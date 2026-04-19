@@ -8325,18 +8325,16 @@ function toolCardHTML(t) {
   const typeClass = isKnown ? t.tool_type : 'custom';
   const typeName = known[t.tool_type] || t.tool_type || '—';
 
-  const h = 200;
-
   return `<div class="tool-card" id="tc-${t.id}" onclick="flipTool('${t.id}',event)">
   ${isAdmin ? `<button class="tool-edit-btn admin-only" onclick="openToolModal('${t.id}');event.stopPropagation()" aria-label="Редактировать">✎</button>` : ''}
-  <div class="tool-inner" style="height:${h}px">
-    <div class="tool-front" style="height:${h}px">
+  <div class="tool-inner">
+    <div class="tool-front">
       <div class="tool-type-badge ${escAttr(typeClass)}">${escHtml(typeName)}</div>
       <div class="tool-title">${escHtml(t.title)}</div>
       <div class="tool-when">${escHtml(t.when_to_use)}</div>
       <div class="tool-hint">Нажми для скрипта →</div>
     </div>
-    <div class="tool-back" style="min-height:${h}px;height:auto">
+    <div class="tool-back">
       <div class="tool-back-label">Готовая фраза</div>
       <div class="tool-script">${escHtml(t.script_line)}</div>
       ${t.example ? `<div class="tool-back-label" style="margin-top:10px">Пример</div>
