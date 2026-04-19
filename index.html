@@ -75,20 +75,19 @@ body.is-admin .admin-only{display:flex!important;}
 .empty-state{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-muted);font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;}
 
 /* ── PRODUCT CARD ── */
-.card-wrap{perspective:1000px;height:480px;cursor:pointer;position:relative;}
-.card-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);}
+.card-wrap{perspective:1000px;cursor:pointer;position:relative;}
+.card-inner{position:relative;width:100%;display:grid;grid-template-areas:"stack";transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,.2,.2,1);}
+.card-inner > *{grid-area:stack;}
 .card-wrap.flipped .card-inner{transform:rotateY(180deg);}
-.card-front,.card-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:var(--radius);border:1px solid rgba(201,168,76,.14);overflow:hidden;}
-.card-front{background:var(--chocolate-mid);display:block;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
-.card-back{background:var(--chocolate-light);transform:rotateY(180deg);display:flex;flex-direction:column;height:100%;}
+.card-front,.card-back{backface-visibility:hidden;border-radius:var(--radius);border:1px solid rgba(201,168,76,.14);overflow:hidden;}
+.card-front{background:var(--chocolate-mid);display:flex;flex-direction:column;}
+.card-back{background:var(--chocolate-light);transform:rotateY(180deg);display:flex;flex-direction:column;}
 .card-wrap.hidden{display:none;}
 .card-img-area{width:100%;height:180px;flex-shrink:0;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 40%,var(--chocolate-light),var(--chocolate-mid) 75%);}
 .card-img-area img{width:100%;height:100%;object-fit:contain;display:block;padding:8px;}
 .card-img-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:rgba(201,168,76,.25);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;}
 .card-accent{height:5px;width:100%;flex-shrink:0;}
-.card-body{padding:22px 24px 16px;}
-.card-front::-webkit-scrollbar{width:3px;}
-.card-front::-webkit-scrollbar-thumb{background:rgba(201,168,76,.25);border-radius:2px;}
+.card-body{padding:22px 24px 16px;flex:1;}
 .card-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;border:1px solid rgba(201,168,76,.28);color:var(--gold);width:fit-content;}
 .card-name{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--cream);line-height:1.05;margin-bottom:3px;}
 .card-type{font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-bottom:14px;}
@@ -109,9 +108,7 @@ body.is-admin .admin-only{display:flex!important;}
 .back-header{padding:18px 22px 12px;border-bottom:1px solid rgba(201,168,76,.1);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .back-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:var(--gold);}
 .back-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);}
-.back-body{padding:14px 22px;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;gap:14px;}
-.back-body::-webkit-scrollbar{width:3px;}
-.back-body::-webkit-scrollbar-thumb{background:rgba(201,168,76,.25);border-radius:2px;}
+.back-body{padding:14px 22px;flex:1;display:flex;flex-direction:column;gap:14px;}
 .back-section-title{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:7px;opacity:.8;}
 .phrase-list{list-style:none;display:flex;flex-direction:column;gap:7px;}
 .phrase-list li{padding:9px 11px;background:rgba(201,168,76,.06);border-left:2px solid rgba(201,168,76,.38);border-radius:0 6px 6px 0;font-family:'Cormorant Garamond',serif;font-size:13.5px;font-style:italic;line-height:1.5;color:var(--cream);}
@@ -248,7 +245,7 @@ body.is-admin .add-tile{display:flex;}
 .add-tile:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.04);}
 .add-tile .plus{font-size:42px;font-weight:300;line-height:1;color:var(--gold);}
 .add-tile p{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0;}
-.card-add.add-tile{min-height:480px;}
+.card-add.add-tile{min-height:420px;}
 
 /* ── FLOATING ACTION BUTTON ── */
 .fab{display:none;position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:var(--gold);border:none;color:var(--chocolate);font-size:32px;font-weight:300;line-height:1;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5);transition:all .2s;}
@@ -299,13 +296,12 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
   .grid{padding:16px 14px 100px;grid-template-columns:1fr;gap:14px;}
 
   /* product card */
-  .card-wrap{height:500px;}
   .card-img-area{height:180px;}
   .card-body{padding:18px 20px 12px;}
   .card-name{font-size:28px;}
   .card-description{font-size:13px;}
   .card-edit-btn{opacity:1;width:34px;height:34px;}
-  .card-add.add-tile{min-height:500px;}
+  .card-add.add-tile{min-height:420px;}
 
   /* tools & glossary */
   .page-header{padding:20px 16px 14px;}
