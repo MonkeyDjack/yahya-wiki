@@ -13184,13 +13184,18 @@ function renderCards() {
   const sect = currentSection === 'all' ? null : currentSection;
   const filtered = sect ? CARDS.filter(c => c.location === sect) : CARDS;
   const cats = new Set(filtered.map(c => c.category).filter(Boolean));
+  // also include NAV-defined empty categories for the current location
+  if (sect && NAV[sect]?.categories) {
+    NAV[sect].categories.forEach(c => cats.add(c));
+  }
   const navCat = document.getElementById('navCategories');
-  if (cats.size > 0) {
+  const catMgrBtn = isAdmin && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
+  if (cats.size > 0 || isAdmin) {
     navCat.classList.remove('hidden');
     navCat.innerHTML = '<button class="cat-tab'+(currentCat==='Все'?' active':'')+'" onclick="setCat(\'Все\',this)">Все</button>' +
       [...cats].sort().map(c =>
         `<button class="cat-tab${currentCat===c?' active':''}" onclick="setCat('${c}',this)">${c}</button>`
-      ).join('');
+      ).join('') + catMgrBtn;
   } else {
     navCat.classList.add('hidden');
   }
@@ -13419,25 +13424,44 @@ function setGlossaryFilter(cat, btn) { setGlossFilter(cat); }
 // ════════════════════════════════════════════════
 // CATEGORY MANAGER (glossary & tools)
 // ════════════════════════════════════════════════
-function openCatManager(type) {
+function openCatManager(type, loc = null) {
   if (!isAdmin) return;
   editingType = 'catmgr';
-  editingId = type;
-  renderCatManagerModal(type);
+  editingId = type === 'card' ? `card:${loc||'магазин'}` : type;
+  renderCatManagerModal(type, loc);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
 }
 
-function renderCatManagerModal(type) {
-  const items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
-  const catField = type === 'gloss' ? 'category' : 'tool_type';
-  const categories = [...new Set(items.map(x => x[catField]).filter(Boolean))].sort();
-  const labels = type === 'tool' ? {upsell:'Апсейл', crosssell:'Кроссейл', bundle:'Бандл'} : {};
+function renderCatManagerModal(type, loc = null) {
+  let items, catField, categories, labels = {}, title, locTabsHTML = '';
 
-  document.getElementById('modalTitle').textContent = type === 'gloss' ? 'Категории терминов' : 'Категории инструментов';
+  if (type === 'card') {
+    const currentLoc = loc || 'магазин';
+    items = CARDS.filter(c => c.location === currentLoc);
+    catField = 'category';
+    const fromNav  = NAV[currentLoc]?.categories || [];
+    const fromData = items.map(x => x.category).filter(Boolean);
+    categories = [...new Set([...fromNav, ...fromData])].sort();
+    title = `Категории продуктов — ${currentLoc}`;
+    const locs = ['магазин','кухня','бар'];
+    locTabsHTML = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+      ${locs.map(l => `<button class="btn${l===currentLoc?' active':''}" style="${l===currentLoc?'background:var(--gold);color:var(--chocolate);border-color:var(--gold)':''}" onclick="openCatManager('card','${l}')">${l}</button>`).join('')}
+    </div>`;
+  } else {
+    items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
+    catField = type === 'gloss' ? 'category' : 'tool_type';
+    categories = [...new Set(items.map(x => x[catField]).filter(Boolean))].sort();
+    labels = type === 'tool' ? {upsell:'Апсейл', crosssell:'Кроссейл', bundle:'Бандл'} : {};
+    title = type === 'gloss' ? 'Категории терминов' : 'Категории инструментов';
+  }
+
+  document.getElementById('modalTitle').textContent = title;
+
+  const locArg = type === 'card' ? `,'${loc||'магазин'}'` : '';
 
   const rowsHTML = categories.length === 0
-    ? '<p style="color:var(--text-muted);font-size:12px">Нет категорий. Создайте запись — категория появится автоматически.</p>'
+    ? '<p style="color:var(--text-muted);font-size:12px">Нет категорий. Добавь новую через поле выше или создай запись с категорией.</p>'
     : categories.map(cat => {
         const count = items.filter(x => x[catField] === cat).length;
         const enc = encodeURIComponent(cat);
@@ -13445,22 +13469,75 @@ function renderCatManagerModal(type) {
         return `<div class="cat-mgr-row" data-cat-enc="${enc}">
           <input class="cat-rename-input" value="${escAttr(displayLabel)}" placeholder="Название">
           <span class="cat-mgr-count">${count}</span>
-          <button class="btn" onclick="handleCatRename('${type}','${enc}',this)">Переименовать</button>
-          <button class="btn danger" onclick="handleCatDelete('${type}','${enc}',this)">Удалить</button>
+          <button class="btn" onclick="handleCatRename('${type}','${enc}',this${locArg})">Переименовать</button>
+          <button class="btn danger" onclick="handleCatDelete('${type}','${enc}',this${locArg})">Удалить</button>
         </div>`;
       }).join('');
 
+  const addRow = `<div class="cat-mgr-row" style="background:rgba(201,168,76,.06);border-color:rgba(201,168,76,.25);margin-bottom:14px">
+    <input class="cat-rename-input" id="newCatInput" placeholder="Новая категория…" onkeydown="if(event.key==='Enter')handleCatAdd('${type}'${locArg})">
+    <button class="btn-save" onclick="handleCatAdd('${type}'${locArg})">+ Добавить</button>
+  </div>`;
+
   document.getElementById('modalBody').innerHTML = `
-    <div><div class="fsec">Категории (${categories.length})</div>
-      ${rowsHTML}
+    ${locTabsHTML}
+    <div><div class="fsec">Добавить категорию</div>
+      ${addRow}
     </div>
-    <p style="color:var(--text-muted);font-size:11px;letter-spacing:.3px;line-height:1.5;margin-top:-6px">💡 Новую категорию создавай прямо при добавлении/редактировании записи — в поле «Новая категория».</p>`;
+    <div><div class="fsec">Существующие (${categories.length})</div>
+      ${rowsHTML}
+    </div>`;
 
   const foot = document.querySelector('.modal-footer');
   foot.innerHTML = `<div class="footer-right" style="margin-left:auto"><button class="btn-save" onclick="closeModal()">Готово</button></div>`;
 }
 
-async function handleCatRename(type, catEnc, btn) {
+function handleCatAdd(type, loc = null) {
+  const input = document.getElementById('newCatInput');
+  const name = (input?.value||'').trim();
+  if (!name) { showToast('Введите название'); return; }
+
+  if (type === 'card') {
+    const l = loc || 'магазин';
+    NAV[l] = NAV[l] || {categories:[], seasonal:[]};
+    NAV[l].categories = NAV[l].categories || [];
+    if (NAV[l].categories.includes(name)) { showToast('Такая уже есть'); return; }
+    NAV[l].categories.push(name);
+    saveNav();
+    renderCards();
+    renderCatManagerModal(type, loc);
+    showToast(`Категория «${name}» добавлена`);
+    return;
+  }
+
+  const items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
+  const catField = type === 'gloss' ? 'category' : 'tool_type';
+  const existing = new Set(items.map(x => x[catField]));
+  if (existing.has(name)) { showToast('Такая уже есть'); return; }
+  // For gloss/tool, an empty category can't exist without items — create a stub record
+  showToast('Создайте запись в этой категории, чтобы она появилась');
+}
+
+function catMgrCtx(type, loc) {
+  if (type === 'card') return {
+    items: CARDS.filter(c => c.location === (loc||'магазин')),
+    allItems: CARDS, catField: 'category', table: 'cards',
+    scopeMatch: (x, name) => x.location === (loc||'магазин') && x.category === name,
+    saveLS: saveCards, rerender: renderCards, word: 'карточек'
+  };
+  if (type === 'gloss') return {
+    items: GLOSSARY_DATA, allItems: GLOSSARY_DATA, catField: 'category', table: 'glossary',
+    scopeMatch: (x, name) => x.category === name,
+    saveLS: saveGlossaryLS, rerender: renderGlossary, word: 'терминов'
+  };
+  return {
+    items: TOOLS_DATA, allItems: TOOLS_DATA, catField: 'tool_type', table: 'tools',
+    scopeMatch: (x, name) => x.tool_type === name,
+    saveLS: saveToolsLS, rerender: renderTools, word: 'инструментов'
+  };
+}
+
+async function handleCatRename(type, catEnc, btn, loc = null) {
   const row = btn.closest('.cat-mgr-row');
   const input = row.querySelector('.cat-rename-input');
   const oldName = decodeURIComponent(catEnc);
@@ -13468,45 +13545,62 @@ async function handleCatRename(type, catEnc, btn) {
   if (!newName) { showToast('Введите название'); return; }
   if (newName === oldName) { showToast('Название не изменилось'); return; }
 
-  const items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
-  const catField = type === 'gloss' ? 'category' : 'tool_type';
-  const table = type === 'gloss' ? 'glossary' : 'tools';
-  const existing = new Set(items.map(x => x[catField]));
+  const ctx = catMgrCtx(type, loc);
+  const existing = new Set(ctx.items.map(x => x[ctx.catField]));
   if (existing.has(newName)) {
     if (!confirm(`Категория «${newName}» уже есть. Объединить в одну?`)) return;
   }
 
-  const changed = items.filter(x => x[catField] === oldName);
-  changed.forEach(x => { x[catField] = newName; });
+  const changed = ctx.allItems.filter(x => ctx.scopeMatch(x, oldName));
+  changed.forEach(x => { x[ctx.catField] = newName; });
 
-  const ok = await dbUpsertMany(table, changed.map(x => ({ id: x.id, data: x })));
+  const ok = await dbUpsertMany(ctx.table, changed.map(x => ({ id: x.id, data: x })));
   if (!ok) return;
 
-  if (type === 'gloss') { saveGlossaryLS(); renderGlossary(); }
-  else                  { saveToolsLS();    renderTools(); }
-  renderCatManagerModal(type);
+  if (type === 'card') {
+    const l = loc || 'магазин';
+    if (NAV[l]?.categories) {
+      NAV[l].categories = NAV[l].categories.map(c => c === oldName ? newName : c);
+      saveNav();
+    }
+  }
+
+  ctx.saveLS(); ctx.rerender();
+  renderCatManagerModal(type, loc);
   showToast(`Переименовано, записей: ${changed.length}`);
 }
 
-function handleCatDelete(type, catEnc, btn) {
+function handleCatDelete(type, catEnc, btn, loc = null) {
   const row = btn.closest('.cat-mgr-row');
   const name = decodeURIComponent(catEnc);
-  const items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
-  const catField = type === 'gloss' ? 'category' : 'tool_type';
-  const count = items.filter(x => x[catField] === name).length;
+  const ctx = catMgrCtx(type, loc);
+  const count = ctx.allItems.filter(x => ctx.scopeMatch(x, name)).length;
 
   document.querySelectorAll('.cat-mgr-confirm').forEach(el => el.remove());
 
   if (count === 0) {
-    showToast('Категория пустая');
+    // empty category — remove from NAV if card type, otherwise nothing to do
+    if (type === 'card') {
+      const l = loc || 'магазин';
+      if (NAV[l]?.categories) {
+        NAV[l].categories = NAV[l].categories.filter(c => c !== name);
+        saveNav();
+      }
+      renderCards();
+      renderCatManagerModal(type, loc);
+      showToast('Категория удалена');
+    } else {
+      showToast('Категория пустая');
+    }
     return;
   }
 
-  const other = [...new Set(items.map(x => x[catField]).filter(Boolean).filter(c => c !== name))].sort();
+  const locArg = type === 'card' ? `,'${loc||'магазин'}'` : '';
+  const other = [...new Set(ctx.items.map(x => x[ctx.catField]).filter(Boolean).filter(c => c !== name))].sort();
   const moveBlock = other.length
     ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
          <select class="cat-move-sel">${other.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('')}</select>
-         <button class="btn" onclick="handleCatMove('${type}','${catEnc}',this)">Перенести сюда</button>
+         <button class="btn" onclick="handleCatMove('${type}','${catEnc}',this${locArg})">Перенести сюда</button>
        </div>`
     : '';
 
@@ -13514,7 +13608,7 @@ function handleCatDelete(type, catEnc, btn) {
     <p style="font-size:12.5px;color:var(--cream-dim);margin-bottom:10px">Удалить «${escHtml(name)}» (${count} записей)?</p>
     ${moveBlock}
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn danger" onclick="handleCatDeleteAll('${type}','${catEnc}',this)">Удалить все записи (${count})</button>
+      <button class="btn danger" onclick="handleCatDeleteAll('${type}','${catEnc}',this${locArg})">Удалить все записи (${count})</button>
       <button class="btn" onclick="this.closest('.cat-mgr-confirm').remove()">Отмена</button>
     </div>
   </div>`;
@@ -13522,44 +13616,49 @@ function handleCatDelete(type, catEnc, btn) {
   row.insertAdjacentHTML('afterend', html);
 }
 
-async function handleCatMove(type, catEnc, btn) {
+async function handleCatMove(type, catEnc, btn, loc = null) {
   const confirmBox = btn.closest('.cat-mgr-confirm');
   const sel = confirmBox.querySelector('.cat-move-sel');
   const target = sel.value;
   const name = decodeURIComponent(catEnc);
-  const items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
-  const catField = type === 'gloss' ? 'category' : 'tool_type';
-  const table = type === 'gloss' ? 'glossary' : 'tools';
-  const changed = items.filter(x => x[catField] === name);
-  changed.forEach(x => { x[catField] = target; });
-  const ok = await dbUpsertMany(table, changed.map(x => ({ id: x.id, data: x })));
+  const ctx = catMgrCtx(type, loc);
+  const changed = ctx.allItems.filter(x => ctx.scopeMatch(x, name));
+  changed.forEach(x => { x[ctx.catField] = target; });
+  const ok = await dbUpsertMany(ctx.table, changed.map(x => ({ id: x.id, data: x })));
   if (!ok) return;
-  if (type === 'gloss') { saveGlossaryLS(); renderGlossary(); }
-  else                  { saveToolsLS();    renderTools(); }
-  renderCatManagerModal(type);
+  if (type === 'card') {
+    const l = loc || 'магазин';
+    if (NAV[l]?.categories) {
+      NAV[l].categories = NAV[l].categories.filter(c => c !== name);
+      saveNav();
+    }
+  }
+  ctx.saveLS(); ctx.rerender();
+  renderCatManagerModal(type, loc);
   showToast(`Перенесено в «${target}»: ${changed.length}`);
 }
 
-async function handleCatDeleteAll(type, catEnc, btn) {
+async function handleCatDeleteAll(type, catEnc, btn, loc = null) {
   const name = decodeURIComponent(catEnc);
-  const table = type === 'gloss' ? 'glossary' : 'tools';
-  const catField = type === 'gloss' ? 'category' : 'tool_type';
-  const items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
-  const toDelete = items.filter(x => x[catField] === name).map(x => x.id);
+  const ctx = catMgrCtx(type, loc);
+  const toDelete = ctx.allItems.filter(x => ctx.scopeMatch(x, name)).map(x => x.id);
   if (!toDelete.length) { showToast('Пусто'); return; }
-  const ok = await dbDeleteMany(table, toDelete);
+  const ok = await dbDeleteMany(ctx.table, toDelete);
   if (!ok) return;
-  if (type === 'gloss') {
-    GLOSSARY_DATA = GLOSSARY_DATA.filter(x => x.category !== name);
-    saveGlossaryLS(); renderGlossary();
-    renderCatManagerModal(type);
-    showToast(`Удалено: ${toDelete.length} терминов`);
-  } else {
-    TOOLS_DATA = TOOLS_DATA.filter(x => x.tool_type !== name);
-    saveToolsLS(); renderTools();
-    renderCatManagerModal(type);
-    showToast(`Удалено: ${toDelete.length} инструментов`);
+  const idSet = new Set(toDelete);
+  if (type === 'card')       CARDS         = CARDS.filter(x => !idSet.has(x.id));
+  else if (type === 'gloss') GLOSSARY_DATA = GLOSSARY_DATA.filter(x => !idSet.has(x.id));
+  else                       TOOLS_DATA    = TOOLS_DATA.filter(x => !idSet.has(x.id));
+  if (type === 'card') {
+    const l = loc || 'магазин';
+    if (NAV[l]?.categories) {
+      NAV[l].categories = NAV[l].categories.filter(c => c !== name);
+      saveNav();
+    }
   }
+  ctx.saveLS(); ctx.rerender();
+  renderCatManagerModal(type, loc);
+  showToast(`Удалено: ${toDelete.length} ${ctx.word}`);
 }
 
 // escape for HTML attribute values (uses escHtml which is defined below)
