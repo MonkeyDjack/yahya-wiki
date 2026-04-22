@@ -14123,8 +14123,29 @@ async function init() {
       isAdmin = true;
       document.body.classList.add('is-admin');
       renderCards(); renderGlossary(); renderTools();
+      // proactively refresh on load so we always have a fresh access token
+      // (iOS Safari throttles autoRefreshToken timers in background tabs)
+      sb.auth.refreshSession().catch(e => console.warn('refresh on init failed', e));
     }
   } catch(e) { console.warn('session check failed', e); }
+
+  // refresh session when tab becomes visible again (handles iOS tab switch / app resume)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isAdmin) {
+      sb.auth.refreshSession().catch(e => console.warn('refresh on visibility failed', e));
+    }
+  });
+
+  // listen for Supabase auth events — log out gracefully if token becomes unusable
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
+      if (isAdmin) {
+        isAdmin = false;
+        document.body.classList.remove('is-admin');
+        renderCards(); renderGlossary(); renderTools();
+      }
+    }
+  });
 
   // pull fresh data from Supabase
   loadFromSupabase();
