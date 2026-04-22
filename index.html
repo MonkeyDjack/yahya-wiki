@@ -13109,27 +13109,50 @@ async function seedFromBuiltin() {
 }
 
 // Shared helper: Supabase-write + local rollback on error
-async function dbUpsert(table, id, data) {
-  const { error } = await sb.from(table).upsert({ id, data });
-  if (error) { showToast('Ошибка сохранения: ' + error.message); return false; }
+// Auth-expired (JWT expired / PGRST301) — пытаемся обновить сессию и повторить запрос.
+// Если refresh не прошёл — принудительно выходим из админ-режима и просим залогиниться заново.
+function isAuthExpiredError(err) {
+  if (!err) return false;
+  const msg = (err.message || '').toLowerCase();
+  const code = err.code || '';
+  return code === 'PGRST301' || msg.includes('jwt expired') || msg.includes('jwt is expired') || msg.includes('invalid jwt');
+}
+async function handleAuthExpired() {
+  try {
+    const { data, error } = await sb.auth.refreshSession();
+    if (!error && data?.session) return true;
+  } catch(e) { /* ignore */ }
+  // refresh failed → выходим и показываем модалку логина
+  isAdmin = false;
+  document.body.classList.remove('is-admin');
+  try { await sb.auth.signOut(); } catch(e) {}
+  showToast('Сессия истекла — войдите заново');
+  openPwdModal();
+  return false;
+}
+async function dbWrite(op, errLabel) {
+  let { error } = await op();
+  if (error && isAuthExpiredError(error)) {
+    if (await handleAuthExpired()) {
+      ({ error } = await op());
+    }
+  }
+  if (error) { showToast(errLabel + ': ' + error.message); return false; }
   return true;
 }
+async function dbUpsert(table, id, data) {
+  return dbWrite(() => sb.from(table).upsert({ id, data }), 'Ошибка сохранения');
+}
 async function dbDelete(table, id) {
-  const { error } = await sb.from(table).delete().eq('id', id);
-  if (error) { showToast('Ошибка удаления: ' + error.message); return false; }
-  return true;
+  return dbWrite(() => sb.from(table).delete().eq('id', id), 'Ошибка удаления');
 }
 async function dbDeleteMany(table, ids) {
   if (!ids.length) return true;
-  const { error } = await sb.from(table).delete().in('id', ids);
-  if (error) { showToast('Ошибка удаления: ' + error.message); return false; }
-  return true;
+  return dbWrite(() => sb.from(table).delete().in('id', ids), 'Ошибка удаления');
 }
 async function dbUpsertMany(table, rows) {
   if (!rows.length) return true;
-  const { error } = await sb.from(table).upsert(rows);
-  if (error) { showToast('Ошибка сохранения: ' + error.message); return false; }
-  return true;
+  return dbWrite(() => sb.from(table).upsert(rows), 'Ошибка сохранения');
 }
 
 // ════════════════════════════════════════════════
