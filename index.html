@@ -13478,6 +13478,8 @@ function openCatManager(type, loc = null) {
   renderCatManagerModal(type, loc);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  // менеджер категорий коммитит изменения сразу — диалог dirty-check не нужен
+  formInitialSnapshot = null;
 }
 
 function renderCatManagerModal(type, loc = null) {
@@ -13723,6 +13725,7 @@ function openModal(id) {
   document.getElementById('modalBody').innerHTML = buildForm(c);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  captureFormSnapshot();
 }
 
 // ════════════════════════════════════════════════
@@ -13739,6 +13742,7 @@ function openGlossModal(id) {
   document.getElementById('modalBody').innerHTML = buildGlossForm(g);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  captureFormSnapshot();
 }
 
 function buildGlossForm(g) {
@@ -13778,7 +13782,7 @@ async function saveGloss() {
   const idx = GLOSSARY_DATA.findIndex(x => x.id === editingId);
   if (idx >= 0) GLOSSARY_DATA[idx] = entry; else GLOSSARY_DATA.push(entry);
   saveGlossaryLS();
-  closeModal();
+  closeModal(true);
   renderGlossary();
   showToast(idx >= 0 ? 'Термин обновлён' : 'Термин добавлен');
 }
@@ -13790,7 +13794,7 @@ async function deleteGloss() {
   if (!ok) return;
   GLOSSARY_DATA = GLOSSARY_DATA.filter(x => x.id !== editingId);
   saveGlossaryLS();
-  closeModal();
+  closeModal(true);
   renderGlossary();
   showToast('Термин удалён');
 }
@@ -13807,6 +13811,7 @@ function openToolModal(id) {
   document.getElementById('modalBody').innerHTML = buildToolForm(t);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
+  captureFormSnapshot();
 }
 
 function buildToolForm(t) {
@@ -13859,7 +13864,7 @@ async function saveTool() {
   const idx = TOOLS_DATA.findIndex(x => x.id === editingId);
   if (idx >= 0) TOOLS_DATA[idx] = entry; else TOOLS_DATA.push(entry);
   saveToolsLS();
-  closeModal();
+  closeModal(true);
   renderTools();
   showToast(idx >= 0 ? 'Инструмент обновлён' : 'Инструмент добавлен');
 }
@@ -13871,13 +13876,35 @@ async function deleteTool() {
   if (!ok) return;
   TOOLS_DATA = TOOLS_DATA.filter(x => x.id !== editingId);
   saveToolsLS();
-  closeModal();
+  closeModal(true);
   renderTools();
   showToast('Инструмент удалён');
 }
 
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));}
-function closeModal() {
+
+// ── защита от случайного закрытия модалки с несохранёнными изменениями ──
+let formInitialSnapshot = null;
+function snapshotForm() {
+  const body = document.getElementById('modalBody');
+  if (!body) return '';
+  const inputs = body.querySelectorAll('input, textarea, select');
+  return Array.from(inputs).map(el => (el.type==='checkbox'||el.type==='radio') ? (el.checked?'1':'0') : el.value).join('|||');
+}
+function captureFormSnapshot() {
+  // ждём пока браузер отрисует innerHTML, чтобы querySelectorAll увидел поля
+  setTimeout(() => { formInitialSnapshot = snapshotForm(); }, 0);
+}
+function isFormDirty() {
+  if (formInitialSnapshot === null) return false;
+  return snapshotForm() !== formInitialSnapshot;
+}
+
+function closeModal(force) {
+  if (!force && isFormDirty()) {
+    if (!confirm('У вас есть несохранённые изменения. Закрыть без сохранения?')) return;
+  }
+  formInitialSnapshot = null;
   document.getElementById('modalOverlay').classList.remove('active');
   document.body.style.overflow = '';
   editingId = null;
@@ -14007,7 +14034,7 @@ async function saveCard() {
   const idx = CARDS.findIndex(c=>c.id===editingId);
   if (idx >= 0) CARDS[idx] = card; else CARDS.push(card);
   saveCards();
-  closeModal();
+  closeModal(true);
   renderCards();
   showToast(idx>=0 ? 'Карточка обновлена' : 'Карточка добавлена');
 }
@@ -14019,7 +14046,7 @@ async function deleteCard() {
   if (!ok) return;
   CARDS = CARDS.filter(c=>c.id!==editingId);
   saveCards();
-  closeModal();
+  closeModal(true);
   renderCards();
   showToast('Карточка удалена');
 }
