@@ -355,6 +355,95 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
 @media(min-width:769px){
   body .fab,body.is-admin .fab{display:none!important;}
 }
+
+/* ── SCRIPTS PAGE ── */
+.scripts-subnav{display:flex;gap:8px;padding:14px 40px;border-bottom:1px solid rgba(201,168,76,.08);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.scripts-subnav::-webkit-scrollbar{display:none;}
+.subnav-btn{padding:10px 20px;border:1px solid rgba(201,168,76,.2);border-radius:40px;background:transparent;color:var(--text-muted);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;}
+.subnav-btn:hover{border-color:rgba(201,168,76,.5);color:var(--gold-light);}
+.subnav-btn.active{background:var(--gold);border-color:var(--gold);color:var(--chocolate);font-weight:500;}
+.subnav-btn .tab-icon{font-size:14px;}
+
+.scripts-block{padding:26px 40px 10px;}
+.scripts-block-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;gap:10px;}
+.scripts-block-subtitle{font-size:11.5px;color:var(--text-muted);line-height:1.6;margin-bottom:18px;max-width:760px;}
+
+/* Tree */
+.tree-box{position:relative;background:var(--chocolate-mid);border:1px solid rgba(201,168,76,.14);border-radius:var(--radius);padding:28px 30px;margin-bottom:14px;}
+.tree-breadcrumb{display:flex;flex-wrap:wrap;gap:4px;font-size:10.5px;color:var(--text-muted);margin-bottom:16px;align-items:center;letter-spacing:.5px;}
+.tree-breadcrumb-item{color:var(--gold-light);}
+.tree-breadcrumb-sep{opacity:.4;}
+.tree-reset-btn{margin-left:auto;padding:6px 14px;border:1px solid rgba(201,168,76,.25);border-radius:20px;background:transparent;color:var(--text-muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.tree-reset-btn:hover{color:var(--gold);border-color:rgba(201,168,76,.5);}
+.tree-question{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--cream);line-height:1.2;margin-bottom:22px;}
+.tree-options{display:flex;flex-direction:column;gap:10px;}
+.tree-option{padding:16px 20px;border:1px solid rgba(201,168,76,.22);border-radius:10px;background:rgba(255,248,240,.02);color:var(--cream);font-size:14px;line-height:1.5;cursor:pointer;transition:all .18s;text-align:left;font-family:'Jost',sans-serif;display:flex;align-items:center;gap:12px;}
+.tree-option:hover{border-color:var(--gold);background:rgba(201,168,76,.08);}
+.tree-option-arrow{color:var(--gold);opacity:.55;margin-left:auto;font-size:18px;line-height:1;}
+.tree-recommendation{padding:22px 24px;background:rgba(201,168,76,.08);border-left:3px solid var(--gold);border-radius:0 10px 10px 0;}
+.tree-rec-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.85;margin-bottom:10px;}
+.tree-rec-text{font-family:'Cormorant Garamond',serif;font-size:19px;line-height:1.45;color:var(--cream);}
+.tree-admin-bar{display:none;gap:8px;margin-top:16px;padding-top:14px;border-top:1px dashed rgba(201,168,76,.2);flex-wrap:wrap;}
+body.is-admin .tree-admin-bar{display:flex;}
+.tree-admin-bar .btn{font-size:10px;}
+.tree-empty{padding:22px;text-align:center;color:var(--text-muted);font-size:12.5px;font-style:italic;}
+
+/* Script card (flip) */
+.script-card{position:relative;border:1px solid rgba(201,168,76,.14);border-radius:var(--radius);overflow:hidden;cursor:pointer;perspective:1000px;}
+.script-inner{width:100%;position:relative;display:grid;grid-template-areas:"stack";transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,.2,.2,1);}
+.script-inner > *{grid-area:stack;}
+.script-card.flipped .script-inner{transform:rotateY(180deg);}
+.script-front,.script-back{backface-visibility:hidden;border-radius:var(--radius);}
+.script-front{background:var(--chocolate-mid);padding:22px 24px 18px;}
+.script-back{background:var(--chocolate-light);padding:22px 24px 18px;transform:rotateY(180deg);}
+.script-stage-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;border:1px solid rgba(201,168,76,.3);color:var(--gold-light);width:fit-content;}
+.script-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--cream);line-height:1.15;margin-bottom:10px;}
+.script-situation{font-size:12.5px;color:var(--text-muted);line-height:1.6;margin-bottom:14px;}
+.script-hint{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);opacity:.5;}
+.script-section-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);opacity:.75;margin:0 0 8px;}
+.script-section-label.neg{color:#c97a5b;opacity:.9;}
+.script-section-label.why{color:var(--gold);}
+.script-text-quote{padding:12px 14px;background:rgba(201,168,76,.07);border-left:2px solid rgba(201,168,76,.45);border-radius:0 8px 8px 0;font-family:'Cormorant Garamond',serif;font-size:14.5px;font-style:italic;line-height:1.55;color:var(--cream);margin-bottom:14px;}
+.script-why{font-size:12px;color:var(--text-muted);line-height:1.6;padding:10px 12px;background:rgba(255,248,240,.03);border-radius:8px;margin-bottom:10px;}
+.script-avoid{font-size:12px;color:var(--text-muted);line-height:1.6;padding:10px 12px;background:rgba(201,122,91,.07);border-radius:8px;border-left:2px solid rgba(201,122,91,.4);}
+.script-back-flip{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);opacity:.45;margin-top:14px;text-align:right;}
+.script-edit-btn{position:absolute;top:10px;right:10px;z-index:5;width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,168,76,.3);background:rgba(18,10,5,.8);color:var(--gold);font-size:13px;display:none;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px);}
+body.is-admin .script-edit-btn{display:flex;}
+
+/* Rule cards (no flip) */
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;}
+.rule-card{position:relative;border:1px solid rgba(201,168,76,.14);border-radius:var(--radius);padding:20px 22px;background:var(--chocolate-mid);}
+.rule-cat{display:inline-block;padding:2px 10px;border-radius:16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-light);border:1px solid rgba(201,168,76,.3);margin-bottom:10px;}
+.rule-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:300;color:var(--cream);line-height:1.2;margin-bottom:10px;}
+.rule-why{font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:10px;}
+.rule-violation{font-size:11.5px;color:#d39989;line-height:1.55;padding:8px 10px;background:rgba(201,122,91,.06);border-left:2px solid rgba(201,122,91,.4);border-radius:0 6px 6px 0;}
+.rule-violation-label{display:block;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:#c97a5b;margin-bottom:4px;opacity:.85;}
+.rule-edit-btn{position:absolute;top:10px;right:10px;z-index:5;width:28px;height:28px;border-radius:50%;border:1px solid rgba(201,168,76,.3);background:rgba(18,10,5,.8);color:var(--gold);font-size:11px;display:none;align-items:center;justify-content:center;cursor:pointer;}
+body.is-admin .rule-edit-btn{display:flex;}
+
+/* Checklist */
+.checklist-box{background:var(--chocolate-mid);border:1px solid rgba(201,168,76,.14);border-radius:var(--radius);padding:22px 26px;margin-bottom:20px;position:relative;}
+.checklist-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--cream);margin-bottom:14px;font-weight:300;}
+.checklist-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.08);font-size:13.5px;color:var(--cream);line-height:1.5;cursor:pointer;}
+.checklist-item:last-child{border-bottom:none;}
+.checklist-check{flex-shrink:0;width:20px;height:20px;border:1.5px solid rgba(201,168,76,.35);border-radius:5px;margin-top:1px;transition:all .15s;display:flex;align-items:center;justify-content:center;color:transparent;font-size:13px;font-weight:700;}
+.checklist-item.checked .checklist-check{background:var(--gold);border-color:var(--gold);color:var(--chocolate);}
+.checklist-item.checked .checklist-text{color:var(--text-muted);text-decoration:line-through;opacity:.65;}
+
+@media (max-width: 768px){
+  .scripts-subnav{padding:10px 16px;gap:6px;}
+  .subnav-btn{padding:8px 14px;font-size:10px;letter-spacing:1.2px;}
+  .scripts-block{padding:18px 16px 8px;}
+  .scripts-block-title{font-size:20px;}
+  .tree-box{padding:20px 18px;}
+  .tree-question{font-size:22px;}
+  .tree-option{padding:13px 15px;font-size:13px;}
+  .rules-grid{grid-template-columns:1fr;}
+  .script-front,.script-back{padding:18px 20px;}
+  .script-title{font-size:21px;}
+  .rule-card{padding:16px 18px;}
+  .checklist-box{padding:18px 20px;}
+}
 </style>
 </head>
 <body>
@@ -380,6 +469,9 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
 <nav class="page-nav">
   <button class="page-tab active" data-page="products">
     <span class="tab-icon">🍫</span> Продукты
+  </button>
+  <button class="page-tab" data-page="scripts">
+    <span class="tab-icon">🎯</span> Скрипты
   </button>
   <button class="page-tab" data-page="tools">
     <span class="tab-icon">📋</span> Инструменты продаж
@@ -413,6 +505,20 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
   </div>
   <div class="page-filter" id="toolsFilter"></div>
   <div id="toolsContainer"></div>
+</div>
+
+<!-- ══════════════ SCRIPTS PAGE ══════════════ -->
+<div id="page-scripts" class="page">
+  <div class="page-header">
+    <h2>Скрипты продаж</h2>
+    <p>Что говорить клиенту на каждом этапе. Выбери свою роль — розница или бар.</p>
+  </div>
+  <div class="scripts-subnav" id="scriptsSubnav">
+    <button class="subnav-btn active" data-role="retail"><span class="tab-icon">🛍</span> Розница</button>
+    <button class="subnav-btn" data-role="bar"><span class="tab-icon">☕</span> Бар</button>
+    <button class="subnav-btn" data-role="common"><span class="tab-icon">🧩</span> Общее</button>
+  </div>
+  <div id="scriptsContent"></div>
 </div>
 
 <!-- ══════════════ GLOSSARY PAGE ══════════════ -->
@@ -13012,19 +13118,408 @@ const BUILTIN_TOOLS = [
 ];
 
 // ════════════════════════════════════════════════
+// BUILT-IN SCRIPTS (seed для нового раздела)
+// ════════════════════════════════════════════════
+const SCRIPT_STAGES = {
+  retail: [
+    {key:'open',       label:'Открытие контакта'},
+    {key:'discovery',  label:'Выявление потребности'},
+    {key:'present',    label:'Презентация'},
+    {key:'objection',  label:'Работа с возражениями'},
+    {key:'close',      label:'Закрытие сделки'}
+  ],
+  bar: [
+    {key:'open',       label:'Встреча гостя'},
+    {key:'order',      label:'Первый заказ'},
+    {key:'upsell',     label:'Допродажа'},
+    {key:'table',      label:'Работа с типом стола'},
+    {key:'objection',  label:'Возражения'},
+    {key:'close',      label:'Закрытие / счёт'}
+  ],
+  common: [
+    {key:'objection',  label:'Универсальные возражения'},
+    {key:'errors',     label:'Типичные ошибки'},
+    {key:'stopphrases',label:'Фразы-стопы'}
+  ]
+};
+
+const RULE_CATEGORIES = [
+  'Посуда и уборка',
+  'Подача',
+  'Коммуникация',
+  'Внешний вид и поведение',
+  'Момент ухода',
+  'Местная специфика'
+];
+
+const BUILTIN_SCRIPTS = [
+  // ───────── ДЕРЕВО ПОТРЕБНОСТИ — РОЗНИЦА ─────────
+  {
+    id:'tree-retail', type:'tree', role:'retail',
+    title:'Дерево потребности — розница',
+    start:'root',
+    nodes:{
+      'root':{question:'Для кого выбираете?',options:[
+        {label:'🏠 Себе / домой',next:'self'},
+        {label:'🎁 В подарок',next:'gift'},
+        {label:'🏢 Корпоратив / много людей',next:'corp'},
+        {label:'🤔 Просто смотрю / не знаю',recommendation:'Покажи новинку или расскажи про национальную коллекцию — у неё самая сильная история в Бишкеке. Переходи к скриптам «Открытие контакта».'}
+      ]},
+      'self':{question:'Что обычно любите?',options:[
+        {label:'Молочный, мягкий вкус',recommendation:'Молочные плитки с пралине, трюфели с кремовой начинкой, кокос-миндаль. Предложи вторую плитку — «одна домой, одна на работу».'},
+        {label:'Тёмный, не очень сладкий',recommendation:'Тёмный 64–85%, Origine Papouasie, коллекция «СИЛА». Уточни — без сахара интересно?'},
+        {label:'С начинкой / корпусные конфеты',recommendation:'Россыпь корпусных (лимон юдзу, кокос-миндаль, малина) или набор на 4/9 — попробовать всё сразу.'},
+        {label:'Особый повод — себе праздник',recommendation:'Национальная коллекция или дубайский шоколад. Подари себе впечатление, а не просто сладкое.'}
+      ]},
+      'gift':{question:'Кому подарок?',options:[
+        {label:'👩 Женщине',next:'gift-woman'},
+        {label:'👨 Мужчине',next:'gift-man'},
+        {label:'👶 Ребёнку',recommendation:'Молочные конфеты (кокос-миндаль), плитка молочная с фундуком. Маленькая коробочка ярких корпусных выглядит как «настоящий взрослый подарок».'},
+        {label:'👴 Старшему (учителю, родителям, начальнику)',recommendation:'Национальная коллекция или набор на 16 конфет в премиум-упаковке. Подарок с характером, несёт уважение.'}
+      ]},
+      'gift-woman':{question:'По какому поводу?',options:[
+        {label:'День рождения / юбилей',recommendation:'Набор на 9 корпусных конфет (1390) + шоколадная бутылка шампанского (1800) = 3190. Эффектно, никто такого не дарит.'},
+        {label:'8 марта / романтика',recommendation:'Национальная коллекция или нарезные «ЛЮБОВЬ»/«НЕЖНОСТЬ». Можно добавить пасхальное яйцо — премиум-вариант.'},
+        {label:'Благодарность / без повода',recommendation:'Набор на 9 конфет + крафт-пакет. Не пафосно, но с характером. ~1500.'},
+        {label:'Универсальный, безопасный',recommendation:'Национальная коллекция на 12 конфет — удивляет вкусами, красиво упакована, беспроигрышный выбор.'}
+      ]},
+      'gift-man':{question:'По какому поводу?',options:[
+        {label:'23 февраля / день рождения',recommendation:'Коллекция «СИЛА» (9 тёмных конфет, 1570) + сигары из тёмного шоколада (1500) = 3070. Брутально, никто так не дарит.'},
+        {label:'Благодарность партнёру / начальнику',recommendation:'Коллекция «ЧЕСТЬ» (16 конфет, 2530) + крафт-пакет. Статусно, но без показухи.'},
+        {label:'Без повода / знатоку шоколада',recommendation:'Набор тёмного ассорти на 9 или плитка Origine 650. Для ценителя.'}
+      ]},
+      'corp':{question:'Сколько получателей?',options:[
+        {label:'До 10 человек',recommendation:'Индивидуальные наборы на 4 конфеты каждому. Можно добавить персональные открытки.'},
+        {label:'10–30 человек',recommendation:'Мини-наборы на 4 или 9 конфет + фирменный крафт-пакет. Сбор заказа — 1 день.'},
+        {label:'Больше 30',recommendation:'Уточни бюджет на человека, срок, нужна ли брендированная упаковка. Передай контакт менеджеру.'}
+      ]}
+    }
+  },
+
+  // ───────── ДЕРЕВО ГОСТЯ — БАР ─────────
+  {
+    id:'tree-bar', type:'tree', role:'bar',
+    title:'Дерево гостя — бар',
+    start:'root',
+    nodes:{
+      'root':{question:'Зачем пришёл гость?',options:[
+        {label:'⚡ Быстрый визит (один, на 15 минут)',recommendation:'Напиток + компактный десерт (трюфель, нуга) + плитка с собой. «К кофе одну конфету — эспрессо с трюфелем апельсин пробовали?»'},
+        {label:'📖 Пауза / отдых (один, надолго)',recommendation:'Напиток + десерт. Через 20 минут подойди: «подлить чай?», «повторить?». Мягкая допродажа.'},
+        {label:'💑 Пара / двое за столиком',next:'bar-couple'},
+        {label:'👨‍👩‍👧 С детьми',recommendation:'Взрослым — обычный заказ. Детям — какао, молочный коктейль, маленькая плитка молочная. Горячее не ставить рядом с ребёнком. Поздороваться с ребёнком отдельно.'},
+        {label:'👥 Компания 3+',recommendation:'Сет/ассорти на стол (9 или 16 конфет) + напитки каждому. «Попробуете разное» — хорошо фреймит.'},
+        {label:'⭐ Постоянный клиент',recommendation:'«Как обычно?» + обязательно покажи новинку дня. Гость чувствует заботу и статус.'}
+      ]},
+      'bar-couple':{question:'Какого типа встреча?',options:[
+        {label:'💘 Свидание / романтика',recommendation:'Фондан или десерт-ассорти на двоих + 2 напитка. «На двоих часто берут ассорти + фондан — хорошо поделиться».'},
+        {label:'💼 Деловая встреча',recommendation:'Кофе/чай + нейтральный десерт (нуга, сабле). Не навязывайся, второй раз подойди через 15–20 минут.'},
+        {label:'👭 Подруги / друзья',recommendation:'Ассорти конфет (9) + 2 авторских напитка (раф лаванда, раф малина). Повод сделать фото и запостить.'}
+      ]}
+    }
+  },
+
+  // ───────── РОЗНИЦА — СКРИПТЫ ─────────
+  {id:'r-open-silent',type:'script',role:'retail',stage:'open',
+   title:'Молчаливый клиент у витрины',
+   situation:'Клиент зашёл, молча рассматривает витрину, глаз не поднимает.',
+   script:'«У витрины наш фирменный ассортимент — если что-то заинтересует, расскажу из чего сделано. Вы в подарок присматриваете или для себя?»',
+   why:'Не давим «что подсказать?» — на это нечего ответить. Даём причину остаться («расскажу из чего»). Открытый вопрос запускает выявление потребности.',
+   avoid:'«Здравствуйте, что подсказать?» · «Обращайтесь если что» · молча стоять рядом, как охранник.'},
+
+  {id:'r-disc-gift',type:'script',role:'retail',stage:'discovery',
+   title:'«Мне что-нибудь в подарок»',
+   situation:'Клиент просит «что-нибудь в подарок», деталей не даёт.',
+   script:'«Давайте подберём. Подарок мужчине или женщине? И по какому поводу?» — после ответа: «А получатель сладкоежка или предпочитает тёмный, не очень сладкий?»',
+   why:'Не предлагаем ни одного товара, пока не узнаем минимум 3 параметра: пол, повод, вкус. Это экономит время и закрывает продажу с первого показа в нужный набор.',
+   avoid:'Тащить клиента к самому дорогому («у нас вот этот чаще берут») · перечислять весь ассортимент подряд.'},
+
+  {id:'r-present-jubilee',type:'script',role:'retail',stage:'present',
+   title:'Подарок маме на юбилей',
+   situation:'Выявили: женщина ~50 лет, юбилей, сладкое любит, бюджет средний+.',
+   script:'«На такой повод отлично зайдёт наша национальная коллекция — конфеты с местными вкусами: курут, облепиха, тал-кант. Подарок с характером, такого в Бишкеке больше нигде нет. Плюс упаковка красивая — маме будет приятно распаковывать. Покажу набор на 250 грамм, как раз в ваш бюджет.»',
+   why:'Связь «ситуация → конкретный продукт», уникальность (нац.коллекция), визуализация («распаковывать»), закрытие на конкретный SKU. Покупатель сразу представляет подарок в руках.',
+   avoid:'«У нас есть разное, посмотрите» · вываливать весь ассортимент · предлагать без привязки к ситуации.'},
+
+  {id:'r-obj-price',type:'script',role:'retail',stage:'objection',
+   title:'«Дорого»',
+   situation:'Клиент: «Дорого за коробку шоколада».',
+   script:'«Понимаю. Давайте разложу: это 250 грамм бельгийского шоколада премиум-класса, без растительных жиров и консервантов, ручная работа. В супермаркете за 250 грамм выйдет 600–800 — другой продукт, массовый. Если бюджет поджимает — есть набор на 120 грамм за [цена], тоже достойный подарок.»',
+   why:'Не спорим («понимаю»), расшифровываем ЗА ЧТО цена, даём альтернативу в рамках бюджета — не теряем продажу.',
+   avoid:'«Ну это же премиум» · «У нас всё так стоит» · обижаться · молчать.'},
+
+  {id:'r-obj-think',type:'script',role:'retail',stage:'objection',
+   title:'«Я подумаю»',
+   situation:'Клиент посмотрел, говорит «пока подумаю, пройдусь».',
+   script:'«Конечно, подумайте. Чтобы ориентироваться — подарок нужен к какой дате? Если до [X] — могу набор собрать с упаковкой за день, без предоплаты зарезервирую. Передумаете — просто не приходите, резерв снимется.»',
+   why:'Не давим, но закрепляем дату и ставим мягкий крючок (резерв без обязательств). У клиента в голове остаёмся именно мы.',
+   avoid:'«Хорошо, до свидания» (теряем) · «А что именно не устроило?» (давление).'},
+
+  {id:'r-close-choose',type:'script',role:'retail',stage:'close',
+   title:'Клиент выбрал, но молчит',
+   situation:'Клиент определился с набором, стоит, «беру» не говорит.',
+   script:'«Упаковываем в фирменный пакет или сразу в подарочную с лентой? Лента 4 цвета — какой под повод?»',
+   why:'Вопрос выбора ВНУТРИ покупки (как упаковать?), а не О покупке (брать/не брать). Клиент уже отвечает как покупатель — сделка закрыта.',
+   avoid:'«Ну что, берёте?» · молча ждать · «Определились?».'},
+
+  // ───────── БАР — СКРИПТЫ ─────────
+  {id:'b-open-seat',type:'script',role:'bar',stage:'open',
+   title:'Встреча гостя',
+   situation:'Гость зашёл, оглядывается в поисках столика.',
+   script:'«Проходите, выбирайте любой свободный. Вы у нас впервые или уже знакомы с меню?»',
+   why:'Первый фильтр «новичок / постоянный». Новичку нужна презентация, постоянному — новинка дня. Скрипт дальше расходится.',
+   avoid:'«Здравствуйте» + уйти за стойку · стоять и ждать пока сам подойдёт.'},
+
+  {id:'b-order-justtea',type:'script',role:'bar',stage:'order',
+   title:'«Просто чай» / «просто кофе»',
+   situation:'Гость: «Мне чай, пожалуйста» — и закрывает меню.',
+   script:'«Конечно, какой именно чай? У нас есть [2–3 варианта]. И к чаю хорошо идёт наш брауни или трюфель с малиной — свежие, только сегодня сделали. Попробуете?»',
+   why:'Уточнение = ещё один контакт. «Только сегодня» = свежесть = премиум. Конкретика вместо «что-нибудь к чаю». Закрываем на ДА/НЕТ, не на «что посоветуете».',
+   avoid:'«Что-нибудь к чаю?» · «Не желаете десерт?» · приносить голый чай без предложения.'},
+
+  {id:'b-upsell-pause',type:'script',role:'bar',stage:'upsell',
+   title:'Допродажа через паузу',
+   situation:'Гость допил чашку наполовину, сидит, разговаривает / в телефоне.',
+   script:'«Повторить чай? Или попробуете наш горячий шоколад — как раз холодно, очень в тему.»',
+   why:'Выбор ВНУТРИ допродажи, а не «ещё что-то?». Привязка к погоде/моменту — создаёт «сейчас самое время».',
+   avoid:'«Всё в порядке?» · «Ещё что-то?» · проходить мимо молча.'},
+
+  {id:'b-table-couple',type:'script',role:'bar',stage:'table',
+   title:'Пара / двое за столиком',
+   situation:'Пара или двое сели, открыли меню.',
+   script:'«У нас часто берут на двоих десерт-ассорти — 4 фирменные конфеты плюс шоколадный фондан, удобно попробовать разное. С каким напитком принести?»',
+   why:'«Часто берут» = соц. доказательство, легализует покупку. Фрейм «на двоих поделиться» подходит и свиданию, и деловой. Сразу переводим на ВЫБОР напитка.',
+   avoid:'Ждать пока сами определятся · «Что будете заказывать?» · меню предложил — ушёл.'},
+
+  {id:'b-upsell-shelf',type:'script',role:'bar',stage:'upsell',
+   title:'⭐ Шоколад с собой — фишка YAHYA',
+   situation:'Гость доедает десерт, видно что понравилось.',
+   script:'«Понравился трюфель? Такие же есть на витрине, в коробках — можно домой или коллегам. Упакую, пока вы допиваете кофе, если хотите?»',
+   why:'Гость УЖЕ попробовал продукт — дальше продаёт вкус, а не описание. Закрытие на действие («упакую») — гость только кивает. Превращает визит в бар в розничный чек. У конкурентов этой связки нет.',
+   avoid:'«Заходите в магазин» · «Может что-то с собой?» · вообще не предлагать.'},
+
+  {id:'b-obj-diet',type:'script',role:'bar',stage:'objection',
+   title:'«Я на диете / не ем сладкое»',
+   situation:'Гость отказывается от десерта с этой формулировкой.',
+   script:'«Тогда попробуйте наш тёмный 85% — сахара там минимум, почти чистое какао. Или горький с морской солью — тоже не сладкий. Маленький кусочек к кофе — не грех.»',
+   why:'Принимаем диету, не спорим. Предлагаем продукт, который её НЕ нарушает. «Не грех» — снимаем вину, разрешаем.',
+   avoid:'«Ну хорошо, как скажете» · «Может чай без сахара тогда?» · отступать при первом отказе.'},
+
+  {id:'b-close-bill',type:'script',role:'bar',stage:'close',
+   title:'Счёт + последнее окно',
+   situation:'Гость просит счёт.',
+   script:'«Сейчас принесу. Пока считаю — может, с собой домой или коллегам добавить? Сегодня хорошо идёт [актуальная позиция / нац.коллекция], покажу на витрине за секунду.»',
+   why:'Момент ожидания счёта — последнее окно для допродажи. Гость всё равно ждёт. Конкретное предложение лучше абстрактного «ещё что-то?».',
+   avoid:'Просто «сейчас принесу» · отпускать без предложения · «что-то ещё?».'},
+
+  // ───────── ОБЩЕЕ ─────────
+  {id:'c-errors-silence',type:'script',role:'common',stage:'errors',
+   title:'Ошибка: молчание',
+   situation:'Продавец/официант стоит рядом с клиентом и ждёт, пока тот сам заговорит.',
+   script:'— вместо молчания:\n«Если что-то расскажу подробнее — я рядом. Вы на первое время просто посмотрите?»\nили\n«Вот сегодня новая коллекция приехала — показать?»',
+   why:'Клиент, особенно в Бишкеке, часто не начинает разговор первым — считает, что отвлекает. Молчание = упущенный чек в 80% случаев.',
+   avoid:'Стоять и смотреть · уйти «чтоб не давить» · «обращайтесь, если что» и исчезнуть.'},
+
+  {id:'c-errors-push',type:'script',role:'common',stage:'errors',
+   title:'Ошибка: предлагать всё подряд',
+   situation:'Продавец, не выявив потребность, начинает перечислять «у нас есть это, это, это».',
+   script:'Вместо перечисления — ОДИН уточняющий вопрос:\n«Для кого выбираете — себе или в подарок?»\nили\n«Какой вкус больше любите — молочный или тёмный?»',
+   why:'Перечисление без повода = шум. Клиент устает, закрывается, уходит. Один точный вопрос сокращает путь к покупке в 3 раза.',
+   avoid:'«У нас есть конфеты, плитки, драже, нуга, сабле...» · давать весь каталог сразу.'},
+
+  {id:'c-stopphrases',type:'script',role:'common',stage:'stopphrases',
+   title:'Фразы, которые нельзя говорить никогда',
+   situation:'Фразы, убивающие продажу или впечатление о бренде.',
+   script:'❌ «Это самое дешёвое у нас»\n❌ «Не знаю, я не пробовал(а)»\n❌ «Всё вкусное»\n❌ «Берут все»\n❌ «У нас дорого, я понимаю»\n❌ «Как хотите»\n❌ «Не за что» / «Не проблема» (вместо «Пожалуйста»)',
+   why:'Первые 4 обесценивают ваш товар и ваше мнение. Следующие создают ощущение, что клиент — обуза. В премиум-сегменте это фатально.',
+   avoid:'Все фразы слева. Если не знаешь ответа — «сейчас уточню у бариста/старшего».'},
+
+  // ───────── ПРАВИЛА ОБСЛУЖИВАНИЯ (БАР) ─────────
+  {id:'rule-pos-1',type:'rule',role:'bar',category:'Посуда и уборка',
+   title:'Не забирать последнюю пустую чашку',
+   why:'Последняя пустая чашка/тарелка, убранная при госте = сигнал «уходи». В премиум-сегменте читается мгновенно и обижает.',
+   violation:'Гость допил чай, официант тут же молча унёс чашку — гость чувствует, что его выпроваживают.'},
+
+  {id:'rule-pos-2',type:'rule',role:'bar',category:'Посуда и уборка',
+   title:'Убирать когда ВСЕ за столом закончили',
+   why:'Когда убираешь у одного, пока другой ещё ест, — торопишь всех.',
+   violation:'Одна подруга доела — ей тут же забрали тарелку, вторая ещё ест и чувствует себя неловко.'},
+
+  {id:'rule-pos-3',type:'rule',role:'bar',category:'Посуда и уборка',
+   title:'Посуду — на поднос, не стопкой',
+   why:'Стопка на столе выглядит неряшливо и создаёт шум. Поднос — стандарт премиум-сервиса.',
+   violation:'Собрал 5 тарелок в руках стопкой и понёс — гремит, капает, вид непрофессиональный.'},
+
+  {id:'rule-pos-4',type:'rule',role:'bar',category:'Посуда и уборка',
+   title:'Крошки и пятна убирать сразу',
+   why:'Чистый стол = внимание. Пятно, которое гость заметит раньше тебя, = провал.',
+   violation:'Пролил каплю соуса и «потом уберу» — гость сидит и видит пятно всю встречу.'},
+
+  {id:'rule-pod-1',type:'rule',role:'bar',category:'Подача',
+   title:'Напитки ставить справа, убирать слева',
+   why:'Стандарт правильной подачи: не тянешься через гостя, не мешаешь. Это база сервиса.',
+   violation:'Ставишь кофе левой рукой, тянешься через тарелку — задеваешь одежду гостя.'},
+
+  {id:'rule-pod-2',type:'rule',role:'bar',category:'Подача',
+   title:'Поднос — всегда в левой руке',
+   why:'Правая рука свободна для подачи. На автомате — меньше ошибок и аварий.',
+   violation:'Несёшь поднос правой, потом пытаешься поставить чашку той же рукой — перекладываешь на глазах у гостя.'},
+
+  {id:'rule-pod-3',type:'rule',role:'bar',category:'Подача',
+   title:'Первую чашку чая наливает официант на 2/3',
+   why:'Сейчас гость сам наливает с первой секунды — читается как «меня не обслуживают». Первая чашка от официанта = момент заботы. Чайник на столе = гость дальше сам, без зависания у столика.',
+   violation:'Принёс чайник и кружки, ушёл. Гость с порога всё делает сам.'},
+
+  {id:'rule-pod-4',type:'rule',role:'bar',category:'Подача',
+   title:'Горячее в тёплой чашке, холодное в холодном стакане',
+   why:'Температура посуды влияет на вкус и вид. Для премиум-сегмента это заметно и критично.',
+   violation:'Налил эспрессо в холодную чашку — пенка осела, клиент пьёт чуть тёплый кофе.'},
+
+  {id:'rule-pod-5',type:'rule',role:'bar',category:'Подача',
+   title:'Шоколад не трогать руками — только щипцами/лопаткой',
+   why:'Руки оставляют отпечатки и меняют температуру шоколада. Гигиена + презентация.',
+   violation:'Переложил трюфель на тарелку пальцами — клиент видит отпечаток на глазури.'},
+
+  {id:'rule-pod-6',type:'rule',role:'bar',category:'Подача',
+   title:'Не ставить тарелку поперёк разговора',
+   why:'Гости разговаривают — дождись микропаузы, скажи «можно поставить?». Не прерывай беседу молча.',
+   violation:'Встал между двумя гостями, которые разговаривают, и тянешься к столу — оба замолкают.'},
+
+  {id:'rule-com-1',type:'rule',role:'bar',category:'Коммуникация',
+   title:'Подойти в первые 2 минуты',
+   why:'Даже если гость не готов заказывать — подойди, скажи «меню, вода, я рядом». Это 95% впечатления о сервисе.',
+   violation:'Гость сел 5 минут назад, никто не подошёл — он уже думает, уходить или ждать.'},
+
+  {id:'rule-com-2',type:'rule',role:'bar',category:'Коммуникация',
+   title:'Check-back через 2 минуты после подачи',
+   why:'После того как принёс блюдо — через 2 минуты подойди: «всё нравится?». Один раз, не назойливо. Гость чувствует, что его не бросили.',
+   violation:'Принёс еду — исчез на 20 минут. Если что-то не так, гость молча ест невкусное и больше не придёт.'},
+
+  {id:'rule-com-3',type:'rule',role:'bar',category:'Коммуникация',
+   title:'Не стоять над столом',
+   why:'«Нависание» давит. Гость ощущает, что его торопят. Отошёл на 2 шага — гораздо комфортнее.',
+   violation:'Стоишь в шаге от стола и ждёшь заказ — гость чувствует себя под надзором.'},
+
+  {id:'rule-com-4',type:'rule',role:'bar',category:'Коммуникация',
+   title:'Не перебивать разговор',
+   why:'Гости говорят — ждёшь паузу, говоришь тихо и коротко. Перебил = сервис стал помехой.',
+   violation:'Встал и громко: «Готовы заказать?» посреди разговора.'},
+
+  {id:'rule-com-5',type:'rule',role:'bar',category:'Коммуникация',
+   title:'Не кричать через зал',
+   why:'Голосовое общение с коллегами через весь зал = атмосфера столовой, не премиум-кафе.',
+   violation:'«Саша, где мой раф?!» через весь зал.'},
+
+  {id:'rule-com-6',type:'rule',role:'bar',category:'Коммуникация',
+   title:'Не обсуждать других гостей/проблемы при клиентах',
+   why:'Гость слышит и думает: про меня тоже так. Убивает доверие к бренду.',
+   violation:'Двое официантов у стойки обсуждают предыдущего клиента или ошибку кухни.'},
+
+  {id:'rule-vid-1',type:'rule',role:'bar',category:'Внешний вид и поведение',
+   title:'Руки не в карманах',
+   why:'Руки в карманах / скрещены / на бёдрах = закрытая поза. Выглядит ленивым или недовольным.',
+   violation:'Стоишь у стойки, руки в карманах, смотришь в зал.'},
+
+  {id:'rule-vid-2',type:'rule',role:'bar',category:'Внешний вид и поведение',
+   title:'Не облокачиваться на столы, стены, стойку',
+   why:'Усталая поза = усталый сервис. Даже если устал — стоишь прямо.',
+   violation:'Оперся на соседний столик пока принимаешь заказ.'},
+
+  {id:'rule-vid-3',type:'rule',role:'bar',category:'Внешний вид и поведение',
+   title:'Не жевать, не есть, не пить в зале',
+   why:'Зал = сцена. Еда/питьё — только в служебной зоне, с паузой.',
+   violation:'Жуёшь жвачку разговаривая с гостем.'},
+
+  {id:'rule-vid-4',type:'rule',role:'bar',category:'Внешний вид и поведение',
+   title:'Телефон — только в служебной зоне',
+   why:'Телефон в руке при госте = «ты для меня фон». В премиум-сегменте смертельно.',
+   violation:'Листаешь инстаграм за стойкой пока гость пытается поймать взгляд.'},
+
+  {id:'rule-vid-5',type:'rule',role:'bar',category:'Внешний вид и поведение',
+   title:'Не трогать лицо / волосы / нос при подаче',
+   why:'Гигиена + эстетика. Гость видит руки, которые потом несут его еду.',
+   violation:'Поправил волосы и тут же взял тарелку.'},
+
+  {id:'rule-vid-6',type:'rule',role:'bar',category:'Внешний вид и поведение',
+   title:'Без сильной парфюмерии',
+   why:'Резкий парфюм перебивает запах шоколада и кофе — а это и есть ваш продукт. Гость буквально «не чувствует» YAHYA.',
+   violation:'Официант с сильным парфюмом наклонился поставить чашку — гость вместо кофе нюхает духи.'},
+
+  {id:'rule-mo-1',type:'rule',role:'bar',category:'Момент ухода',
+   title:'Счёт — только по просьбе',
+   why:'Принести счёт раньше = «уходите». Даже если очевидно, что гость закончил — ждёшь просьбы.',
+   violation:'Гость допил — официант положил чек рядом без просьбы.'},
+
+  {id:'rule-mo-2',type:'rule',role:'bar',category:'Момент ухода',
+   title:'После оплаты не маячить',
+   why:'Оплатил — дай спокойно допить, досидеть, договорить. Не ходи рядом с глазами «ну когда же».',
+   violation:'Гость рассчитался, но ещё пьёт кофе — официант кружит рядом каждые 30 секунд.'},
+
+  {id:'rule-mo-3',type:'rule',role:'bar',category:'Момент ухода',
+   title:'Не мыть пол / ставить стулья при гостях',
+   why:'Уборка в зале при живом госте = «закрываемся, уходите». Даже за 15 минут до закрытия.',
+   violation:'В 21:45 закрытие, гости ещё сидят, а ты уже моешь пол рядом.'},
+
+  {id:'rule-mo-4',type:'rule',role:'bar',category:'Момент ухода',
+   title:'Провожать словами «приходите ещё»',
+   why:'Сухое «до свидания» = конец общения. «Приходите ещё» = приглашение. Последняя фраза запоминается лучше всего.',
+   violation:'Гость уходит, молча киваем.'},
+
+  {id:'rule-loc-1',type:'rule',role:'bar',category:'Местная специфика',
+   title:'Старшему за столом — первому',
+   why:'Первому — меню, первому — заказ, первому — check-back. В нашей культуре это считывается мгновенно, ошибка обижает и вас, и всю компанию за столом.',
+   violation:'Принимаешь заказ с молодого, старший сидит и ждёт.'},
+
+  {id:'rule-loc-2',type:'rule',role:'bar',category:'Местная специфика',
+   title:'Чай наливать на 2/3 чашки',
+   why:'Традиция чайханы: недолитый = знак уважения + повод подойти ещё раз. Дополнительный контакт = возможность допродажи.',
+   violation:'Залил чашку до краёв — по местной традиции читается как «пейте и уходите».'},
+
+  {id:'rule-loc-3',type:'rule',role:'bar',category:'Местная специфика',
+   title:'С детьми — отдельное внимание',
+   why:'Поздороваться с ребёнком, спросить у родителей что можно принести (какао, молочный коктейль, маленькая плитка). Горячее — не рядом с ребёнком. Родители запоминают это сильнее, чем внимание к себе.',
+   violation:'Обратился только к родителям, поставил горячий кофе с края стола у ребёнка.'},
+
+  // ───────── ЧЕК-ЛИСТЫ СМЕНЫ ─────────
+  {id:'cl-retail',type:'checklist',role:'retail',
+   title:'Чек-лист смены продавца',
+   items:[
+     'Спросил у каждого клиента повод / для кого покупает',
+     'Ни разу не начал с «что подсказать?»',
+     'Предложил попробовать хотя бы одну конфету новому клиенту',
+     'Сделал минимум одну допродажу (кросс или апсейл) на каждые 3 чека',
+     'Знаю что сегодня нового на витрине — могу назвать по имени'
+   ]},
+
+  {id:'cl-bar',type:'checklist',role:'bar',
+   title:'Чек-лист смены официанта',
+   items:[
+     'Подошёл к каждому столу в первые 2 минуты',
+     'Предложил десерт к каждому заказу напитка минимум 1 раз',
+     'Налил первую чашку чая сам (не оставил гостя наливать с порога)',
+     'Предложил минимум 3 гостям за смену шоколад с собой с витрины',
+     'Не забрал последнюю чашку ни у одного гостя, пока он сидит',
+     'Назвал новинку дня хотя бы один раз — даже если гость не спросил'
+   ]}
+];
+
+// ════════════════════════════════════════════════
 // STATE
 // ════════════════════════════════════════════════
 let CARDS         = [];
 let GLOSSARY_DATA = [];
 let TOOLS_DATA    = [];
+let SCRIPTS_DATA  = [];
 
 let currentPage    = 'products';
 let currentSection = 'all';
 let currentCat     = 'Все';
 let currentToolFilter = 'all';
 let currentGFilter = 'all';
+let currentScriptRole = 'retail';  // retail | bar | common
+let currentTreeNode = null;        // node id inside active tree
+let currentTreePath = [];          // breadcrumb labels
 let editingId      = null;
-let editingType    = 'card'; // 'card' | 'gloss' | 'tool'
+let editingType    = 'card'; // 'card' | 'gloss' | 'tool' | 'script' | 'rule' | 'tree' | 'checklist'
 let isAdmin        = false;
 
 // ── PERSISTENCE HELPERS ──
@@ -13040,16 +13535,29 @@ function loadTools() {
   return JSON.parse(JSON.stringify(BUILTIN_TOOLS));
 }
 function saveToolsLS() { localStorage.setItem('yahya_tools_v1', JSON.stringify(TOOLS_DATA)); }
+function loadScripts() {
+  const s = localStorage.getItem('yahya_scripts_v1');
+  if (s) { try { return JSON.parse(s); } catch(e) {} }
+  return JSON.parse(JSON.stringify(BUILTIN_SCRIPTS));
+}
+function saveScriptsLS() { localStorage.setItem('yahya_scripts_v1', JSON.stringify(SCRIPTS_DATA)); }
 
 // ── MODAL DISPATCHER ──
 function saveModal() {
-  if (editingType === 'gloss') return saveGloss();
-  if (editingType === 'tool')  return saveTool();
+  if (editingType === 'gloss')     return saveGloss();
+  if (editingType === 'tool')      return saveTool();
+  if (editingType === 'script')    return saveScript();
+  if (editingType === 'rule')      return saveRule();
+  if (editingType === 'tree')      return saveTreeNode();
+  if (editingType === 'checklist') return saveChecklist();
   return saveCard();
 }
 function deleteEntity() {
-  if (editingType === 'gloss') return deleteGloss();
-  if (editingType === 'tool')  return deleteTool();
+  if (editingType === 'gloss')     return deleteGloss();
+  if (editingType === 'tool')      return deleteTool();
+  if (editingType === 'script')    return deleteScript();
+  if (editingType === 'rule')      return deleteRule();
+  if (editingType === 'tree')      return deleteTreeNode();
   return deleteCard();
 }
 
@@ -13057,6 +13565,7 @@ function deleteEntity() {
 function fabAction() {
   if (currentPage === 'tools')    return openToolModal(null);
   if (currentPage === 'glossary') return openGlossModal(null);
+  if (currentPage === 'scripts')  return openScriptModal(null);
   return openModal(null);
 }
 
@@ -13067,10 +13576,11 @@ async function loadFromSupabase() {
   const bar = document.getElementById('loadingBar');
   try {
     bar.classList.add('active');
-    const [cardsRes, glossRes, toolsRes] = await Promise.all([
+    const [cardsRes, glossRes, toolsRes, scriptsRes] = await Promise.all([
       sb.from('cards').select('data'),
       sb.from('glossary').select('data'),
-      sb.from('tools').select('data')
+      sb.from('tools').select('data'),
+      sb.from('scripts').select('data').then(r => r, () => ({data:null, error:null})) // scripts table may not exist yet
     ]);
     if (cardsRes.error) throw cardsRes.error;
     if (glossRes.error) throw glossRes.error;
@@ -13079,9 +13589,12 @@ async function loadFromSupabase() {
     const c = (cardsRes.data||[]).map(r => r.data);
     const g = (glossRes.data||[]).map(r => r.data);
     const t = (toolsRes.data||[]).map(r => r.data);
+    // scripts table might not exist — fall back to builtin silently
+    const scriptsTableOk = scriptsRes && !scriptsRes.error;
+    const s = scriptsTableOk ? (scriptsRes.data||[]).map(r => r.data) : [];
 
     // Auto-seed if DB is totally empty and admin logged in
-    if (c.length === 0 && g.length === 0 && t.length === 0) {
+    if (c.length === 0 && g.length === 0 && t.length === 0 && s.length === 0) {
       if (isAdmin) {
         showToast('База пустая — загружаю начальные данные…');
         await seedFromBuiltin();
@@ -13091,16 +13604,28 @@ async function loadFromSupabase() {
       CARDS = JSON.parse(JSON.stringify(BUILTIN_CARDS));
       GLOSSARY_DATA = JSON.parse(JSON.stringify(BUILTIN_GLOSSARY));
       TOOLS_DATA = JSON.parse(JSON.stringify(BUILTIN_TOOLS));
+      SCRIPTS_DATA = JSON.parse(JSON.stringify(BUILTIN_SCRIPTS));
     } else {
       CARDS = c.length ? c : CARDS;
       GLOSSARY_DATA = g.length ? g : GLOSSARY_DATA;
       TOOLS_DATA = t.length ? t : TOOLS_DATA;
+      // Scripts: if the table is missing or empty — keep builtin as fallback
+      if (scriptsTableOk) {
+        SCRIPTS_DATA = s.length ? s : JSON.parse(JSON.stringify(BUILTIN_SCRIPTS));
+        // Auto-seed scripts when table is empty and admin is logged in
+        if (s.length === 0 && isAdmin) {
+          showToast('Заливаю скрипты в базу…');
+          await seedScriptsOnly();
+        }
+      } else {
+        SCRIPTS_DATA = JSON.parse(JSON.stringify(BUILTIN_SCRIPTS));
+      }
     }
 
     // refresh offline cache
-    saveCards(); saveGlossaryLS(); saveToolsLS();
+    saveCards(); saveGlossaryLS(); saveToolsLS(); saveScriptsLS();
 
-    renderCards(); renderGlossary(); renderTools();
+    renderCards(); renderGlossary(); renderTools(); renderScripts();
     document.getElementById('apiBadge').classList.add('visible');
   } catch(e) {
     console.error('Supabase load failed', e);
@@ -13114,10 +13639,12 @@ async function seedFromBuiltin() {
   const cardsPayload = BUILTIN_CARDS.map(c => ({id:c.id, data:c}));
   const glossPayload = BUILTIN_GLOSSARY.map(g => ({id:g.id, data:g}));
   const toolsPayload = BUILTIN_TOOLS.map(t => ({id:t.id, data:t}));
-  const [c, g, t] = await Promise.all([
+  const scriptsPayload = BUILTIN_SCRIPTS.map(s => ({id:s.id, data:s}));
+  const [c, g, t, s] = await Promise.all([
     sb.from('cards').upsert(cardsPayload),
     sb.from('glossary').upsert(glossPayload),
-    sb.from('tools').upsert(toolsPayload)
+    sb.from('tools').upsert(toolsPayload),
+    sb.from('scripts').upsert(scriptsPayload).then(r => r, () => ({error:{message:'scripts table missing'}}))
   ]);
   if (c.error || g.error || t.error) {
     showToast('Ошибка загрузки начальных данных');
@@ -13127,9 +13654,23 @@ async function seedFromBuiltin() {
   CARDS = JSON.parse(JSON.stringify(BUILTIN_CARDS));
   GLOSSARY_DATA = JSON.parse(JSON.stringify(BUILTIN_GLOSSARY));
   TOOLS_DATA = JSON.parse(JSON.stringify(BUILTIN_TOOLS));
-  saveCards(); saveGlossaryLS(); saveToolsLS();
-  renderCards(); renderGlossary(); renderTools();
-  showToast(`Загружено: ${CARDS.length} карточек, ${GLOSSARY_DATA.length} терминов, ${TOOLS_DATA.length} инструментов`);
+  SCRIPTS_DATA = JSON.parse(JSON.stringify(BUILTIN_SCRIPTS));
+  saveCards(); saveGlossaryLS(); saveToolsLS(); saveScriptsLS();
+  renderCards(); renderGlossary(); renderTools(); renderScripts();
+  const scriptsNote = s.error ? ' (скрипты только локально — таблица в Supabase не создана)' : `, ${SCRIPTS_DATA.length} скриптов`;
+  showToast(`Загружено: ${CARDS.length} карточек, ${GLOSSARY_DATA.length} терминов, ${TOOLS_DATA.length} инструментов${scriptsNote}`);
+}
+
+async function seedScriptsOnly() {
+  const scriptsPayload = BUILTIN_SCRIPTS.map(s => ({id:s.id, data:s}));
+  const { error } = await sb.from('scripts').upsert(scriptsPayload);
+  if (error) {
+    console.error('scripts seed failed', error);
+    return;
+  }
+  SCRIPTS_DATA = JSON.parse(JSON.stringify(BUILTIN_SCRIPTS));
+  saveScriptsLS();
+  renderScripts();
 }
 
 // Shared helper: Supabase-write + local rollback on error
@@ -13876,6 +14417,576 @@ async function deleteTool() {
   showToast('Инструмент удалён');
 }
 
+// ════════════════════════════════════════════════
+// SCRIPTS PAGE — render
+// ════════════════════════════════════════════════
+let currentTreeRec = null;
+
+function renderScripts() {
+  const container = document.getElementById('scriptsContent');
+  if (!container) return;
+  const role = currentScriptRole;
+  document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.role === role);
+  });
+
+  const roleScripts = SCRIPTS_DATA.filter(s => s.role === role);
+  const tree = roleScripts.find(s => s.type === 'tree');
+  const scripts = roleScripts.filter(s => s.type === 'script');
+  const rules = roleScripts.filter(s => s.type === 'rule');
+  const checklists = roleScripts.filter(s => s.type === 'checklist');
+
+  let html = '';
+
+  if (role !== 'common') {
+    html += renderTreeBlock(tree, role);
+  }
+  html += renderScriptsByStage(scripts, role);
+  if (role === 'bar') {
+    if (rules.length) html += renderRulesBlock(rules);
+    else if (isAdmin) html += `<div class="scripts-block"><div class="scripts-block-title">📏 Правила обслуживания</div><div class="rules-grid"><div class="add-tile admin-only" onclick="openRuleModal(null)"><div class="plus">+</div><p>Добавить правило</p></div></div></div>`;
+  }
+  if (checklists.length) {
+    html += renderChecklistsBlock(checklists);
+  } else if (isAdmin && role !== 'common') {
+    html += `<div class="scripts-block"><div class="scripts-block-title">✅ Чек-лист смены</div><div class="add-tile admin-only" style="max-width:380px" onclick="openChecklistModal(null)"><div class="plus">+</div><p>Добавить чек-лист</p></div></div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function renderTreeBlock(tree, role) {
+  const title = role === 'retail' ? '🌳 Дерево потребности' : '🌳 Дерево гостя';
+  const sub = role === 'retail'
+    ? 'Отвечай на вопросы вместе с клиентом — в конце получишь рекомендацию, что предложить.'
+    : 'Определи тип визита гостя — получишь готовую связку «что продавать».';
+
+  let body;
+  if (!tree || !tree.nodes || !tree.start) {
+    body = `<div class="tree-box"><div class="tree-empty">Дерево ещё не создано.${isAdmin ? ' Нажми «Создать дерево» ниже.' : ''}</div>${isAdmin ? `<div class="tree-admin-bar"><button class="btn" onclick="createEmptyTree('${escAttr(role)}')">+ Создать дерево</button></div>` : ''}</div>`;
+  } else if (currentTreeRec) {
+    body = `<div class="tree-box">${renderBreadcrumb()}<div class="tree-recommendation"><div class="tree-rec-label">Рекомендация</div><div class="tree-rec-text">${escHtml(currentTreeRec).replace(/\n/g,'<br>')}</div></div></div>`;
+  } else {
+    const nodeId = currentTreeNode || tree.start;
+    const node = tree.nodes[nodeId] || tree.nodes[tree.start];
+    const opts = (node.options || []).map((o, i) => `<button class="tree-option" onclick="handleTreeOption(${i})"><span>${escHtml(o.label || '')}</span><span class="tree-option-arrow">→</span></button>`).join('');
+    body = `<div class="tree-box">
+      ${renderBreadcrumb()}
+      <div class="tree-question">${escHtml(node.question || '')}</div>
+      <div class="tree-options">${opts || '<div class="tree-empty">Нет вариантов в этом узле.</div>'}</div>
+      ${isAdmin ? renderTreeAdminBar(tree.id, nodeId) : ''}
+    </div>`;
+  }
+
+  return `<div class="scripts-block">
+    <div class="scripts-block-title">${title}</div>
+    <div class="scripts-block-subtitle">${sub}</div>
+    ${body}
+  </div>`;
+}
+
+function renderBreadcrumb() {
+  if (!currentTreePath.length && !currentTreeRec) return '';
+  let html = `<div class="tree-breadcrumb">
+    <span class="tree-breadcrumb-item" style="cursor:pointer" onclick="treeReset()">🌳 Начало</span>`;
+  currentTreePath.forEach(p => {
+    html += `<span class="tree-breadcrumb-sep">›</span><span class="tree-breadcrumb-item">${escHtml(p)}</span>`;
+  });
+  html += `<button class="tree-reset-btn" onclick="treeReset()">← Начать заново</button></div>`;
+  return html;
+}
+
+function renderTreeAdminBar(treeId, nodeId) {
+  return `<div class="tree-admin-bar">
+    <button class="btn" onclick="openTreeNodeModal('${escAttr(treeId)}','${escAttr(nodeId)}')">✎ Редактировать узел</button>
+    <button class="btn" onclick="openTreeNodeModal('${escAttr(treeId)}','')">+ Новый узел</button>
+    ${nodeId !== 'root' ? `<button class="btn danger" onclick="deleteTreeNode('${escAttr(treeId)}','${escAttr(nodeId)}')">Удалить узел</button>` : ''}
+  </div>`;
+}
+
+function handleTreeOption(optIdx) {
+  const tree = SCRIPTS_DATA.find(s => s.role === currentScriptRole && s.type === 'tree');
+  if (!tree) return;
+  const nodeId = currentTreeNode || tree.start;
+  const node = tree.nodes[nodeId];
+  const opt = node?.options?.[optIdx];
+  if (!opt) return;
+  currentTreePath.push(opt.label);
+  if (opt.recommendation) {
+    currentTreeRec = opt.recommendation;
+  } else if (opt.next) {
+    currentTreeNode = opt.next;
+  }
+  renderScripts();
+}
+
+function treeReset() {
+  currentTreeNode = null;
+  currentTreePath = [];
+  currentTreeRec = null;
+  renderScripts();
+}
+
+function renderScriptsByStage(scripts, role) {
+  const stages = SCRIPT_STAGES[role] || [];
+  const byStage = {};
+  scripts.forEach(s => { (byStage[s.stage] = byStage[s.stage] || []).push(s); });
+  const orderedStages = [...stages.filter(st => byStage[st.key])];
+  Object.keys(byStage).forEach(k => { if (!stages.find(st => st.key === k)) orderedStages.push({key:k, label:k}); });
+
+  if (!orderedStages.length) {
+    if (!isAdmin) return '';
+    return `<div class="scripts-block"><div class="scripts-block-title">📝 Скрипты по этапам</div><div class="scripts-block-subtitle">Пока нет скриптов для этой роли.</div></div>
+    <div class="tools-section"><div class="tools-grid"><div class="add-tile admin-only" onclick="openScriptModal(null)"><div class="plus">+</div><p>Добавить скрипт</p></div></div></div>`;
+  }
+
+  const stagesHtml = orderedStages.map(st => {
+    const list = byStage[st.key] || [];
+    return `<div class="tools-section" style="padding-top:4px">
+      <div class="tools-section-title">${escHtml(st.label)}</div>
+      <div class="tools-grid">
+        ${list.map(s => scriptCardHTML(s)).join('')}
+        ${isAdmin ? `<div class="add-tile admin-only" onclick="openScriptModal(null,'${escAttr(st.key)}')"><div class="plus">+</div><p>Добавить скрипт</p></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="scripts-block">
+    <div class="scripts-block-title">📝 Скрипты по этапам</div>
+    <div class="scripts-block-subtitle">Что говорить в конкретной ситуации. Нажми на карточку — увидишь готовую фразу, почему работает и чего избегать.</div>
+  </div>${stagesHtml}`;
+}
+
+function scriptCardHTML(s) {
+  const stages = SCRIPT_STAGES[s.role] || [];
+  const stageLabel = stages.find(st => st.key === s.stage)?.label || s.stage || '—';
+  return `<div class="script-card" id="scd-${escAttr(s.id)}" onclick="flipScript('${escAttr(s.id)}',event)">
+    ${isAdmin ? `<button class="script-edit-btn admin-only" onclick="openScriptModal('${escAttr(s.id)}');event.stopPropagation()" aria-label="Редактировать">✎</button>` : ''}
+    <div class="script-inner">
+      <div class="script-front">
+        <div class="script-stage-badge">${escHtml(stageLabel)}</div>
+        <div class="script-title">${escHtml(s.title || '')}</div>
+        <div class="script-situation">${escHtml(s.situation || '')}</div>
+        <div class="script-hint">Нажми для скрипта →</div>
+      </div>
+      <div class="script-back">
+        <div class="script-section-label">Что сказать</div>
+        <div class="script-text-quote">${escHtml(s.script || '').replace(/\n/g,'<br>')}</div>
+        ${s.why ? `<div class="script-section-label why">Почему работает</div><div class="script-why">${escHtml(s.why).replace(/\n/g,'<br>')}</div>` : ''}
+        ${s.avoid ? `<div class="script-section-label neg">Чего НЕ делать</div><div class="script-avoid">${escHtml(s.avoid).replace(/\n/g,'<br>')}</div>` : ''}
+        <div class="script-back-flip">← Назад</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function flipScript(id, e) {
+  if (e && e.target && e.target.closest('.script-edit-btn')) return;
+  document.getElementById('scd-'+id)?.classList.toggle('flipped');
+}
+
+function renderRulesBlock(rules) {
+  const byCat = {};
+  rules.forEach(r => { (byCat[r.category] = byCat[r.category] || []).push(r); });
+  const cats = RULE_CATEGORIES.filter(c => byCat[c]).concat(Object.keys(byCat).filter(c => !RULE_CATEGORIES.includes(c)));
+  const catsHtml = cats.map(cat => `
+    <div class="tools-section" style="padding-top:4px">
+      <div class="tools-section-title">${escHtml(cat)}</div>
+      <div class="rules-grid">
+        ${byCat[cat].map(r => ruleCardHTML(r)).join('')}
+        ${isAdmin ? `<div class="add-tile admin-only" onclick="openRuleModal(null,'${escAttr(cat)}')"><div class="plus">+</div><p>Добавить правило</p></div>` : ''}
+      </div>
+    </div>
+  `).join('');
+  return `<div class="scripts-block">
+    <div class="scripts-block-title">📏 Правила обслуживания</div>
+    <div class="scripts-block-subtitle">Стандарты сервиса, которые формируют впечатление о бренде. В премиум-сегменте эти правила дают ~50% «ощущения» качества.</div>
+  </div>${catsHtml}`;
+}
+
+function ruleCardHTML(r) {
+  return `<div class="rule-card">
+    ${isAdmin ? `<button class="rule-edit-btn admin-only" onclick="openRuleModal('${escAttr(r.id)}')" aria-label="Редактировать">✎</button>` : ''}
+    <div class="rule-cat">${escHtml(r.category || 'Правило')}</div>
+    <div class="rule-title">${escHtml(r.title || '')}</div>
+    ${r.why ? `<div class="rule-why">${escHtml(r.why)}</div>` : ''}
+    ${r.violation ? `<div class="rule-violation"><span class="rule-violation-label">Пример нарушения</span>${escHtml(r.violation)}</div>` : ''}
+  </div>`;
+}
+
+function renderChecklistsBlock(checklists) {
+  const inner = checklists.map(cl => `
+    <div class="checklist-box">
+      ${isAdmin ? `<button class="rule-edit-btn admin-only" onclick="openChecklistModal('${escAttr(cl.id)}')" aria-label="Редактировать">✎</button>` : ''}
+      <div class="checklist-title">${escHtml(cl.title || 'Чек-лист')}</div>
+      ${(cl.items||[]).map(item => `<div class="checklist-item" onclick="this.classList.toggle('checked')"><div class="checklist-check">✓</div><div class="checklist-text">${escHtml(item)}</div></div>`).join('')}
+    </div>
+  `).join('');
+  return `<div class="scripts-block">
+    <div class="scripts-block-title">✅ Чек-лист смены</div>
+    <div class="scripts-block-subtitle">Отмечай по ходу смены. Галочки сбрасываются — чек-лист для текущей смены, не журнал.</div>
+    ${inner}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════
+// SCRIPTS — edit (script / rule / tree / checklist)
+// ════════════════════════════════════════════════
+function openScriptModal(id, defaultStage) {
+  editingType = 'script';
+  editingId = id;
+  const s = id ? SCRIPTS_DATA.find(x => x.id === id && x.type === 'script') : null;
+  document.getElementById('modalTitle').textContent = s ? 'Редактировать скрипт' : 'Новый скрипт';
+  document.getElementById('btnDelete').style.display = s ? 'block' : 'none';
+  document.getElementById('modalBody').innerHTML = buildScriptForm(s, defaultStage);
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildScriptForm(s, defaultStage) {
+  const v = (k, def='') => s ? (s[k]||def) : def;
+  const role = v('role', currentScriptRole);
+  const stage = v('stage', defaultStage || '');
+  const roleOptions = [['retail','🛍 Розница'],['bar','☕ Бар'],['common','🧩 Общее']];
+  const stageOptions = SCRIPT_STAGES[role] || [];
+  return `
+  <div><div class="fsec">Скрипт продаж</div>
+    <div class="fgrid">
+      <div class="ff"><label>Роль</label>
+        <select id="sc-role" onchange="rebuildScriptStageOptions()">
+          ${roleOptions.map(([k,l]) => `<option value="${k}" ${role===k?'selected':''}>${escHtml(l)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="ff"><label>Этап</label>
+        <select id="sc-stage">
+          ${stageOptions.map(st => `<option value="${escAttr(st.key)}" ${stage===st.key?'selected':''}>${escHtml(st.label)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="ff" style="margin-top:12px"><label>Название / короткая суть</label><input id="sc-title" value="${escHtml(v('title'))}" placeholder="Напр. Молчаливый клиент у витрины"></div>
+    <div class="ff" style="margin-top:12px"><label>Ситуация (когда применять)</label><textarea id="sc-situation">${escHtml(v('situation'))}</textarea></div>
+  </div>
+  <div><div class="fsec">Содержание</div>
+    <div class="ff"><label>Что сказать (скрипт)</label><textarea id="sc-script" style="min-height:100px">${escHtml(v('script'))}</textarea></div>
+    <div class="ff" style="margin-top:12px"><label>Почему работает</label><textarea id="sc-why">${escHtml(v('why'))}</textarea></div>
+    <div class="ff" style="margin-top:12px"><label>Чего НЕ делать</label><textarea id="sc-avoid">${escHtml(v('avoid'))}</textarea></div>
+  </div>`;
+}
+
+function rebuildScriptStageOptions() {
+  const role = document.getElementById('sc-role').value;
+  const stages = SCRIPT_STAGES[role] || [];
+  const sel = document.getElementById('sc-stage');
+  sel.innerHTML = stages.map(st => `<option value="${escAttr(st.key)}">${escHtml(st.label)}</option>`).join('');
+}
+
+async function saveScript() {
+  const title = document.getElementById('sc-title').value.trim();
+  if (!title) { showToast('Введите название скрипта'); return; }
+  const role = document.getElementById('sc-role').value;
+  const stage = document.getElementById('sc-stage').value;
+  const situation = document.getElementById('sc-situation').value.trim();
+  const scriptText = document.getElementById('sc-script').value.trim();
+  const why = document.getElementById('sc-why').value.trim();
+  const avoid = document.getElementById('sc-avoid').value.trim();
+  if (!scriptText) { showToast('Введите саму фразу'); return; }
+  const prefix = {retail:'r', bar:'b', common:'c'}[role] || 's';
+  const id = editingId || (prefix + '-' + (stage||'new') + '-' + Date.now().toString(36).slice(-5));
+  const entry = {id, type:'script', role, stage, title, situation, script:scriptText, why, avoid};
+  const ok = await dbUpsert('scripts', id, entry);
+  if (!ok) return;
+  const idx = SCRIPTS_DATA.findIndex(x => x.id === editingId);
+  if (idx >= 0) SCRIPTS_DATA[idx] = entry; else SCRIPTS_DATA.push(entry);
+  saveScriptsLS();
+  closeModal();
+  renderScripts();
+  showToast(idx >= 0 ? 'Скрипт обновлён' : 'Скрипт добавлен');
+}
+
+async function deleteScript() {
+  if (!editingId) return;
+  if (!confirm('Удалить скрипт?')) return;
+  const ok = await dbDelete('scripts', editingId);
+  if (!ok) return;
+  SCRIPTS_DATA = SCRIPTS_DATA.filter(x => x.id !== editingId);
+  saveScriptsLS();
+  closeModal();
+  renderScripts();
+  showToast('Скрипт удалён');
+}
+
+// ── RULES ──
+function openRuleModal(id, defaultCat) {
+  editingType = 'rule';
+  editingId = id;
+  const r = id ? SCRIPTS_DATA.find(x => x.id === id && x.type === 'rule') : null;
+  document.getElementById('modalTitle').textContent = r ? 'Редактировать правило' : 'Новое правило';
+  document.getElementById('btnDelete').style.display = r ? 'block' : 'none';
+  document.getElementById('modalBody').innerHTML = buildRuleForm(r, defaultCat);
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildRuleForm(r, defaultCat) {
+  const v = (k, def='') => r ? (r[k]||def) : def;
+  const cat = v('category', defaultCat || RULE_CATEGORIES[0]);
+  const existingCats = [...new Set(SCRIPTS_DATA.filter(x=>x.type==='rule').map(x=>x.category).concat(RULE_CATEGORIES).filter(Boolean))];
+  return `
+  <div><div class="fsec">Правило обслуживания</div>
+    <div class="ff"><label>Категория</label>
+      <select id="rl-cat">
+        ${existingCats.map(c => `<option ${c===cat?'selected':''}>${escHtml(c)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="ff" style="margin-top:12px"><label>Или новая категория</label>
+      <input id="rl-cat-new" placeholder="Оставить пусто если выбрано выше">
+    </div>
+    <div class="ff" style="margin-top:12px"><label>Правило (одна строка)</label><input id="rl-title" value="${escHtml(v('title'))}" placeholder="Напр. Не забирать последнюю чашку"></div>
+    <div class="ff" style="margin-top:12px"><label>Почему (причина)</label><textarea id="rl-why">${escHtml(v('why'))}</textarea></div>
+    <div class="ff" style="margin-top:12px"><label>Пример нарушения</label><textarea id="rl-violation">${escHtml(v('violation'))}</textarea></div>
+  </div>`;
+}
+
+async function saveRule() {
+  const title = document.getElementById('rl-title').value.trim();
+  if (!title) { showToast('Введите правило'); return; }
+  const newCat = document.getElementById('rl-cat-new').value.trim();
+  const category = newCat || document.getElementById('rl-cat').value;
+  const why = document.getElementById('rl-why').value.trim();
+  const violation = document.getElementById('rl-violation').value.trim();
+  const id = editingId || ('rule-' + Date.now().toString(36).slice(-6));
+  const entry = {id, type:'rule', role:'bar', category, title, why, violation};
+  const ok = await dbUpsert('scripts', id, entry);
+  if (!ok) return;
+  const idx = SCRIPTS_DATA.findIndex(x => x.id === editingId);
+  if (idx >= 0) SCRIPTS_DATA[idx] = entry; else SCRIPTS_DATA.push(entry);
+  saveScriptsLS();
+  closeModal();
+  renderScripts();
+  showToast(idx >= 0 ? 'Правило обновлено' : 'Правило добавлено');
+}
+
+async function deleteRule() {
+  if (!editingId) return;
+  if (!confirm('Удалить правило?')) return;
+  const ok = await dbDelete('scripts', editingId);
+  if (!ok) return;
+  SCRIPTS_DATA = SCRIPTS_DATA.filter(x => x.id !== editingId);
+  saveScriptsLS();
+  closeModal();
+  renderScripts();
+  showToast('Правило удалено');
+}
+
+// ── TREE nodes ──
+async function createEmptyTree(role) {
+  if (!isAdmin) return;
+  const id = 'tree-' + role;
+  if (SCRIPTS_DATA.find(x => x.id === id)) { showToast('Дерево уже есть'); return; }
+  const tree = {id, type:'tree', role, title:(role==='retail'?'Дерево потребности':'Дерево гостя'), start:'root', nodes:{root:{question:'(введите корневой вопрос)', options:[]}}};
+  const ok = await dbUpsert('scripts', id, tree);
+  if (!ok) return;
+  SCRIPTS_DATA.push(tree);
+  saveScriptsLS();
+  renderScripts();
+  showToast('Дерево создано — теперь отредактируй корневой узел');
+}
+
+function openTreeNodeModal(treeId, nodeId) {
+  editingType = 'tree';
+  editingId = treeId + '::' + (nodeId || '');
+  const tree = SCRIPTS_DATA.find(x => x.id === treeId);
+  if (!tree) { showToast('Дерево не найдено'); return; }
+  const node = nodeId ? tree.nodes[nodeId] : null;
+  document.getElementById('modalTitle').textContent = node ? 'Редактировать узел' : 'Новый узел';
+  document.getElementById('btnDelete').style.display = (node && nodeId !== 'root') ? 'block' : 'none';
+  document.getElementById('modalBody').innerHTML = buildTreeNodeForm(tree, nodeId || '', node);
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildTreeNodeForm(tree, nodeId, node) {
+  const v = (k, def='') => node ? (node[k]||def) : def;
+  const nodeIds = Object.keys(tree.nodes);
+  const opts = node?.options || [];
+  const isRoot = nodeId === 'root';
+  return `
+  <div><div class="fsec">Узел дерева</div>
+    <div class="ff"><label>ID узла${isRoot?' (root — нельзя менять)':''}</label>
+      <input id="tr-nodeid" value="${escAttr(nodeId)}" ${isRoot?'readonly':''} placeholder="напр. gift-woman">
+    </div>
+    <div class="ff" style="margin-top:12px"><label>Вопрос</label>
+      <textarea id="tr-q" style="min-height:60px">${escHtml(v('question'))}</textarea>
+    </div>
+    <input type="hidden" id="tr-nodeids" value="${escAttr(nodeIds.join('|'))}">
+    <div class="ff" style="margin-top:16px"><label style="display:flex;align-items:center;justify-content:space-between">
+      <span>Варианты ответа</span>
+      <button class="btn" type="button" onclick="addTreeOptionRow()" style="padding:4px 12px;font-size:10px">+ Вариант</button>
+    </label></div>
+    <div id="tr-opts" style="display:flex;flex-direction:column;gap:10px">
+      ${opts.map((o,i) => treeOptionRow(o, i, nodeIds)).join('')}
+    </div>
+  </div>`;
+}
+
+function treeOptionRow(o, i, nodeIds) {
+  const isRec = !!o.recommendation;
+  const listId = 'tr-nodes-list-' + i + '-' + Date.now().toString(36).slice(-4);
+  return `<div class="tree-opt-row" style="border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:10px;background:rgba(255,248,240,.02)">
+    <div class="ff"><label>Текст опции</label>
+      <input class="tr-opt-label" value="${escAttr(o.label||'')}" placeholder="Напр. В подарок">
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button type="button" class="filter-btn tr-mode-next ${!isRec?'active':''}" onclick="setTreeOptMode(this,'next')">→ Следующий узел</button>
+      <button type="button" class="filter-btn tr-mode-rec ${isRec?'active':''}" onclick="setTreeOptMode(this,'rec')">★ Рекомендация</button>
+    </div>
+    <div class="ff tr-opt-next-wrap" style="margin-top:8px;${isRec?'display:none':''}">
+      <label>ID узла, куда вести</label>
+      <input class="tr-opt-next" value="${escAttr(o.next||'')}" placeholder="напр. gift-woman" list="${listId}">
+      <datalist id="${listId}">${nodeIds.map(n => `<option value="${escAttr(n)}">`).join('')}</datalist>
+    </div>
+    <div class="ff tr-opt-rec-wrap" style="margin-top:8px;${!isRec?'display:none':''}">
+      <label>Текст рекомендации</label>
+      <textarea class="tr-opt-rec">${escHtml(o.recommendation||'')}</textarea>
+    </div>
+    <div style="text-align:right;margin-top:6px">
+      <button type="button" class="btn danger" onclick="this.closest('.tree-opt-row').remove()" style="font-size:10px;padding:4px 10px">Удалить вариант</button>
+    </div>
+  </div>`;
+}
+
+function addTreeOptionRow() {
+  const container = document.getElementById('tr-opts');
+  const nodeIds = (document.getElementById('tr-nodeids').value || '').split('|').filter(Boolean);
+  const tmp = document.createElement('div');
+  tmp.innerHTML = treeOptionRow({}, container.children.length, nodeIds);
+  container.appendChild(tmp.firstElementChild);
+}
+
+function setTreeOptMode(btn, mode) {
+  const row = btn.closest('.tree-opt-row');
+  row.querySelectorAll('.tr-mode-next, .tr-mode-rec').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (mode === 'next') { row.querySelector('.tr-opt-next-wrap').style.display = ''; row.querySelector('.tr-opt-rec-wrap').style.display = 'none'; }
+  else { row.querySelector('.tr-opt-next-wrap').style.display = 'none'; row.querySelector('.tr-opt-rec-wrap').style.display = ''; }
+}
+
+async function saveTreeNode() {
+  const [treeId, oldNodeId] = (editingId || '::').split('::');
+  const tree = SCRIPTS_DATA.find(x => x.id === treeId);
+  if (!tree) { showToast('Дерево не найдено'); return; }
+  const newNodeId = (document.getElementById('tr-nodeid').value || '').trim();
+  if (!newNodeId) { showToast('Введите ID узла'); return; }
+  if (/\s/.test(newNodeId)) { showToast('ID без пробелов (используйте - или _)'); return; }
+  const question = document.getElementById('tr-q').value.trim();
+  const rows = [...document.querySelectorAll('#tr-opts .tree-opt-row')];
+  const options = rows.map(row => {
+    const label = row.querySelector('.tr-opt-label').value.trim();
+    const isRec = row.querySelector('.tr-opt-rec-wrap').style.display !== 'none';
+    if (isRec) return {label, recommendation: row.querySelector('.tr-opt-rec').value.trim()};
+    return {label, next: row.querySelector('.tr-opt-next').value.trim()};
+  }).filter(o => o.label);
+
+  const newTree = JSON.parse(JSON.stringify(tree));
+  const isNew = !oldNodeId;
+  if (!isNew && oldNodeId !== newNodeId) {
+    delete newTree.nodes[oldNodeId];
+    // fix references
+    Object.values(newTree.nodes).forEach(n => { if (n.options) n.options.forEach(o => { if (o.next === oldNodeId) o.next = newNodeId; }); });
+  }
+  newTree.nodes[newNodeId] = {question, options};
+
+  const ok = await dbUpsert('scripts', newTree.id, newTree);
+  if (!ok) return;
+  const idx = SCRIPTS_DATA.findIndex(x => x.id === newTree.id);
+  if (idx >= 0) SCRIPTS_DATA[idx] = newTree; else SCRIPTS_DATA.push(newTree);
+  saveScriptsLS();
+  currentTreeNode = newNodeId === 'root' ? null : newNodeId;
+  currentTreeRec = null;
+  closeModal();
+  renderScripts();
+  showToast(isNew ? 'Узел создан' : 'Узел обновлён');
+}
+
+async function deleteTreeNode(treeIdOrUndef, nodeIdOrUndef) {
+  let treeId, nId;
+  if (nodeIdOrUndef === undefined) {
+    [treeId, nId] = (editingId || '::').split('::');
+  } else {
+    treeId = treeIdOrUndef; nId = nodeIdOrUndef;
+  }
+  if (!treeId || !nId || nId === 'root') { showToast('Нельзя удалить корневой узел'); return; }
+  if (!confirm('Удалить узел «'+nId+'»?')) return;
+  const tree = SCRIPTS_DATA.find(x => x.id === treeId);
+  if (!tree) return;
+  const newTree = JSON.parse(JSON.stringify(tree));
+  delete newTree.nodes[nId];
+  Object.values(newTree.nodes).forEach(n => { if (n.options) n.options.forEach(o => { if (o.next === nId) o.next = ''; }); });
+  const ok = await dbUpsert('scripts', treeId, newTree);
+  if (!ok) return;
+  const idx = SCRIPTS_DATA.findIndex(x => x.id === treeId);
+  if (idx >= 0) SCRIPTS_DATA[idx] = newTree;
+  saveScriptsLS();
+  currentTreeNode = null;
+  currentTreePath = [];
+  currentTreeRec = null;
+  if (nodeIdOrUndef === undefined) closeModal();
+  renderScripts();
+  showToast('Узел удалён');
+}
+
+// ── CHECKLIST ──
+function openChecklistModal(id) {
+  editingType = 'checklist';
+  editingId = id;
+  const cl = id ? SCRIPTS_DATA.find(x => x.id === id && x.type === 'checklist') : null;
+  document.getElementById('modalTitle').textContent = cl ? 'Редактировать чек-лист' : 'Новый чек-лист';
+  document.getElementById('btnDelete').style.display = cl ? 'block' : 'none';
+  document.getElementById('modalBody').innerHTML = buildChecklistForm(cl);
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildChecklistForm(cl) {
+  const v = (k, def='') => cl ? (cl[k]||def) : def;
+  const role = v('role', currentScriptRole==='common'?'retail':currentScriptRole);
+  const itemsText = (cl?.items || []).join('\n');
+  return `
+  <div><div class="fsec">Чек-лист смены</div>
+    <div class="fgrid">
+      <div class="ff"><label>Роль</label>
+        <select id="cl-role">
+          <option value="retail" ${role==='retail'?'selected':''}>🛍 Розница</option>
+          <option value="bar" ${role==='bar'?'selected':''}>☕ Бар</option>
+        </select>
+      </div>
+      <div class="ff"><label>Название</label>
+        <input id="cl-title" value="${escHtml(v('title'))}" placeholder="Чек-лист смены">
+      </div>
+    </div>
+    <div class="ff" style="margin-top:12px"><label>Пункты (по одному на строку)</label>
+      <textarea id="cl-items" style="min-height:160px">${escHtml(itemsText)}</textarea>
+    </div>
+  </div>`;
+}
+
+async function saveChecklist() {
+  const title = document.getElementById('cl-title').value.trim();
+  const role = document.getElementById('cl-role').value;
+  const items = document.getElementById('cl-items').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  if (!items.length) { showToast('Добавьте хотя бы один пункт'); return; }
+  const id = editingId || ('cl-' + role + '-' + Date.now().toString(36).slice(-5));
+  const entry = {id, type:'checklist', role, title: title || 'Чек-лист смены', items};
+  const ok = await dbUpsert('scripts', id, entry);
+  if (!ok) return;
+  const idx = SCRIPTS_DATA.findIndex(x => x.id === editingId);
+  if (idx >= 0) SCRIPTS_DATA[idx] = entry; else SCRIPTS_DATA.push(entry);
+  saveScriptsLS();
+  closeModal();
+  renderScripts();
+  showToast(idx >= 0 ? 'Чек-лист обновлён' : 'Чек-лист добавлен');
+}
+
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));}
 
 function closeModal() {
@@ -14070,7 +15181,7 @@ async function exitAdmin() {
   await sb.auth.signOut();
   isAdmin = false;
   document.body.classList.remove('is-admin');
-  renderCards(); renderGlossary(); renderTools();
+  renderCards(); renderGlossary(); renderTools(); renderScripts();
   showToast('Вышли из режима редактора');
 }
 
@@ -14078,7 +15189,7 @@ async function exitAdmin() {
 // EXPORT / IMPORT
 // ════════════════════════════════════════════════
 function exportData() {
-  const blob = new Blob([JSON.stringify({cards:CARDS,glossary:GLOSSARY_DATA,tools:TOOLS_DATA},null,2)],{type:'application/json'});
+  const blob = new Blob([JSON.stringify({cards:CARDS,glossary:GLOSSARY_DATA,tools:TOOLS_DATA,scripts:SCRIPTS_DATA},null,2)],{type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'yahya_wiki_export.json';
@@ -14094,13 +15205,15 @@ function importData(e) {
       if (data.cards?.length)   { CARDS = data.cards; saveCards(); renderCards(); }
       if (data.glossary?.length){ GLOSSARY_DATA = data.glossary; saveGlossaryLS(); renderGlossary(); }
       if (data.tools?.length)   { TOOLS_DATA = data.tools; saveToolsLS(); renderTools(); }
-      showToast(`Локально: ${data.cards?.length||0} карточек, ${data.glossary?.length||0} терминов, ${data.tools?.length||0} инструментов. Синхронизация с облаком…`);
+      if (data.scripts?.length) { SCRIPTS_DATA = data.scripts; saveScriptsLS(); renderScripts(); }
+      showToast(`Локально: ${data.cards?.length||0} карт., ${data.glossary?.length||0} терм., ${data.tools?.length||0} инстр., ${data.scripts?.length||0} скр. Синхронизация…`);
       // Пушим в Supabase, если админ залогинен
       if (isAdmin) {
         const tasks = [];
         if (data.cards?.length)    tasks.push(dbUpsertMany('cards',    data.cards.map(c    => ({id:c.id, data:c}))));
         if (data.glossary?.length) tasks.push(dbUpsertMany('glossary', data.glossary.map(g => ({id:g.id, data:g}))));
         if (data.tools?.length)    tasks.push(dbUpsertMany('tools',    data.tools.map(t    => ({id:t.id, data:t}))));
+        if (data.scripts?.length)  tasks.push(dbUpsertMany('scripts',  data.scripts.map(s  => ({id:s.id, data:s}))));
         const results = await Promise.all(tasks);
         if (results.every(r => r)) {
           showToast('Синхронизировано с облаком ✓');
@@ -14134,13 +15247,15 @@ async function init() {
   if (!CARDS.length) CARDS = JSON.parse(JSON.stringify(BUILTIN_CARDS));
   GLOSSARY_DATA = loadGlossary();
   TOOLS_DATA    = loadTools();
+  SCRIPTS_DATA  = loadScripts();
 
   renderCards();
   renderTools();
   renderGlossary();
+  renderScripts();
 
   const hash = location.hash.replace('#','');
-  if (['products','tools','glossary'].includes(hash)) navigateTo(hash);
+  if (['products','tools','glossary','scripts'].includes(hash)) navigateTo(hash);
 
   // restore admin session if present
   try {
@@ -14148,7 +15263,7 @@ async function init() {
     if (session) {
       isAdmin = true;
       document.body.classList.add('is-admin');
-      renderCards(); renderGlossary(); renderTools();
+      renderCards(); renderGlossary(); renderTools(); renderScripts();
       // proactively refresh on load so we always have a fresh access token
       // (iOS Safari throttles autoRefreshToken timers in background tabs)
       sb.auth.refreshSession().catch(e => console.warn('refresh on init failed', e));
@@ -14168,9 +15283,22 @@ async function init() {
       if (isAdmin) {
         isAdmin = false;
         document.body.classList.remove('is-admin');
-        renderCards(); renderGlossary(); renderTools();
+        renderCards(); renderGlossary(); renderTools(); renderScripts();
       }
     }
+  });
+
+  // scripts subnav (retail/bar/common)
+  document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentScriptRole = btn.dataset.role;
+      currentTreeNode = null;
+      currentTreePath = [];
+      currentTreeRec = null;
+      renderScripts();
+    });
   });
 
   // pull fresh data from Supabase
