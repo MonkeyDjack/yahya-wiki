@@ -511,11 +511,11 @@ body.is-admin .rule-edit-btn{display:flex;}
 <div id="page-scripts" class="page">
   <div class="page-header">
     <h2>Скрипты продаж</h2>
-    <p>Что говорить клиенту на каждом этапе. Выбери свою роль — розница или бар.</p>
+    <p>Что говорить клиенту на каждом этапе. Выбери свой участок — касса или столики.</p>
   </div>
   <div class="scripts-subnav" id="scriptsSubnav">
-    <button class="subnav-btn active" data-role="retail"><span class="tab-icon">🛍</span> Розница</button>
-    <button class="subnav-btn" data-role="bar"><span class="tab-icon">☕</span> Бар</button>
+    <button class="subnav-btn active" data-role="retail"><span class="tab-icon">🛍</span> У кассы</button>
+    <button class="subnav-btn" data-role="bar"><span class="tab-icon">☕</span> У столиков</button>
     <button class="subnav-btn" data-role="common"><span class="tab-icon">🧩</span> Общее</button>
   </div>
   <div id="scriptsContent"></div>
@@ -14647,7 +14647,7 @@ function buildScriptForm(s, defaultStage) {
   const v = (k, def='') => s ? (s[k]||def) : def;
   const role = v('role', currentScriptRole);
   const stage = v('stage', defaultStage || '');
-  const roleOptions = [['retail','🛍 Розница'],['bar','☕ Бар'],['common','🧩 Общее']];
+  const roleOptions = [['retail','🛍 Обслуживание у кассы'],['bar','☕ Обслуживание столиков'],['common','🧩 Общее']];
   const stageOptions = SCRIPT_STAGES[role] || [];
   return `
   <div><div class="fsec">Скрипт продаж</div>
@@ -14956,8 +14956,8 @@ function buildChecklistForm(cl) {
     <div class="fgrid">
       <div class="ff"><label>Роль</label>
         <select id="cl-role">
-          <option value="retail" ${role==='retail'?'selected':''}>🛍 Розница</option>
-          <option value="bar" ${role==='bar'?'selected':''}>☕ Бар</option>
+          <option value="retail" ${role==='retail'?'selected':''}>🛍 Обслуживание у кассы</option>
+          <option value="bar" ${role==='bar'?'selected':''}>☕ Обслуживание столиков</option>
         </select>
       </div>
       <div class="ff"><label>Название</label>
