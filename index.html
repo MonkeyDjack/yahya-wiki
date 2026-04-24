@@ -13781,6 +13781,22 @@ function loadCards() {
 }
 function saveCards() { localStorage.setItem('yahya_cards_v4', JSON.stringify(CARDS)); }
 
+// Все категории, доступные для конкретной локации: базовые из DEFAULT_NAV +
+// пользовательские из NAV (localStorage) + реально использующиеся в CARDS +
+// опционально — явная категория редактируемой карточки (чтобы её option всегда
+// была в селекте, даже если NAV усечён).
+function getCardCategories(loc, extra = null) {
+  const s = new Set();
+  (DEFAULT_NAV[loc]?.categories || []).forEach(c => s.add(c));
+  (NAV[loc]?.categories || []).forEach(c => s.add(c));
+  CARDS.filter(c => c.location === loc && c.category).forEach(c => s.add(c.category));
+  if (extra) s.add(extra);
+  return s;
+}
+function getCardCategoriesSorted(loc, extra = null) {
+  return [...getCardCategories(loc, extra)].sort((a,b)=>a.localeCompare(b,'ru'));
+}
+
 function renderCards() {
   const counts = {all: CARDS.length};
   ['магазин','кухня','бар'].forEach(loc => {
@@ -13793,14 +13809,7 @@ function renderCards() {
 
   const sect = currentSection === 'all' ? null : currentSection;
   const filtered = sect ? CARDS.filter(c => c.location === sect) : CARDS;
-  const cats = new Set(filtered.map(c => c.category).filter(Boolean));
-  // include both default categories (always shown for the section) and any user-added categories in NAV.
-  // Без мёрджа с DEFAULT_NAV у пользователей с устаревшим localStorage.NAV пропадали базовые категории.
-  if (sect) {
-    const defCats  = DEFAULT_NAV[sect]?.categories || [];
-    const userCats = NAV[sect]?.categories || [];
-    [...defCats, ...userCats].forEach(c => cats.add(c));
-  }
+  const cats = sect ? getCardCategories(sect) : new Set(filtered.map(c => c.category).filter(Boolean));
   const navCat = document.getElementById('navCategories');
   const catMgrBtn = isAdmin && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
   if (cats.size > 0 || isAdmin) {
@@ -14053,9 +14062,7 @@ function renderCatManagerModal(type, loc = null) {
     const currentLoc = loc || 'магазин';
     items = CARDS.filter(c => c.location === currentLoc);
     catField = 'category';
-    const fromNav  = NAV[currentLoc]?.categories || [];
-    const fromData = items.map(x => x.category).filter(Boolean);
-    categories = [...new Set([...fromNav, ...fromData])].sort();
+    categories = getCardCategoriesSorted(currentLoc);
     title = `Категории продуктов — ${currentLoc}`;
     const locs = ['магазин','кухня','бар'];
     locTabsHTML = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
@@ -15043,21 +15050,24 @@ function buildForm(c) {
   const occHTML = occasions.map((o,i) => `<div class="dyn-item"><input class="emoji-in" value="${o.emoji||''}" placeholder="🎁"><input placeholder="Повод" value="${o.text||''}"><button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button></div>`).join('');
 
   const locs = ['магазин','кухня','бар'];
-  const cats = NAV[v('location','магазин')]?.categories || [];
+  const currentLoc = v('location','магазин');
+  const currentCatVal = v('category');
+  // полный список категорий для текущей локации + гарантированно текущая категория карточки
+  const cats = getCardCategoriesSorted(currentLoc, currentCatVal);
 
   return `
   <div><div class="fsec">Основное</div>
     <div class="fgrid">
       <div class="ff"><label>Название</label><input id="f-name" value="${v('name')}"></div>
-      <div class="ff"><label>Тип / Категория продукта</label><input id="f-type" value="${v('type')}"></div>
+      <div class="ff"><label>Тип / Коллекция <span style="font-weight:normal;opacity:.6;font-size:10px">(свободный текст)</span></label><input id="f-type" value="${v('type')}" placeholder="Напр. Корпусная коллекция"></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
-      <div class="ff"><label>Локация</label><select id="f-location" onchange="updateCatSelect(this.value)">${locs.map(l=>`<option ${v('location')==l?'selected':''}>${l}</option>`).join('')}</select></div>
-      <div class="ff"><label>Раздел меню</label><select id="f-category">${cats.map(c=>`<option ${v('category')==c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="ff"><label>Локация <span style="font-weight:normal;opacity:.6;font-size:10px">(вкладка сайта)</span></label><select id="f-location" onchange="updateCatSelect(this.value)">${locs.map(l=>`<option ${v('location')==l?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="ff"><label>Категория меню <span style="font-weight:normal;opacity:.6;font-size:10px">(фильтр в навигации)</span></label><select id="f-category">${cats.map(c=>`<option ${currentCatVal==c?'selected':''}>${escHtml(c)}</option>`).join('')}</select></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
       <div class="ff"><label>Бейдж (цена / вес)</label><input id="f-badge" value="${v('badge')}"></div>
-      <div class="ff"><label>Подкатегория</label><input id="f-sub" value="${v('subcategory')}"></div>
+      <div class="ff"><label>Подкатегория <span style="font-weight:normal;opacity:.6;font-size:10px">(опционально)</span></label><input id="f-sub" value="${v('subcategory')}" placeholder="Напр. Корпусные"></div>
     </div>
   </div>
   <div><div class="fsec">Описание</div>
@@ -15087,8 +15097,11 @@ function buildForm(c) {
 }
 
 function updateCatSelect(loc) {
-  const cats = NAV[loc]?.categories || [];
-  document.getElementById('f-category').innerHTML = cats.map(c=>`<option>${c}</option>`).join('');
+  // при смене локации показываем полный список категорий для неё — DEFAULT_NAV + NAV + данные
+  const sel = document.getElementById('f-category');
+  const prev = sel?.value;
+  const cats = getCardCategoriesSorted(loc);
+  sel.innerHTML = cats.map(c=>`<option ${prev===c?'selected':''}>${escHtml(c)}</option>`).join('');
 }
 function addPhrase() {
   document.getElementById('ph-list').insertAdjacentHTML('beforeend',
