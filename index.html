@@ -13794,9 +13794,12 @@ function renderCards() {
   const sect = currentSection === 'all' ? null : currentSection;
   const filtered = sect ? CARDS.filter(c => c.location === sect) : CARDS;
   const cats = new Set(filtered.map(c => c.category).filter(Boolean));
-  // also include NAV-defined empty categories for the current location
-  if (sect && NAV[sect]?.categories) {
-    NAV[sect].categories.forEach(c => cats.add(c));
+  // include both default categories (always shown for the section) and any user-added categories in NAV.
+  // Без мёрджа с DEFAULT_NAV у пользователей с устаревшим localStorage.NAV пропадали базовые категории.
+  if (sect) {
+    const defCats  = DEFAULT_NAV[sect]?.categories || [];
+    const userCats = NAV[sect]?.categories || [];
+    [...defCats, ...userCats].forEach(c => cats.add(c));
   }
   const navCat = document.getElementById('navCategories');
   const catMgrBtn = isAdmin && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
