@@ -478,24 +478,48 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
 .scripts-block-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:10px;}
 .scripts-block-subtitle{font-size:11.5px;color:var(--text-muted);line-height:1.6;margin-bottom:18px;max-width:760px;}
 
-/* Tree */
-.tree-box{position:relative;background:var(--bg-card);border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:var(--radius);padding:28px 30px;margin-bottom:14px;box-shadow:var(--shadow-sm);}
-.tree-breadcrumb{display:flex;flex-wrap:wrap;gap:4px;font-size:10.5px;color:var(--text-muted);margin-bottom:16px;align-items:center;letter-spacing:.5px;}
-.tree-breadcrumb-item{color:var(--text-accent-soft);}
-.tree-breadcrumb-sep{opacity:.4;}
-.tree-reset-btn{margin-left:auto;padding:6px 14px;border:1px solid rgba(var(--rgb-gold-500),.25);border-radius:20px;background:transparent;color:var(--text-muted);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
-.tree-reset-btn:hover{color:var(--accent);border-color:rgba(var(--rgb-gold-500),.5);}
-.tree-question{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--text-body);line-height:1.2;margin-bottom:22px;}
+/* Tree — chat-like conversation view */
+.tree-box{position:relative;background:var(--bg-card);border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:var(--radius);padding:28px 30px;margin-bottom:14px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:16px;}
+
+/* Шаг (вопрос + ответ) */
+.tree-step{display:flex;flex-direction:column;gap:10px;}
+
+/* Завершённый шаг — compact с кнопкой «изменить» */
+.tree-step-done{padding-bottom:14px;border-bottom:1px dashed rgba(var(--rgb-gold-500),.14);}
+.tree-step-q{font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.3;color:var(--text-muted);font-weight:300;letter-spacing:.2px;}
+.tree-step-a{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;padding:7px 12px 7px 9px;border:1px solid rgba(var(--rgb-gold-500),.22);border-radius:22px;background:rgba(var(--rgb-gold-500),.06);color:var(--text-body);font-family:'Jost',sans-serif;font-size:12.5px;cursor:pointer;transition:all .18s;}
+.tree-step-a:hover{background:rgba(var(--rgb-gold-500),.14);border-color:var(--accent);}
+.tree-step-check{width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--text-on-accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.tree-step-label{flex:1;}
+.tree-step-edit-hint{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);opacity:.7;padding-left:8px;margin-left:2px;border-left:1px solid rgba(var(--rgb-gold-500),.25);}
+.tree-step-a:hover .tree-step-edit-hint{color:var(--accent);opacity:1;}
+
+/* Активный шаг — крупный вопрос + опции */
+.tree-step-active{gap:18px;}
+.tree-step-q-active{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:var(--text-heading);line-height:1.2;}
+
+/* Опции (варианты ответа) */
 .tree-options{display:flex;flex-direction:column;gap:10px;}
-.tree-option{padding:16px 20px;border:1px solid rgba(var(--rgb-gold-500),.22);border-radius:10px;background:rgba(var(--rgb-choco-800),.02);color:var(--text-body);font-size:14px;line-height:1.5;cursor:pointer;transition:all .18s;text-align:left;font-family:'Jost',sans-serif;display:flex;align-items:center;gap:12px;}
-.tree-option:hover{border-color:var(--accent);background:rgba(var(--rgb-gold-500),.08);}
+.tree-option{padding:16px 20px;border:1px solid rgba(var(--rgb-gold-500),.22);border-radius:10px;background:rgba(var(--rgb-choco-900),.1);color:var(--text-body);font-size:14px;line-height:1.5;cursor:pointer;transition:all .18s;text-align:left;font-family:'Jost',sans-serif;display:flex;align-items:center;gap:12px;}
+.tree-option:hover{border-color:var(--accent);background:rgba(var(--rgb-gold-500),.1);transform:translateX(2px);}
 .tree-option-arrow{color:var(--accent);opacity:.55;margin-left:auto;font-size:18px;line-height:1;}
-.tree-recommendation{padding:22px 24px;background:rgba(var(--rgb-gold-500),.08);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;}
-.tree-rec-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.85;margin-bottom:10px;}
-.tree-rec-text{font-family:'Cormorant Garamond',serif;font-size:19px;line-height:1.45;color:var(--text-body);}
-.tree-admin-bar{display:none;gap:8px;margin-top:16px;padding-top:14px;border-top:1px dashed rgba(var(--rgb-gold-500),.2);flex-wrap:wrap;}
+
+/* Рекомендация — финальный блок */
+.tree-recommendation{padding:22px 24px;background:rgba(var(--rgb-gold-500),.08);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;display:flex;flex-direction:column;gap:14px;}
+.tree-rec-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);opacity:.9;}
+.tree-rec-text{font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1.45;color:var(--text-heading);}
+.tree-reset-big{align-self:flex-start;margin-top:4px;}
+
+/* Маленькая «сбросить» под активным вопросом */
+.tree-reset-row{display:flex;justify-content:flex-end;margin-top:-4px;}
+.tree-reset-small{padding:4px 10px;border:none;background:transparent;color:var(--text-muted);font-size:10.5px;letter-spacing:.5px;cursor:pointer;transition:color .2s;font-family:'Jost',sans-serif;}
+.tree-reset-small:hover{color:var(--accent);}
+
+/* Админ-бар */
+.tree-admin-bar{display:none;gap:8px;margin-top:8px;padding-top:14px;border-top:1px dashed rgba(var(--rgb-gold-500),.2);flex-wrap:wrap;}
 body.is-admin .tree-admin-bar{display:flex;}
 .tree-admin-bar .btn{font-size:10px;}
+
 .tree-empty{padding:22px;text-align:center;color:var(--text-muted);font-size:12.5px;font-style:italic;}
 
 /* Script card (flip) */
@@ -548,7 +572,10 @@ body.is-admin .rule-edit-btn{display:flex;}
   .scripts-block{padding:18px 16px 8px;}
   .scripts-block-title{font-size:20px;}
   .tree-box{padding:20px 18px;}
-  .tree-question{font-size:22px;}
+  .tree-step-q-active{font-size:22px;}
+  .tree-step-q{font-size:13.5px;}
+  .tree-rec-text{font-size:17px;}
+  .tree-box{padding:18px 16px;gap:14px;}
   .tree-option{padding:13px 15px;font-size:13px;}
   .rules-grid{grid-template-columns:1fr;}
   .script-front,.script-back{padding:18px 20px;}
@@ -13650,8 +13677,10 @@ let currentCat     = 'Все';
 let currentToolFilter = 'all';
 let currentGFilter = 'all';
 let currentScriptRole = 'retail';  // retail | bar | common
-let currentTreeNode = null;        // node id inside active tree
-let currentTreePath = [];          // breadcrumb labels
+// currentTreePath — полный журнал прохождения дерева. Каждый элемент:
+//   {nodeId, question, optIdx, label, next, recommendation}
+// Пустой массив = мы на корневом вопросе. Последний шаг с recommendation = финал.
+let currentTreePath = [];
 let editingId      = null;
 let editingType    = 'card'; // 'card' | 'gloss' | 'tool' | 'script' | 'rule' | 'tree' | 'checklist'
 let isAdmin        = false;
@@ -14564,8 +14593,6 @@ async function deleteTool() {
 // ════════════════════════════════════════════════
 // SCRIPTS PAGE — render
 // ════════════════════════════════════════════════
-let currentTreeRec = null;
-
 function renderScripts() {
   const container = document.getElementById('scriptsContent');
   if (!container) return;
@@ -14602,72 +14629,133 @@ function renderScripts() {
 function renderTreeBlock(tree, role) {
   const title = role === 'retail' ? '🌳 Дерево потребности' : '🌳 Дерево гостя';
   const sub = role === 'retail'
-    ? 'Отвечай на вопросы вместе с клиентом — в конце получишь рекомендацию, что предложить.'
-    : 'Определи тип визита гостя — получишь готовую связку «что продавать».';
+    ? 'Отвечай на вопросы вместе с клиентом. История видна сверху — можно вернуться к любому шагу.'
+    : 'Определи тип визита гостя. История видна сверху — можно вернуться к любому шагу.';
 
-  let body;
+  // Дерева нет
   if (!tree || !tree.nodes || !tree.start) {
-    body = `<div class="tree-box"><div class="tree-empty">Дерево ещё не создано.${isAdmin ? ' Нажми «Создать дерево» ниже.' : ''}</div>${isAdmin ? `<div class="tree-admin-bar"><button class="btn" onclick="createEmptyTree('${escAttr(role)}')">+ Создать дерево</button></div>` : ''}</div>`;
-  } else if (currentTreeRec) {
-    body = `<div class="tree-box">${renderBreadcrumb()}<div class="tree-recommendation"><div class="tree-rec-label">Рекомендация</div><div class="tree-rec-text">${escHtml(currentTreeRec).replace(/\n/g,'<br>')}</div></div></div>`;
-  } else {
-    const nodeId = currentTreeNode || tree.start;
-    const node = tree.nodes[nodeId] || tree.nodes[tree.start];
-    const opts = (node.options || []).map((o, i) => `<button class="tree-option" onclick="handleTreeOption(${i})"><span>${escHtml(o.label || '')}</span><span class="tree-option-arrow">→</span></button>`).join('');
-    body = `<div class="tree-box">
-      ${renderBreadcrumb()}
-      <div class="tree-question">${escHtml(node.question || '')}</div>
-      <div class="tree-options">${opts || '<div class="tree-empty">Нет вариантов в этом узле.</div>'}</div>
-      ${isAdmin ? renderTreeAdminBar(tree.id, nodeId) : ''}
-    </div>`;
+    const body = `<div class="tree-box"><div class="tree-empty">Дерево ещё не создано.${isAdmin ? ' Нажми «Создать дерево» ниже.' : ''}</div>${isAdmin ? `<div class="tree-admin-bar"><button class="btn" onclick="createEmptyTree('${escAttr(role)}')">+ Создать дерево</button></div>` : ''}</div>`;
+    return `<div class="scripts-block"><div class="scripts-block-title">${title}</div><div class="scripts-block-subtitle">${sub}</div>${body}</div>`;
   }
 
-  return `<div class="scripts-block">
-    <div class="scripts-block-title">${title}</div>
-    <div class="scripts-block-subtitle">${sub}</div>
-    ${body}
-  </div>`;
+  // Пройденные шаги (уже отвеченные вопросы)
+  const stepsHTML = currentTreePath.map((step, i) => `
+    <div class="tree-step tree-step-done">
+      <div class="tree-step-q">${escHtml(step.question || '')}</div>
+      <button class="tree-step-a" onclick="editTreeStep(${i})" aria-label="Изменить ответ">
+        <span class="tree-step-check">✓</span>
+        <span class="tree-step-label">${escHtml(step.label || '')}</span>
+        <span class="tree-step-edit-hint">изменить</span>
+      </button>
+    </div>
+  `).join('');
+
+  // Последний шаг определяет: показать активный вопрос или рекомендацию
+  const lastStep = currentTreePath[currentTreePath.length - 1];
+  let activeHTML = '';
+  let activeNodeId = null;
+
+  if (lastStep && lastStep.recommendation) {
+    // Путь завершён — показываем рекомендацию
+    activeHTML = `
+      <div class="tree-recommendation">
+        <div class="tree-rec-label">Рекомендация</div>
+        <div class="tree-rec-text">${escHtml(lastStep.recommendation).replace(/\n/g,'<br>')}</div>
+        <button class="btn tree-reset-big" onclick="treeReset()">🔄 Начать заново</button>
+      </div>
+    `;
+    // Для админ-бара — активный узел это тот, где была выбрана рекомендация
+    activeNodeId = lastStep.nodeId;
+  } else {
+    // Показываем текущий вопрос
+    activeNodeId = lastStep ? lastStep.next : tree.start;
+    const node = tree.nodes[activeNodeId];
+    if (!node) {
+      activeHTML = `<div class="tree-empty">Узел «${escHtml(activeNodeId || '')}» не найден в дереве.${isAdmin ? ' Создай его через «+ Новый узел» ниже.' : ''}</div>`;
+    } else {
+      const opts = (node.options || []).map((o, i) => `
+        <button class="tree-option" onclick="pickTreeOption(${currentTreePath.length}, ${i})">
+          <span>${escHtml(o.label || '')}</span>
+          <span class="tree-option-arrow">→</span>
+        </button>
+      `).join('');
+      activeHTML = `
+        <div class="tree-step tree-step-active">
+          <div class="tree-step-q-active">${escHtml(node.question || '')}</div>
+          <div class="tree-options">${opts || '<div class="tree-empty">У этого узла нет вариантов.</div>'}</div>
+        </div>
+      `;
+    }
+  }
+
+  // Маленькая «сбросить» кнопка — только если начали путь
+  const resetSmall = (currentTreePath.length > 0 && !(lastStep && lastStep.recommendation))
+    ? `<div class="tree-reset-row"><button class="tree-reset-small" onclick="treeReset()">↺ Сбросить все ответы</button></div>`
+    : '';
+
+  const adminHTML = isAdmin ? renderTreeAdminBar(tree, activeNodeId) : '';
+
+  return `
+    <div class="scripts-block">
+      <div class="scripts-block-title">${title}</div>
+      <div class="scripts-block-subtitle">${sub}</div>
+      <div class="tree-box">
+        ${stepsHTML}
+        ${activeHTML}
+        ${resetSmall}
+        ${adminHTML}
+      </div>
+    </div>
+  `;
 }
 
-function renderBreadcrumb() {
-  if (!currentTreePath.length && !currentTreeRec) return '';
-  let html = `<div class="tree-breadcrumb">
-    <span class="tree-breadcrumb-item" style="cursor:pointer" onclick="treeReset()">🌳 Начало</span>`;
-  currentTreePath.forEach(p => {
-    html += `<span class="tree-breadcrumb-sep">›</span><span class="tree-breadcrumb-item">${escHtml(p)}</span>`;
-  });
-  html += `<button class="tree-reset-btn" onclick="treeReset()">← Начать заново</button></div>`;
-  return html;
-}
-
-function renderTreeAdminBar(treeId, nodeId) {
+function renderTreeAdminBar(tree, activeNodeId) {
+  const treeId = tree.id;
+  const canEdit = activeNodeId && tree.nodes[activeNodeId];
+  const canDelete = canEdit && activeNodeId !== 'root';
   return `<div class="tree-admin-bar">
-    <button class="btn" onclick="openTreeNodeModal('${escAttr(treeId)}','${escAttr(nodeId)}')">✎ Редактировать узел</button>
+    ${canEdit ? `<button class="btn" onclick="openTreeNodeModal('${escAttr(treeId)}','${escAttr(activeNodeId)}')">✎ Редактировать текущий узел</button>` : ''}
     <button class="btn" onclick="openTreeNodeModal('${escAttr(treeId)}','')">+ Новый узел</button>
-    ${nodeId !== 'root' ? `<button class="btn danger" onclick="deleteTreeNode('${escAttr(treeId)}','${escAttr(nodeId)}')">Удалить узел</button>` : ''}
+    ${canDelete ? `<button class="btn danger" onclick="deleteTreeNode('${escAttr(treeId)}','${escAttr(activeNodeId)}')">Удалить этот узел</button>` : ''}
   </div>`;
 }
 
-function handleTreeOption(optIdx) {
+// Выбрать вариант на шаге stepIdx. Всё после этого шага обнуляется.
+function pickTreeOption(stepIdx, optIdx) {
   const tree = SCRIPTS_DATA.find(s => s.role === currentScriptRole && s.type === 'tree');
   if (!tree) return;
-  const nodeId = currentTreeNode || tree.start;
+
+  // Обрезаем путь до stepIdx
+  currentTreePath = currentTreePath.slice(0, stepIdx);
+
+  // Определяем активный узел на этом шаге
+  const nodeId = stepIdx === 0 ? tree.start : currentTreePath[stepIdx - 1].next;
   const node = tree.nodes[nodeId];
-  const opt = node?.options?.[optIdx];
+  if (!node) return;
+
+  const opt = node.options?.[optIdx];
   if (!opt) return;
-  currentTreePath.push(opt.label);
-  if (opt.recommendation) {
-    currentTreeRec = opt.recommendation;
-  } else if (opt.next) {
-    currentTreeNode = opt.next;
-  }
+
+  currentTreePath.push({
+    nodeId,
+    question: node.question || '',
+    optIdx,
+    label: opt.label || '',
+    next: opt.next,
+    recommendation: opt.recommendation
+  });
+
+  renderScripts();
+}
+
+// Вернуться к шагу stepIdx — раскрыть его снова для изменения.
+function editTreeStep(stepIdx) {
+  currentTreePath = currentTreePath.slice(0, stepIdx);
   renderScripts();
 }
 
 function treeReset() {
-  currentTreeNode = null;
   currentTreePath = [];
-  currentTreeRec = null;
   renderScripts();
 }
 
@@ -15045,8 +15133,8 @@ async function saveTreeNode() {
   const idx = SCRIPTS_DATA.findIndex(x => x.id === newTree.id);
   if (idx >= 0) SCRIPTS_DATA[idx] = newTree; else SCRIPTS_DATA.push(newTree);
   saveScriptsLS();
-  currentTreeNode = newNodeId === 'root' ? null : newNodeId;
-  currentTreeRec = null;
+  // После редактирования узла — сбрасываем путь чтобы изменения были видны с чистого листа
+  currentTreePath = [];
   closeModal();
   renderScripts();
   showToast(isNew ? 'Узел создан' : 'Узел обновлён');
@@ -15071,9 +15159,7 @@ async function deleteTreeNode(treeIdOrUndef, nodeIdOrUndef) {
   const idx = SCRIPTS_DATA.findIndex(x => x.id === treeId);
   if (idx >= 0) SCRIPTS_DATA[idx] = newTree;
   saveScriptsLS();
-  currentTreeNode = null;
   currentTreePath = [];
-  currentTreeRec = null;
   if (nodeIdOrUndef === undefined) closeModal();
   renderScripts();
   showToast('Узел удалён');
@@ -15444,9 +15530,7 @@ async function init() {
       document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentScriptRole = btn.dataset.role;
-      currentTreeNode = null;
       currentTreePath = [];
-      currentTreeRec = null;
       renderScripts();
     });
   });
