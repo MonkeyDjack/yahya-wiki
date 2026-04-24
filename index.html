@@ -14,19 +14,26 @@
    *  В CSS компонентов этими именами НЕ пользоваться.
    * ═══════════════════════════════════════════════════════════════ */
 
-  /* Коричневый — основа бренда. От самого тёмного к светлому. */
-  --color-choco-900: #2E1E11;   /* глубокий-глубокий (рамки/тени) */
-  --color-choco-800: #5A3E27;   /* контрастный (модалки, хедер) */
+  /* Коричневый — основа бренда. От самого тёмного к светлому.
+     На светлом фоне #845D3E карточки должны быть ЗАМЕТНО темнее
+     (иначе сливаются) — отсюда насыщенный градиент вниз. */
+  --color-choco-950: #1E130A;   /* глубже некуда — оверлеи, тени */
+  --color-choco-900: #2E1E11;   /* модалки, deep контраст */
+  --color-choco-850: #402B1A;   /* FLIP-оборот карточек */
+  --color-choco-800: #5A3E27;   /* хедер, полупрозрачные панели */
+  --color-choco-750: #6A4A2F;   /* промежуточное */
   --color-choco-700: #845D3E;   /* ← ОСНОВНОЙ ФОН страницы (задан владельцем) */
-  --color-choco-600: #9A7352;   /* карточка поверх фона */
-  --color-choco-500: #AE8865;   /* flip-оборот / elevated */
-  --color-choco-400: #C19F7D;   /* очень светлый (редко) */
+  --color-choco-600: #9A7352;   /* светлее фона (редко, hover подсветка) */
+  --color-choco-500: #AE8865;   /* ещё светлее */
+  --color-choco-400: #C19F7D;   /* совсем светло */
 
-  /* Кремовый — текст и светлые плоскости */
-  --color-cream-100: #F5E6CD;   /* ярчайший */
-  --color-cream-200: #EAD7B8;   /* основной текст */
-  --color-cream-300: #CFB793;   /* приглушённый */
-  --color-cream-400: #A8886B;   /* вторичный (meta, подписи) */
+  /* Кремовый — текст и светлые плоскости.
+     На светлом фоне #845D3E даже «muted» должен быть довольно ярким,
+     иначе сливается. Шкала подкручена для видимости. */
+  --color-cream-100: #F8EDD5;   /* ярчайший — заголовки */
+  --color-cream-200: #F0DFC0;   /* основной текст */
+  --color-cream-300: #D9C49E;   /* приглушённый */
+  --color-cream-400: #C3A87E;   /* вторичный (meta) — читаем и на фоне, и на карточке */
 
   /* Золото — акцент */
   --color-gold-300: #E4C181;   /* светло-золотое (hover/highlight) */
@@ -41,8 +48,10 @@
 
   /* RGB-тройки для rgba() с прозрачностью.
      Должны соответствовать hex-значениям выше. */
-  --rgb-choco-700:  132, 93, 62;
+  --rgb-choco-950:  30, 19, 10;
+  --rgb-choco-900:  46, 30, 17;
   --rgb-choco-800:  90, 62, 39;
+  --rgb-choco-700:  132, 93, 62;
   --rgb-cream-200:  234, 215, 184;
   --rgb-gold-500:   207, 168, 90;
   --rgb-danger:     201, 106, 85;
@@ -53,15 +62,18 @@
    *  Меняй только если хочешь поменять РОЛЬ цвета, не оттенок.
    * ═══════════════════════════════════════════════════════════════ */
 
-  /* — Фоны — */
-  --bg-page:          var(--color-choco-700);              /* body */
-  --bg-card:          var(--color-choco-600);              /* обычная карточка */
-  --bg-card-alt:      var(--color-choco-500);              /* flip-оборот, elevated */
-  --bg-deep:          var(--color-choco-800);              /* модалки, выделенные области */
-  --bg-modal-scrim:   rgba(var(--rgb-choco-800), .88);     /* фон за модалкой */
-  --bg-input:         rgba(var(--rgb-choco-800), .22);     /* инпуты, селекты */
-  --bg-tint-soft:     rgba(var(--rgb-choco-800), .06);     /* еле-еле заметная «вмятина» */
-  --bg-tint-medium:   rgba(var(--rgb-choco-800), .14);     /* чуть заметнее */
+  /* — Фоны —
+     На светлом основном фоне #845D3E карточки делаем ТЕМНЕЕ фона,
+     чтобы создать контраст «окно в глубину» — это классический
+     приём для светлых тем. */
+  --bg-page:          var(--color-choco-700);              /* body — светлый базовый */
+  --bg-card:          var(--color-choco-850);              /* тёмная карточка на светлом фоне */
+  --bg-card-alt:      var(--color-choco-800);              /* flip-оборот — чуть светлее card */
+  --bg-deep:          var(--color-choco-900);              /* модалки, глубокий контраст */
+  --bg-modal-scrim:   rgba(var(--rgb-choco-950), .78);     /* фон за модалкой */
+  --bg-input:         rgba(var(--rgb-choco-950), .22);     /* инпуты, селекты */
+  --bg-tint-soft:     rgba(var(--rgb-choco-900), .1);      /* еле-еле заметная «вмятина» */
+  --bg-tint-medium:   rgba(var(--rgb-choco-900), .22);     /* чуть заметнее */
   --bg-accent-soft:   rgba(var(--rgb-gold-500), .1);       /* лёгкая подсветка золотом */
   --bg-accent-medium: rgba(var(--rgb-gold-500), .18);      /* заметнее */
 
@@ -80,10 +92,10 @@
   --border-strong:    rgba(var(--rgb-gold-500), .55);      /* заметная */
   --border-active:    var(--color-gold-500);               /* активная (фокус) */
 
-  /* — Тени (карточкам на светлом фоне они нужны) — */
-  --shadow-sm: 0 2px 8px rgba(var(--rgb-choco-800), .22);
-  --shadow-md: 0 4px 14px rgba(var(--rgb-choco-800), .28);
-  --shadow-lg: 0 10px 28px rgba(var(--rgb-choco-800), .35);
+  /* — Тени (карточкам на светлом фоне они нужны; тень темнее чем фон) — */
+  --shadow-sm: 0 2px 8px rgba(var(--rgb-choco-950), .35);
+  --shadow-md: 0 4px 16px rgba(var(--rgb-choco-950), .45);
+  --shadow-lg: 0 12px 32px rgba(var(--rgb-choco-950), .55);
 
   /* — Акцент / гл. цвет действия — */
   --accent:           var(--color-gold-500);
@@ -140,7 +152,7 @@ body.is-admin .admin-badge{display:flex;}
 body.is-admin .admin-only{display:flex!important;}
 
 /* ── PAGE NAVIGATION ── */
-.page-nav{position:relative;z-index:10;border-bottom:1px solid rgba(var(--rgb-gold-500),.14);background:rgba(var(--rgb-choco-800),.6);backdrop-filter:blur(6px);display:flex;padding:0 40px;}
+.page-nav{position:relative;z-index:10;border-bottom:1px solid rgba(var(--rgb-gold-500),.2);background:rgba(var(--rgb-choco-900),.55);backdrop-filter:blur(6px);display:flex;padding:0 40px;}
 .page-tab{padding:16px 22px 14px;border:none;background:transparent;font-family:'Jost','Segoe UI',sans-serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-muted);cursor:pointer;transition:all .2s;border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;align-items:center;gap:8px;}
 .page-tab:hover{color:var(--text-body);}
 .page-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -159,7 +171,7 @@ body.is-admin .admin-only{display:flex!important;}
 .nav-categories.hidden{display:none;}
 .cat-tab{padding:6px 16px;border:1px solid rgba(var(--rgb-gold-500),.2);border-radius:40px;background:transparent;color:var(--text-muted);font-family:'Jost','Segoe UI',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
 .cat-tab:hover{border-color:rgba(var(--rgb-gold-500),.5);color:var(--text-accent-soft);}
-.cat-tab.active{background:var(--accent);border-color:var(--accent);color:var(--bg-page);font-weight:500;}
+.cat-tab.active{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent);font-weight:600;}
 
 /* ── PAGES ── */
 .page{display:none;}
@@ -225,7 +237,7 @@ body.is-admin .admin-only{display:flex!important;}
 .page-filter{padding:16px 40px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid rgba(var(--rgb-gold-500),.08);}
 .filter-btn{padding:6px 16px;border:1px solid rgba(var(--rgb-gold-500),.2);border-radius:40px;background:transparent;color:var(--text-muted);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
 .filter-btn:hover{border-color:rgba(var(--rgb-gold-500),.5);color:var(--text-accent-soft);}
-.filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg-page);font-weight:500;}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent);font-weight:600;}
 .tools-section{padding:32px 40px;}
 .tools-section-title{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);opacity:.7;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
 .tools-section-title::after{content:'';flex:1;height:1px;background:rgba(var(--rgb-gold-500),.12);}
@@ -300,7 +312,7 @@ body.is-admin .admin-only{display:flex!important;}
 .faq-pair{display:flex;flex-direction:column;gap:5px;flex:1;}
 .faq-pair input,.faq-pair textarea{background:rgba(var(--rgb-choco-800),.04);border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:8px;color:var(--text-body);font-family:'Jost',sans-serif;font-size:13px;padding:8px 11px;outline:none;transition:border-color .2s;width:100%;}
 .faq-pair textarea{resize:vertical;min-height:52px;}
-.btn-save{padding:9px 26px;background:var(--accent);border:none;border-radius:40px;color:var(--bg-page);font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s;}
+.btn-save{padding:9px 26px;background:var(--accent);border:none;border-radius:40px;color:var(--text-on-accent);font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s;}
 .btn-save:hover{background:var(--text-accent-soft);}
 .btn-cancel{padding:9px 18px;border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:40px;background:transparent;color:var(--text-muted);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;}
 .btn-cancel:hover{border-color:var(--accent);color:var(--accent);}
@@ -315,7 +327,7 @@ body.is-admin .admin-only{display:flex!important;}
 .pwd-input{width:100%;background:rgba(var(--rgb-choco-800),.05);border:1px solid rgba(var(--rgb-gold-500),.22);border-radius:10px;color:var(--text-body);font-family:'Jost',sans-serif;font-size:18px;padding:13px 16px;text-align:center;letter-spacing:6px;outline:none;margin-bottom:8px;transition:border-color .2s;display:block;}
 .pwd-input:focus{border-color:rgba(var(--rgb-gold-500),.55);}
 .pwd-error{font-size:11px;color:rgba(var(--rgb-alert-soft),.75);min-height:18px;margin-bottom:14px;}
-.btn-pwd-enter{width:100%;padding:11px;background:var(--accent);border:none;border-radius:40px;color:var(--bg-page);font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;margin-bottom:12px;transition:background .2s;}
+.btn-pwd-enter{width:100%;padding:11px;background:var(--accent);border:none;border-radius:40px;color:var(--text-on-accent);font-family:'Jost',sans-serif;font-size:11px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;margin-bottom:12px;transition:background .2s;}
 .btn-pwd-enter:hover{background:var(--text-accent-soft);}
 .btn-pwd-cancel{background:none;border:none;color:var(--text-muted);font-size:11px;letter-spacing:1px;cursor:pointer;}
 .btn-pwd-cancel:hover{color:var(--text-body);}
@@ -347,7 +359,7 @@ body.is-admin .add-tile{display:flex;}
 .card-add.add-tile{min-height:420px;}
 
 /* ── FLOATING ACTION BUTTON ── */
-.fab{display:none;position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:var(--bg-page);font-size:32px;font-weight:300;line-height:1;cursor:pointer;box-shadow:var(--shadow-lg);transition:all .2s;}
+.fab{display:none;position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:var(--text-on-accent);font-size:32px;font-weight:300;line-height:1;cursor:pointer;box-shadow:var(--shadow-lg);transition:all .2s;}
 .fab:hover,.fab:active{background:var(--text-accent-soft);transform:scale(1.05);}
 body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
 
@@ -459,7 +471,7 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
 .scripts-subnav::-webkit-scrollbar{display:none;}
 .subnav-btn{padding:10px 20px;border:1px solid rgba(var(--rgb-gold-500),.2);border-radius:40px;background:transparent;color:var(--text-muted);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;white-space:nowrap;flex-shrink:0;}
 .subnav-btn:hover{border-color:rgba(var(--rgb-gold-500),.5);color:var(--text-accent-soft);}
-.subnav-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg-page);font-weight:500;}
+.subnav-btn.active{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent);font-weight:600;}
 .subnav-btn .tab-icon{font-size:14px;}
 
 .scripts-block{padding:26px 40px 10px;}
@@ -527,7 +539,7 @@ body.is-admin .rule-edit-btn{display:flex;}
 .checklist-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(var(--rgb-gold-500),.08);font-size:13.5px;color:var(--text-body);line-height:1.5;cursor:pointer;}
 .checklist-item:last-child{border-bottom:none;}
 .checklist-check{flex-shrink:0;width:20px;height:20px;border:1.5px solid rgba(var(--rgb-gold-500),.35);border-radius:5px;margin-top:1px;transition:all .15s;display:flex;align-items:center;justify-content:center;color:transparent;font-size:13px;font-weight:700;}
-.checklist-item.checked .checklist-check{background:var(--accent);border-color:var(--accent);color:var(--bg-page);}
+.checklist-item.checked .checklist-check{background:var(--accent);border-color:var(--accent);color:var(--text-on-accent);}
 .checklist-item.checked .checklist-text{color:var(--text-muted);text-decoration:line-through;opacity:.65;}
 
 @media (max-width: 768px){
@@ -14166,7 +14178,7 @@ function renderCatManagerModal(type, loc = null) {
     title = `Категории продуктов — ${currentLoc}`;
     const locs = ['магазин','кухня','бар'];
     locTabsHTML = `<div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-      ${locs.map(l => `<button class="btn${l===currentLoc?' active':''}" style="${l===currentLoc?'background:var(--accent);color:var(--bg-page);border-color:var(--accent)':''}" onclick="openCatManager('card','${l}')">${l}</button>`).join('')}
+      ${locs.map(l => `<button class="btn${l===currentLoc?' active':''}" style="${l===currentLoc?'background:var(--accent);color:var(--text-on-accent);border-color:var(--accent)':''}" onclick="openCatManager('card','${l}')">${l}</button>`).join('')}
     </div>`;
   } else {
     items = type === 'gloss' ? GLOSSARY_DATA : TOOLS_DATA;
