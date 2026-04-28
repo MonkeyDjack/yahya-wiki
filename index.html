@@ -677,6 +677,12 @@ body.is-admin .rule-edit-btn{display:flex;}
 .tech-quiz-wrong .q{font-weight:600;font-size:14px;color:var(--text-heading);margin-bottom:8px;line-height:1.45;}
 .tech-quiz-wrong .your{color:var(--text-dim);font-size:13px;margin-bottom:4px;}
 .tech-quiz-wrong .right{color:var(--color-success);font-size:13px;font-weight:500;}
+/* ─── Quiz editor (admin) — переопределяем .ff input для опций ─── */
+.qq-option-row{display:flex !important;align-items:center;gap:8px;margin-top:6px;}
+.qq-option-row .qq-correct{width:18px !important;height:18px !important;padding:0 !important;flex:0 0 18px !important;background:rgba(var(--rgb-choco-800),.04) !important;accent-color:var(--accent);}
+.qq-option-row .qq-text-opt{flex:1 1 auto !important;width:auto !important;background:rgba(var(--rgb-choco-800),.04);border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:8px;color:var(--text-body);font-size:13px;padding:9px 11px;outline:none;font-family:'Jost','Segoe UI',sans-serif;}
+.qq-option-row .qq-text-opt:focus{border-color:rgba(var(--rgb-gold-500),.48);}
+.qq-options{padding-top:4px;}
 @media(max-width:720px){
   .tech-modules{padding:18px 14px;}
   .tech-topic-view{padding:18px 14px;}
