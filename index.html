@@ -683,6 +683,48 @@ body.is-admin .rule-edit-btn{display:flex;}
 .qq-option-row .qq-text-opt{flex:1 1 auto !important;width:auto !important;background:rgba(var(--rgb-choco-800),.04);border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:8px;color:var(--text-body);font-size:13px;padding:9px 11px;outline:none;font-family:'Jost','Segoe UI',sans-serif;}
 .qq-option-row .qq-text-opt:focus{border-color:rgba(var(--rgb-gold-500),.48);}
 .qq-options{padding-top:4px;}
+/* ─── Дашборд админа ─── */
+.dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px;}
+.dash-stat-card{padding:18px 22px;background:var(--bg-card);border:1px solid var(--border-default);border-radius:12px;}
+.dash-stat-num{font-size:32px;font-weight:700;color:var(--text-heading);line-height:1;}
+.dash-stat-num .of{font-size:18px;color:var(--text-dim);font-weight:500;}
+.dash-stat-lbl{margin-top:6px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-dim);}
+.dash-section{background:var(--bg-card);border:1px solid var(--border-default);border-radius:12px;padding:18px 20px;margin-bottom:18px;}
+.dash-section-header{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.dash-section-header h3{font-size:16px;color:var(--text-heading);}
+.dash-hint{font-size:12px;color:var(--text-muted);}
+.dash-users{display:flex;flex-direction:column;gap:8px;}
+.dash-user-row{display:grid;grid-template-columns:minmax(180px,1fr) 2fr auto;align-items:center;gap:18px;padding:14px 18px;background:var(--bg-deep);border:1px solid var(--border-subtle);border-radius:10px;cursor:pointer;transition:all .12s;}
+.dash-user-row:hover{border-color:var(--accent);transform:translateX(2px);}
+.dash-user-name-main{font-size:15px;font-weight:600;color:var(--text-heading);}
+.dash-user-meta{font-size:12px;color:var(--text-dim);margin-top:2px;}
+.dash-progress-block{display:flex;flex-direction:column;gap:6px;}
+.dash-progress-row{display:flex;align-items:center;gap:10px;font-size:12px;}
+.dash-progress-row .lbl{font-weight:600;color:var(--text-dim);width:24px;flex-shrink:0;}
+.dash-progress-row .bar{flex:1;height:8px;background:rgba(var(--rgb-choco-800),.20);border-radius:4px;overflow:hidden;min-width:80px;}
+.dash-progress-row .bar .fill{height:100%;background:var(--accent);transition:width .3s;}
+.dash-progress-row .num{font-weight:600;color:var(--text-body);width:40px;text-align:right;flex-shrink:0;}
+.dash-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;flex-shrink:0;}
+.dash-badge.passed{background:rgba(126,168,112,.15);color:var(--color-success);}
+.dash-badge.failed{background:rgba(168,58,44,.12);color:var(--danger-text);}
+.dash-badge.muted{background:rgba(var(--rgb-choco-800),.10);color:var(--text-muted);}
+.dash-arrow{font-size:20px;color:var(--text-dim);flex-shrink:0;}
+.dash-topic-list{display:flex;flex-direction:column;gap:4px;}
+.dash-topic-item{display:flex;align-items:center;gap:12px;padding:8px 12px;background:var(--bg-deep);border-radius:6px;font-size:13px;}
+.dash-topic-item .status{font-size:14px;color:var(--text-muted);width:16px;flex-shrink:0;}
+.dash-topic-item.done .status{color:var(--color-success);font-weight:bold;}
+.dash-topic-item .num{font-size:11px;color:var(--accent);font-weight:600;width:38px;flex-shrink:0;}
+.dash-topic-item .title{color:var(--text-body);}
+.dash-attempt{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 14px;background:var(--bg-deep);border-left:3px solid var(--border-default);border-radius:6px;margin-bottom:6px;flex-wrap:wrap;}
+.dash-attempt.passed{border-left-color:var(--color-success);}
+.dash-attempt.failed{border-left-color:var(--danger);}
+.dash-attempt-meta{font-size:13px;color:var(--text-dim);}
+.dash-attempt-score{font-size:14px;font-weight:600;color:var(--text-heading);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.dash-attempt-pct{font-size:12px;font-weight:400;color:var(--text-dim);}
+@media(max-width:720px){
+  .dash-user-row{grid-template-columns:1fr;gap:10px;}
+  .dash-arrow{display:none;}
+}
 @media(max-width:720px){
   .tech-modules{padding:18px 14px;}
   .tech-topic-view{padding:18px 14px;}
@@ -15985,10 +16027,14 @@ let currentCat     = 'Все';
 let currentToolFilter = 'all';
 let currentGFilter = 'all';
 let currentScriptRole = 'retail';  // retail | bar | common
-let currentTechView = 'modules';   // modules | topic | quiz | quiz-result
+let currentTechView = 'modules';   // modules | topic | quiz | quiz-result | dashboard | user-detail
 let currentTopicId  = null;        // активная тема при currentTechView='topic'
 let currentQuizId   = null;        // активный тест при currentTechView='quiz'
 let currentQuizAnswers = {};       // {questionIndex: optionIndex} — ответы текущей попытки
+let currentDetailUserId = null;    // активный сотрудник при currentTechView='user-detail'
+let ALL_PROFILES   = [];           // все профили (грузятся в дашборде админа)
+let ALL_PROGRESS   = [];           // прогресс всех пользователей
+let ALL_ATTEMPTS   = [];           // все попытки тестов всех пользователей
 // currentTreePath — полный журнал прохождения дерева. Каждый элемент:
 //   {nodeId, question, optIdx, label, next, recommendation}
 // Пустой массив = мы на корневом вопросе. Последний шаг с recommendation = финал.
@@ -16039,6 +16085,7 @@ function saveModal() {
   if (editingType === 'checklist') return saveChecklist();
   if (editingType === 'technique') return saveTechnique();
   if (editingType === 'quiz')      return saveQuiz();
+  if (editingType === 'profile')   return saveProfile();
   return saveCard();
 }
 function deleteEntity() {
@@ -16630,6 +16677,14 @@ function renderTechniques() {
     return renderQuizResultView(root);
   }
 
+  if (currentTechView === 'dashboard') {
+    return renderDashboardView(root);
+  }
+
+  if (currentTechView === 'user-detail' && currentDetailUserId) {
+    return renderUserDetailView(root);
+  }
+
   // Default — список модулей
   const m1 = getModuleData(1);
   const m2 = getModuleData(2);
@@ -16643,6 +16698,7 @@ function renderTechniques() {
         <div class="tech-userbar-meta">${escHtml(USER_PROFILE.branch || 'Филиал не указан')} · ${USER_PROFILE.role === 'admin' ? 'Админ' : 'Продавец'}</div>
       </div>
       <div class="tech-userbar-spacer"></div>
+      ${isAdmin ? `<button class="btn" onclick="openDashboard()">👥 Сотрудники</button>` : ''}
       <button class="btn" onclick="exitAdmin()">Выйти</button>
     </div>
   `;
@@ -16774,6 +16830,7 @@ function backToModules() {
   currentTechView = 'modules';
   currentTopicId = null;
   currentQuizId = null;
+  currentDetailUserId = null;
   renderTechniques();
 }
 
@@ -17438,6 +17495,353 @@ async function saveQuiz() {
 function deleteQuiz() {
   // Удалять тест не даём — он один на модуль и зашит в логику
   showToast('Тест нельзя удалить, можно только редактировать вопросы');
+}
+
+// ════════════════════════════════════════════════
+// АДМИН-ДАШБОРД: сотрудники, прогресс, попытки
+// ════════════════════════════════════════════════
+
+const BRANCH_LIST = ['Эркиндик','ЦУМ','Азия Молл','Аэропорт','Бишкек Парк','Азбука','NGROUP','Бар','Производство','Офис'];
+
+async function openDashboard() {
+  if (!isAdmin) { showToast('Только для админа'); return; }
+  currentTechView = 'dashboard';
+  // Рендер сразу с loading-состоянием
+  const root = document.getElementById('techniquesRoot');
+  if (root) {
+    root.innerHTML = `<div class="tech-modules"><div class="tech-userbar">
+      <button class="btn" onclick="backToModules()">← Назад</button>
+      <div style="font-size:18px;font-weight:600;color:var(--text-heading);margin-left:8px">👥 Загрузка дашборда…</div>
+    </div></div>`;
+  }
+  try {
+    const [pr, pg, at] = await Promise.all([
+      sb.from('profiles').select('*').order('created_at', {ascending:false}),
+      sb.from('user_progress').select('*'),
+      sb.from('quiz_attempts').select('*').order('attempted_at', {ascending:false})
+    ]);
+    if (pr.error) throw pr.error;
+    if (pg.error) throw pg.error;
+    if (at.error) throw at.error;
+    ALL_PROFILES = pr.data || [];
+    ALL_PROGRESS = pg.data || [];
+    ALL_ATTEMPTS = at.data || [];
+    renderTechniques();
+  } catch(e) {
+    console.error('dashboard load failed', e);
+    showToast('Ошибка загрузки дашборда: ' + (e.message||e));
+  }
+}
+
+function userModuleProgressPct(userId, num) {
+  const { topics } = getModuleData(num);
+  if (!topics.length) return 0;
+  const done = topics.filter(t =>
+    ALL_PROGRESS.some(pr => pr.user_id === userId && pr.technique_id === t.id)
+  ).length;
+  return Math.round(100 * done / topics.length);
+}
+
+function latestAttemptFor(quizId, userId) {
+  const atts = ALL_ATTEMPTS.filter(a => a.quiz_id === quizId && a.user_id === userId);
+  if (!atts.length) return null;
+  return atts[0]; // отсортированы desc по attempted_at
+}
+
+function userLastActive(userId) {
+  const ts = [
+    ...ALL_PROGRESS.filter(p => p.user_id === userId).map(p => new Date(p.completed_at).getTime()),
+    ...ALL_ATTEMPTS.filter(a => a.user_id === userId).map(a => new Date(a.attempted_at).getTime())
+  ];
+  if (!ts.length) return null;
+  return new Date(Math.max(...ts));
+}
+
+function formatRelativeTime(date) {
+  if (!date) return '—';
+  const ms = Date.now() - date.getTime();
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return 'только что';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min} мин назад`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr} ч назад`;
+  const days = Math.floor(hr / 24);
+  if (days < 30) return `${days} дн назад`;
+  const months = Math.floor(days / 30);
+  return `${months} мес назад`;
+}
+
+function formatDateTime(iso) {
+  const d = new Date(iso);
+  const day = String(d.getDate()).padStart(2, '0');
+  const mon = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'][d.getMonth()];
+  const hr = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${day} ${mon} ${hr}:${min}`;
+}
+
+function renderDashboardView(root) {
+  const sellers = ALL_PROFILES.filter(p => p.role === 'seller');
+  const totalSellers = sellers.length;
+  const passedM1 = sellers.filter(p => latestAttemptFor('module1', p.id)?.passed).length;
+  const passedM2 = sellers.filter(p => latestAttemptFor('module2', p.id)?.passed).length;
+
+  const sortedProfiles = [...ALL_PROFILES].sort((a,b) => {
+    if (a.role !== b.role) return a.role === 'admin' ? -1 : 1;
+    return (a.full_name || '').localeCompare(b.full_name || '');
+  });
+
+  const usersHTML = sortedProfiles.length === 0
+    ? `<p style="color:var(--text-dim);text-align:center;padding:40px 20px">Нет зарегистрированных сотрудников. Создавай аккаунты в Supabase Dashboard → Auth → Users.</p>`
+    : sortedProfiles.map(renderUserRow).join('');
+
+  root.innerHTML = `
+    <div class="tech-modules">
+      <div class="tech-userbar">
+        <button class="btn" onclick="backToModules()">← К модулям</button>
+        <div style="font-size:18px;font-weight:600;color:var(--text-heading);margin-left:14px">👥 Дашборд сотрудников</div>
+        <div class="tech-userbar-spacer"></div>
+        <button class="btn" onclick="openDashboard()" title="Обновить">↻ Обновить</button>
+      </div>
+
+      <div class="dash-stats">
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">${totalSellers}</div>
+          <div class="dash-stat-lbl">Продавцов</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">${passedM1}<span class="of">/${totalSellers||1}</span></div>
+          <div class="dash-stat-lbl">Сдали Модуль 1</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">${passedM2}<span class="of">/${totalSellers||1}</span></div>
+          <div class="dash-stat-lbl">Сдали Модуль 2</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">${ALL_ATTEMPTS.length}</div>
+          <div class="dash-stat-lbl">Попыток тестов</div>
+        </div>
+      </div>
+
+      <div class="dash-section">
+        <div class="dash-section-header">
+          <h3>Сотрудники</h3>
+          <div class="dash-hint">Чтобы добавить нового — Supabase Dashboard → Auth → Users → Add user</div>
+        </div>
+        <div class="dash-users">
+          ${usersHTML}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderUserRow(p) {
+  const m1pct = userModuleProgressPct(p.id, 1);
+  const m2pct = userModuleProgressPct(p.id, 2);
+  const m1att = latestAttemptFor('module1', p.id);
+  const m2att = latestAttemptFor('module2', p.id);
+  const lastActive = userLastActive(p.id);
+
+  const m1Badge = m1att
+    ? `<span class="dash-badge ${m1att.passed ? 'passed' : 'failed'}">${m1att.passed ? '✓' : '✗'} ${m1att.score}/${m1att.total}</span>`
+    : `<span class="dash-badge muted">—</span>`;
+  const m2Badge = m2att
+    ? `<span class="dash-badge ${m2att.passed ? 'passed' : 'failed'}">${m2att.passed ? '✓' : '✗'} ${m2att.score}/${m2att.total}</span>`
+    : `<span class="dash-badge muted">—</span>`;
+
+  return `
+    <div class="dash-user-row" onclick="openUserDetail('${p.id}')">
+      <div class="dash-user-name">
+        <div class="dash-user-name-main">
+          ${p.role === 'admin' ? '👑 ' : ''}${escHtml(p.full_name || '— без имени —')}
+        </div>
+        <div class="dash-user-meta">
+          ${escHtml(p.branch || 'филиал не указан')}
+          ${lastActive ? ` · ${escHtml(formatRelativeTime(lastActive))}` : ' · не заходил'}
+        </div>
+      </div>
+      <div class="dash-progress-block">
+        <div class="dash-progress-row">
+          <span class="lbl">М1</span>
+          <div class="bar"><div class="fill" style="width:${m1pct}%"></div></div>
+          <span class="num">${m1pct}%</span>
+          ${m1Badge}
+        </div>
+        <div class="dash-progress-row">
+          <span class="lbl">М2</span>
+          <div class="bar"><div class="fill" style="width:${m2pct}%"></div></div>
+          <span class="num">${m2pct}%</span>
+          ${m2Badge}
+        </div>
+      </div>
+      <div class="dash-arrow">→</div>
+    </div>
+  `;
+}
+
+function openUserDetail(userId) {
+  if (!isAdmin) return;
+  currentDetailUserId = userId;
+  currentTechView = 'user-detail';
+  renderTechniques();
+  window.scrollTo({top:0});
+}
+
+function renderUserDetailView(root) {
+  const p = ALL_PROFILES.find(x => x.id === currentDetailUserId);
+  if (!p) { backToModules(); return; }
+
+  const m1Topics = getModuleData(1).topics;
+  const m2Topics = getModuleData(2).topics;
+  const userAttempts = ALL_ATTEMPTS.filter(a => a.user_id === p.id);
+
+  const moduleProgressDetail = (num, topics) => `
+    <div class="dash-topic-list">
+      ${topics.map(t => {
+        const done = ALL_PROGRESS.some(pr => pr.user_id === p.id && pr.technique_id === t.id);
+        return `
+          <div class="dash-topic-item ${done ? 'done' : ''}">
+            <span class="status">${done ? '✓' : '○'}</span>
+            <span class="num">${escHtml(t.id)}</span>
+            <span class="title">${escHtml(t.data.title)}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  const attemptsHTML = userAttempts.length === 0
+    ? `<p style="color:var(--text-dim);font-size:13px">Тесты ещё не сдавал.</p>`
+    : userAttempts.map(a => {
+        const pct = Math.round(a.score / a.total * 100);
+        return `
+          <div class="dash-attempt ${a.passed ? 'passed' : 'failed'}">
+            <div class="dash-attempt-meta">
+              ${a.quiz_id === 'module1' ? '🎓 Модуль 1' : '🚀 Модуль 2'}
+              · ${escHtml(formatDateTime(a.attempted_at))}
+            </div>
+            <div class="dash-attempt-score">
+              ${a.score} / ${a.total}
+              <span class="dash-attempt-pct">(${pct}%)</span>
+              <span class="dash-badge ${a.passed?'passed':'failed'}">${a.passed?'✓ Сдан':'✗ Не сдан'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+  root.innerHTML = `
+    <div class="tech-topic-view">
+      <button class="tech-back-btn" onclick="openDashboard()">← К дашборду</button>
+      <h1>${p.role==='admin'?'👑 ':''}${escHtml(p.full_name || '— без имени —')}</h1>
+      <div class="tagline-big">${escHtml(p.branch || 'филиал не указан')} · ${p.role === 'admin' ? 'Админ' : 'Продавец'}</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
+        <button class="btn" onclick="openProfileEditor('${p.id}')">✎ Изменить профиль</button>
+        <button class="btn danger" onclick="resetUserProgress('${p.id}')">↺ Сбросить прогресс</button>
+      </div>
+
+      <div class="tech-section">
+        <h3>Модуль 1 — Основные техники (${userModuleProgressPct(p.id, 1)}%)</h3>
+        ${moduleProgressDetail(1, m1Topics)}
+      </div>
+
+      <div class="tech-section">
+        <h3>Модуль 2 — Дополнительные техники (${userModuleProgressPct(p.id, 2)}%)</h3>
+        ${moduleProgressDetail(2, m2Topics)}
+      </div>
+
+      <div class="tech-section">
+        <h3>Попытки тестов (${userAttempts.length})</h3>
+        ${attemptsHTML}
+      </div>
+    </div>
+  `;
+}
+
+function openProfileEditor(userId) {
+  if (!isAdmin) return;
+  editingType = 'profile';
+  editingId = userId;
+  const p = ALL_PROFILES.find(x => x.id === userId);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = 'Редактировать профиль';
+  document.getElementById('btnDelete').style.display = 'none';
+  const branchOptions = ['', ...BRANCH_LIST]
+    .map(b => `<option value="${escAttr(b)}" ${(p.branch||'')===b?'selected':''}>${b||'— не указан —'}</option>`)
+    .join('');
+  document.getElementById('modalBody').innerHTML = `
+    <div><div class="fsec">Профиль сотрудника</div>
+      <div class="ff"><label>Имя</label>
+        <input id="prof-name" value="${escAttr(p.full_name || '')}" placeholder="Айгуль Жумабаева">
+      </div>
+      <div class="ff" style="margin-top:12px"><label>Филиал</label>
+        <select id="prof-branch">${branchOptions}</select>
+      </div>
+      <div class="ff" style="margin-top:12px"><label>Роль</label>
+        <select id="prof-role">
+          <option value="seller" ${p.role==='seller'?'selected':''}>Продавец</option>
+          <option value="admin" ${p.role==='admin'?'selected':''}>Админ</option>
+        </select>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ может редактировать темы, тесты и видеть дашборд.</div>
+      </div>
+    </div>
+    <div><div class="fsec">Email (логин)</div>
+      <div style="font-size:13px;color:var(--text-dim)">${escHtml(p.id)}<br>Email менять нельзя — только через Supabase Dashboard.</div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveProfile() {
+  const id = editingId;
+  if (!id) return;
+  const full_name = document.getElementById('prof-name').value.trim();
+  const branch = document.getElementById('prof-branch').value;
+  const role = document.getElementById('prof-role').value;
+  const ok = await dbWrite(
+    () => sb.from('profiles').update({
+      full_name, branch, role, updated_at: new Date().toISOString()
+    }).eq('id', id),
+    'Ошибка сохранения профиля'
+  );
+  if (!ok) return;
+  const i = ALL_PROFILES.findIndex(p => p.id === id);
+  if (i >= 0) Object.assign(ALL_PROFILES[i], {full_name, branch, role});
+  // Если редактируем самого себя — обновляем USER_PROFILE
+  if (USER_PROFILE && USER_PROFILE.id === id) {
+    Object.assign(USER_PROFILE, {full_name, branch, role});
+    isAdmin = (role === 'admin');
+    document.body.classList.toggle('is-admin', isAdmin);
+  }
+  closeModal();
+  renderTechniques();
+  showToast('Профиль обновлён');
+}
+
+async function resetUserProgress(userId) {
+  const u = ALL_PROFILES.find(x => x.id === userId);
+  if (!u) return;
+  if (!confirm(`Сбросить весь прогресс «${u.full_name || u.id}»? Удалит «изучено» и историю попыток тестов.`)) return;
+  const [r1, r2] = await Promise.all([
+    sb.from('user_progress').delete().eq('user_id', userId),
+    sb.from('quiz_attempts').delete().eq('user_id', userId)
+  ]);
+  if (r1.error || r2.error) {
+    showToast('Ошибка сброса: ' + (r1.error?.message || r2.error?.message || ''));
+    return;
+  }
+  ALL_PROGRESS = ALL_PROGRESS.filter(p => p.user_id !== userId);
+  ALL_ATTEMPTS = ALL_ATTEMPTS.filter(a => a.user_id !== userId);
+  // Если сбросили самому себе — почистить локальное состояние
+  if (USER_PROFILE && USER_PROFILE.id === userId) {
+    USER_PROGRESS = [];
+    LATEST_ATTEMPTS = {};
+  }
+  showToast('Прогресс сброшен');
+  renderTechniques();
 }
 
 // ════════════════════════════════════════════════
