@@ -16086,6 +16086,7 @@ function saveModal() {
   if (editingType === 'technique') return saveTechnique();
   if (editingType === 'quiz')      return saveQuiz();
   if (editingType === 'profile')   return saveProfile();
+  if (editingType === 'newuser')   return saveNewUser();
   return saveCard();
 }
 function deleteEntity() {
@@ -17627,7 +17628,8 @@ function renderDashboardView(root) {
       <div class="dash-section">
         <div class="dash-section-header">
           <h3>Сотрудники</h3>
-          <div class="dash-hint">Чтобы добавить нового — Supabase Dashboard → Auth → Users → Add user</div>
+          <div class="dash-hint">Создавай аккаунты прямо отсюда</div>
+          <button class="btn" style="margin-left:auto" onclick="openCreateUserModal()">+ Добавить сотрудника</button>
         </div>
         <div class="dash-users">
           ${usersHTML}
@@ -17835,13 +17837,136 @@ async function resetUserProgress(userId) {
   }
   ALL_PROGRESS = ALL_PROGRESS.filter(p => p.user_id !== userId);
   ALL_ATTEMPTS = ALL_ATTEMPTS.filter(a => a.user_id !== userId);
-  // Если сбросили самому себе — почистить локальное состояние
   if (USER_PROFILE && USER_PROFILE.id === userId) {
     USER_PROGRESS = [];
     LATEST_ATTEMPTS = {};
   }
   showToast('Прогресс сброшен');
   renderTechniques();
+}
+
+// ── Создание нового сотрудника прямо из дашборда ──
+function openCreateUserModal() {
+  if (!isAdmin) { showToast('Только для админа'); return; }
+  editingType = 'newuser';
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Новый сотрудник';
+  document.getElementById('btnDelete').style.display = 'none';
+
+  const branchOptions = ['', ...BRANCH_LIST]
+    .map(b => `<option value="${escAttr(b)}">${b||'— не указан —'}</option>`)
+    .join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <div><div class="fsec">Создание аккаунта</div>
+      <div class="ff"><label>Имя сотрудника</label>
+        <input id="newuser-name" placeholder="Айгуль Жумабаева" autocomplete="off">
+      </div>
+      <div class="fgrid" style="margin-top:12px">
+        <div class="ff"><label>Логин</label>
+          <input id="newuser-login" placeholder="cum-aigul" autocomplete="off">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Простой логин — добавится @yahya.local. Или сразу полный email.</div>
+        </div>
+        <div class="ff"><label>Пароль</label>
+          <input id="newuser-pwd" type="text" placeholder="минимум 6 символов" autocomplete="new-password">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Сообщи продавцу — он сможет менять у тебя.</div>
+        </div>
+      </div>
+      <div class="fgrid" style="margin-top:12px">
+        <div class="ff"><label>Филиал</label>
+          <select id="newuser-branch">${branchOptions}</select>
+        </div>
+        <div class="ff"><label>Роль</label>
+          <select id="newuser-role">
+            <option value="seller" selected>Продавец</option>
+            <option value="admin">Админ</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;font-size:12px;color:var(--text-dim)">
+        После создания: сотрудник логинится теми же логином и паролем на главной странице → вкладка «Техники продаж».
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('newuser-name').focus(), 80);
+}
+
+async function saveNewUser() {
+  if (!isAdmin) { showToast('Только админ'); return; }
+  const name = document.getElementById('newuser-name').value.trim();
+  let login = document.getElementById('newuser-login').value.trim().toLowerCase();
+  const password = document.getElementById('newuser-pwd').value;
+  const branch = document.getElementById('newuser-branch').value;
+  const role = document.getElementById('newuser-role').value;
+
+  if (!name)   { showToast('Введи имя'); return; }
+  if (!login)  { showToast('Введи логин'); return; }
+  if (password.length < 6) { showToast('Пароль минимум 6 символов'); return; }
+
+  if (!login.includes('@')) login += '@yahya.local';
+  // Простая валидация формата
+  if (!/^[a-z0-9._+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(login)) {
+    showToast('Неверный формат логина'); return;
+  }
+
+  // 1) Сохраняем токены админа ДО signUp — signUp их вытеснит
+  const { data: { session: adminSession } } = await sb.auth.getSession();
+  if (!adminSession) { showToast('Сессия истекла, перелогинься'); return; }
+
+  showToast('Создаём аккаунт…');
+
+  let newUserId = null;
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email: login,
+      password,
+      options: { data: { full_name: name } }
+    });
+    if (error) throw error;
+    if (!data?.user) throw new Error('Юзер не возвращён');
+    newUserId = data.user.id;
+  } catch(e) {
+    // Восстанавливаем сессию админа на случай если signUp её сломал
+    await sb.auth.setSession({
+      access_token: adminSession.access_token,
+      refresh_token: adminSession.refresh_token
+    }).catch(() => {});
+    const msg = (e.message || String(e)).toLowerCase();
+    if (msg.includes('registered') || msg.includes('already')) {
+      showToast('Такой логин уже занят');
+    } else {
+      showToast('Ошибка: ' + (e.message || e));
+    }
+    return;
+  }
+
+  // 2) Восстанавливаем сессию админа (signUp залогинил нового юзера на этой вкладке)
+  const restoreRes = await sb.auth.setSession({
+    access_token: adminSession.access_token,
+    refresh_token: adminSession.refresh_token
+  });
+  if (restoreRes.error) {
+    showToast('Аккаунт создан, но сессия админа потерялась. Перелогинься заново.');
+    console.error('session restore failed', restoreRes.error);
+    closeModal();
+    return;
+  }
+
+  // 3) Обновляем профиль (триггер уже создал базовый — допишем поля)
+  const updates = { full_name: name };
+  if (branch) updates.branch = branch;
+  if (role && role !== 'seller') updates.role = role;
+  const { error: pErr } = await sb.from('profiles').update(updates).eq('id', newUserId);
+  if (pErr) {
+    console.warn('Profile update failed:', pErr);
+    showToast(`Аккаунт создан, но профиль не обновился: ${pErr.message}`);
+  }
+
+  closeModal();
+  showToast(`Создан: ${login}`);
+  await openDashboard(); // перезагружаем список
 }
 
 // ════════════════════════════════════════════════
