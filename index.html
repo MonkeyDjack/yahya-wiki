@@ -651,10 +651,37 @@ body.is-admin .rule-edit-btn{display:flex;}
 .tech-intro-block{margin-bottom:18px;}
 .tech-intro-block h3{font-size:16px;color:var(--text-heading);margin-bottom:8px;}
 .tech-intro-block .body{font-size:14px;line-height:1.6;color:var(--text-body);white-space:pre-wrap;}
+/* ─── Тесты ─── */
+.tech-quiz-view{max-width:760px;}
+.tech-quiz-meta{color:var(--text-dim);font-size:13px;margin-bottom:24px;padding:10px 14px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;}
+.tech-quiz-question{margin-bottom:22px;padding:20px 22px;background:var(--bg-card);border:1px solid var(--border-default);border-radius:12px;}
+.tech-quiz-q-num{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:6px;}
+.tech-quiz-q-text{font-size:16px;font-weight:600;color:var(--text-heading);margin-bottom:14px;line-height:1.45;}
+.tech-quiz-options{display:flex;flex-direction:column;gap:8px;}
+.tech-quiz-option{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:var(--bg-deep);border:1px solid var(--border-default);border-radius:8px;cursor:pointer;transition:all .15s;}
+.tech-quiz-option:hover{border-color:var(--accent);}
+.tech-quiz-option.selected{background:rgba(var(--rgb-gold-500),.10);border-color:var(--accent);}
+.tech-quiz-option input{margin-top:3px;flex-shrink:0;accent-color:var(--accent);}
+.tech-quiz-option-text{font-size:14px;color:var(--text-body);line-height:1.5;}
+.tech-quiz-submit-bar{position:sticky;bottom:14px;margin-top:24px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-lg);}
+.tech-quiz-submit-bar .lbl{flex:1;font-size:14px;color:var(--text-body);font-weight:500;}
+.tech-result-card{margin:24px 0;padding:36px 28px;background:var(--bg-card);border:2px solid var(--border-default);border-radius:14px;text-align:center;}
+.tech-result-card.passed{border-color:var(--color-success);background:linear-gradient(135deg,rgba(126,168,112,.10),var(--bg-card));}
+.tech-result-card.failed{border-color:var(--danger);background:linear-gradient(135deg,rgba(168,58,44,.08),var(--bg-card));}
+.tech-result-icon{font-size:48px;margin-bottom:8px;}
+.tech-result-card h1{font-size:28px;color:var(--text-heading);margin-bottom:10px;}
+.tech-result-score{font-size:44px;font-weight:700;color:var(--text-heading);margin-bottom:4px;line-height:1;}
+.tech-result-pct{color:var(--text-dim);font-size:13px;margin-bottom:14px;}
+.tech-result-msg{font-size:15px;color:var(--text-body);line-height:1.55;max-width:480px;margin:0 auto;}
+.tech-quiz-wrong{padding:14px 18px;background:rgba(168,58,44,.06);border-left:3px solid var(--danger);border-radius:6px;margin-bottom:10px;}
+.tech-quiz-wrong .q{font-weight:600;font-size:14px;color:var(--text-heading);margin-bottom:8px;line-height:1.45;}
+.tech-quiz-wrong .your{color:var(--text-dim);font-size:13px;margin-bottom:4px;}
+.tech-quiz-wrong .right{color:var(--color-success);font-size:13px;font-weight:500;}
 @media(max-width:720px){
   .tech-modules{padding:18px 14px;}
   .tech-topic-view{padding:18px 14px;}
   .tech-topics{grid-template-columns:1fr;}
+  .tech-quiz-question{padding:16px 18px;}
 }
 </style>
 </head>
@@ -15955,6 +15982,7 @@ let currentScriptRole = 'retail';  // retail | bar | common
 let currentTechView = 'modules';   // modules | topic | quiz | quiz-result
 let currentTopicId  = null;        // активная тема при currentTechView='topic'
 let currentQuizId   = null;        // активный тест при currentTechView='quiz'
+let currentQuizAnswers = {};       // {questionIndex: optionIndex} — ответы текущей попытки
 // currentTreePath — полный журнал прохождения дерева. Каждый элемент:
 //   {nodeId, question, optIdx, label, next, recommendation}
 // Пустой массив = мы на корневом вопросе. Последний шаг с recommendation = финал.
@@ -16003,6 +16031,8 @@ function saveModal() {
   if (editingType === 'rule')      return saveRule();
   if (editingType === 'tree')      return saveTreeNode();
   if (editingType === 'checklist') return saveChecklist();
+  if (editingType === 'technique') return saveTechnique();
+  if (editingType === 'quiz')      return saveQuiz();
   return saveCard();
 }
 function deleteEntity() {
@@ -16011,6 +16041,8 @@ function deleteEntity() {
   if (editingType === 'script')    return deleteScript();
   if (editingType === 'rule')      return deleteRule();
   if (editingType === 'tree')      return deleteTreeNode();
+  if (editingType === 'technique') return deleteTechnique();
+  if (editingType === 'quiz')      return deleteQuiz();
   return deleteCard();
 }
 
@@ -16650,9 +16682,15 @@ function renderTechniques() {
     const quizClick = (!quizDisabled && cdMs === 0)
       ? `startQuiz(${num})`
       : `showToast('Тест пока недоступен')`;
+    const adminEditBtn = isAdmin
+      ? `<button class="edit-btn admin-only" style="position:absolute;top:10px;right:10px"
+                  onclick="event.stopPropagation();openQuizEditor('module${num}')" title="Редактировать тест">✎</button>`
+      : '';
     const quizTile = `
       <div class="tech-quiz-tile ${quizDisabled || cdMs > 0 ? 'disabled' : ''}"
+           style="position:relative"
            onclick="${quizClick}">
+        ${adminEditBtn}
         <h4>📝 Аттестация Модуля ${num}</h4>
         <p>${escHtml(quizCaption)}</p>
         ${badgeHTML}
@@ -16674,6 +16712,12 @@ function renderTechniques() {
         <div class="tech-topics">
           ${introTile}
           ${topicsHTML}
+          ${isAdmin ? `<div class="tech-topic-tile" style="border-style:dashed;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer" onclick="openTechniqueEditor(null)">
+            <div>
+              <div style="font-size:32px;color:var(--accent);margin-bottom:6px">+</div>
+              <div style="font-size:13px;color:var(--text-dim)">Добавить тему в Модуль ${num}</div>
+            </div>
+          </div>` : ''}
         </div>
         <div style="margin-top:18px">${quizTile}</div>
       </div>
@@ -16686,7 +16730,7 @@ function renderTechniques() {
       ${renderModule(1, m1, false)}
       ${renderModule(2, m2, m2Locked)}
       ${isAdmin ? `<div style="margin-top:24px;padding:14px 18px;background:var(--bg-card);border:1px dashed var(--accent);border-radius:10px;font-size:13px;color:var(--text-dim)">
-        Режим админа: клик по карандашу на теме — редактировать. Управление тестами и пользователями — следующий этап.
+        Режим админа: клик по карандашу — редактировать тему/тест. Плитка «+ Добавить тему» создаёт новую. Дашборд по пользователям и попыткам — следующий этап.
       </div>` : ''}
     </div>
   `;
@@ -16826,21 +16870,568 @@ async function markTechniqueDone(id) {
   }
 }
 
-// Заглушки для следующего этапа (Б3)
+// ── Тесты (аттестация) ──
 function startQuiz(num) {
-  showToast('Аттестация — следующий этап разработки');
-  // TODO: currentQuizId = 'module' + num; currentTechView = 'quiz'; renderTechniques();
-}
-function renderQuizView(root) {
-  root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="backToModules()">← К модулям</button><p>Тест в разработке.</p></div>`;
-}
-function renderQuizResultView(root) {
-  root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="backToModules()">← К модулям</button><p>Результаты в разработке.</p></div>`;
+  const quiz = QUIZZES_DATA.find(q => q.id === 'module' + num);
+  if (!quiz) { showToast('Тест не найден'); return; }
+  if (quizCooldownRemainingMs(num) > 0) {
+    showToast('Подожди до следующей попытки');
+    return;
+  }
+  currentQuizId = 'module' + num;
+  currentTechView = 'quiz';
+  currentQuizAnswers = {};
+  renderTechniques();
+  window.scrollTo({top:0});
 }
 
-// Заглушка для admin-редактора темы (Б4)
+function renderQuizView(root) {
+  const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
+  if (!quiz) {
+    root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="backToModules()">← К модулям</button><p>Тест не найден.</p></div>`;
+    return;
+  }
+  const d = quiz.data;
+  const questions = d.questions || [];
+
+  const questionsHTML = questions.map((q, qi) => {
+    const optionsHTML = q.options.map((opt, oi) => {
+      const checked = currentQuizAnswers[qi] === oi ? 'checked' : '';
+      const selectedClass = currentQuizAnswers[qi] === oi ? 'selected' : '';
+      return `
+        <label class="tech-quiz-option ${selectedClass}" data-q="${qi}" data-o="${oi}">
+          <input type="radio" name="q${qi}" value="${oi}" ${checked} onchange="selectQuizAnswer(${qi},${oi})">
+          <span class="tech-quiz-option-text">${escHtml(opt.text)}</span>
+        </label>
+      `;
+    }).join('');
+    return `
+      <div class="tech-quiz-question">
+        <div class="tech-quiz-q-num">Вопрос ${qi + 1} из ${questions.length}</div>
+        <div class="tech-quiz-q-text">${escHtml(q.q)}</div>
+        <div class="tech-quiz-options">${optionsHTML}</div>
+      </div>
+    `;
+  }).join('');
+
+  const answered = Object.keys(currentQuizAnswers).length;
+  const allAnswered = answered === questions.length;
+
+  root.innerHTML = `
+    <div class="tech-topic-view tech-quiz-view">
+      <button class="tech-back-btn" onclick="cancelQuiz()">← Прервать</button>
+      <h1>${escHtml(d.title || 'Аттестация')}</h1>
+      <div class="tech-quiz-meta">
+        ${questions.length} вопросов · проходной балл ${d.pass_score || 80}%
+      </div>
+      ${questionsHTML}
+      <div class="tech-quiz-submit-bar">
+        <div class="lbl" id="quizAnsweredCount">Ответов: ${answered} из ${questions.length}</div>
+        <button class="tech-mark-done-btn" id="quizSubmitBtn"
+          ${allAnswered ? '' : 'disabled style="opacity:.4;cursor:not-allowed"'}
+          onclick="submitQuiz()">Сдать тест</button>
+      </div>
+    </div>
+  `;
+}
+
+function selectQuizAnswer(qi, oi) {
+  currentQuizAnswers[qi] = oi;
+  // Обновляем визуально без полного ререндера (чтобы не терять scroll)
+  document.querySelectorAll(`.tech-quiz-option[data-q="${qi}"]`).forEach(lbl => {
+    const isSelected = parseInt(lbl.dataset.o, 10) === oi;
+    lbl.classList.toggle('selected', isSelected);
+  });
+  const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
+  if (!quiz) return;
+  const total = (quiz.data.questions || []).length;
+  const answered = Object.keys(currentQuizAnswers).length;
+  const cnt = document.getElementById('quizAnsweredCount');
+  if (cnt) cnt.textContent = `Ответов: ${answered} из ${total}`;
+  if (answered === total) {
+    const btn = document.getElementById('quizSubmitBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+    }
+  }
+}
+
+function cancelQuiz() {
+  const answered = Object.keys(currentQuizAnswers).length;
+  if (answered > 0 && !confirm('Прервать тест? Ответы будут потеряны.')) return;
+  currentQuizAnswers = {};
+  backToModules();
+}
+
+async function submitQuiz() {
+  const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
+  if (!quiz || !USER_PROFILE) return;
+  const questions = quiz.data.questions || [];
+  let score = 0;
+  questions.forEach((q, qi) => {
+    const ai = currentQuizAnswers[qi];
+    if (ai != null && q.options[ai]?.correct) score++;
+  });
+  const total = questions.length;
+  const passScore = quiz.data.pass_score || 80;
+  const passed = total > 0 && (score / total * 100) >= passScore;
+
+  const ok = await dbWrite(
+    () => sb.from('quiz_attempts').insert({
+      user_id: USER_PROFILE.id,
+      quiz_id: currentQuizId,
+      score, total, passed,
+      answers: currentQuizAnswers
+    }),
+    'Ошибка сохранения результата'
+  );
+  if (!ok) return;
+
+  LATEST_ATTEMPTS[currentQuizId] = {
+    user_id: USER_PROFILE.id,
+    quiz_id: currentQuizId,
+    score, total, passed,
+    answers: currentQuizAnswers,
+    attempted_at: new Date().toISOString()
+  };
+
+  currentTechView = 'quiz-result';
+  renderTechniques();
+  window.scrollTo({top:0});
+}
+
+function renderQuizResultView(root) {
+  const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
+  if (!quiz) { backToModules(); return; }
+  const d = quiz.data;
+  const questions = d.questions || [];
+  const att = LATEST_ATTEMPTS[currentQuizId];
+  if (!att) { backToModules(); return; }
+  const passScore = d.pass_score || 80;
+  const pct = Math.round(att.score / att.total * 100);
+  const moduleNum = parseInt(currentQuizId.replace('module', ''), 10);
+
+  // Разбор ошибок
+  const wrongs = questions.map((q, qi) => {
+    const aIdx = (att.answers || {})[qi];
+    const userOpt = q.options[aIdx];
+    if (userOpt && userOpt.correct) return null;
+    const correctOpt = q.options.find(o => o.correct);
+    return {
+      qi,
+      q: q.q,
+      your: userOpt ? userOpt.text : '— не отвечено —',
+      right: correctOpt ? correctOpt.text : '—'
+    };
+  }).filter(Boolean);
+
+  const wrongHTML = wrongs.length === 0 ? `
+    <div class="tech-section">
+      <h3>Идеально</h3>
+      <div class="body">Все 25 ответов верные. Так держать!</div>
+    </div>
+  ` : `
+    <div class="tech-section">
+      <h3>Где ошибся (${wrongs.length})</h3>
+      ${wrongs.map(w => `
+        <div class="tech-quiz-wrong">
+          <div class="q">${escHtml(w.q)}</div>
+          <div class="your"><b>Твой ответ:</b> ${escHtml(w.your)}</div>
+          <div class="right"><b>Правильно:</b> ${escHtml(w.right)}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  const nextStep = att.passed
+    ? (moduleNum === 1
+        ? 'Модуль 2 разблокирован — там 15 продвинутых техник.'
+        : 'Ты прошёл оба модуля. Можешь перепройти любой материал в любое время.')
+    : `Не страшно. Перечитай темы Модуля ${moduleNum}, через 30 минут попробуй ещё раз.`;
+
+  root.innerHTML = `
+    <div class="tech-topic-view tech-quiz-result">
+      <button class="tech-back-btn" onclick="backToModules()">← К модулям</button>
+      <div class="tech-result-card ${att.passed ? 'passed' : 'failed'}">
+        <div class="tech-result-icon">${att.passed ? '🎉' : '🤔'}</div>
+        <h1>${att.passed ? 'Сдано!' : 'Не сдано'}</h1>
+        <div class="tech-result-score">${att.score} / ${att.total}</div>
+        <div class="tech-result-pct">${pct}% правильных · проходной балл ${passScore}%</div>
+        <div class="tech-result-msg">${escHtml(nextStep)}</div>
+      </div>
+      ${wrongHTML}
+    </div>
+  `;
+}
+
+// ── Admin: редактор темы ──
 function openTechniqueEditor(id) {
-  showToast('Редактор тем — следующий этап. Временно правь через Supabase Dashboard или отправь запрос разработчику.');
+  if (!isAdmin) { showToast('Доступно только админу'); return; }
+  editingType = 'technique';
+  editingId = id;
+  const t = id ? TECHNIQUES_DATA.find(x => x.id === id) : null;
+  document.getElementById('modalTitle').textContent = t ? `Редактировать тему ${t.id}` : 'Новая тема';
+  document.getElementById('btnDelete').style.display = t ? 'block' : 'none';
+  document.getElementById('modalBody').innerHTML = buildTechniqueForm(t);
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildTechniqueForm(t) {
+  const d = t ? (t.data || {}) : { module: 1, order: 99, title: '', tagline: '', what: '', when: [], how: [], how_after: '', template: '', examples: [], anti: [], note: '' };
+  const isIntro = !!d.is_intro;
+
+  if (isIntro) {
+    const blocks = (d.blocks || []);
+    return `
+      <div><div class="fsec">Введение в модуль</div>
+        <div class="fgrid">
+          <div class="ff"><label>ID</label><input id="tech-id" value="${escAttr(t ? t.id : '')}" ${t ? 'disabled' : ''}></div>
+          <div class="ff"><label>Модуль</label>
+            <select id="tech-module">
+              <option value="1" ${d.module===1?'selected':''}>Модуль 1</option>
+              <option value="2" ${d.module===2?'selected':''}>Модуль 2</option>
+            </select>
+          </div>
+        </div>
+        <div class="ff" style="margin-top:12px"><label>Заголовок</label><input id="tech-title" value="${escHtml(d.title||'')}"></div>
+      </div>
+      <div><div class="fsec">Блоки введения</div>
+        <div id="intro-blocks-list">
+          ${blocks.map((b,i) => introBlockRowHTML(b, i)).join('')}
+        </div>
+        <button type="button" class="btn" style="margin-top:8px" onclick="addIntroBlock()">+ Добавить блок</button>
+      </div>
+    `;
+  }
+
+  // Обычная тема
+  const examples = d.examples || [];
+  return `
+  <div><div class="fsec">Идентификация</div>
+    <div class="fgrid">
+      <div class="ff"><label>ID (например 1.5 или 2.10)</label>
+        <input id="tech-id" value="${escAttr(t ? t.id : '')}" ${t ? 'disabled' : ''} placeholder="1.11">
+      </div>
+      <div class="ff"><label>Модуль</label>
+        <select id="tech-module">
+          <option value="1" ${d.module===1?'selected':''}>Модуль 1 — основные</option>
+          <option value="2" ${d.module===2?'selected':''}>Модуль 2 — дополнительные</option>
+        </select>
+      </div>
+      <div class="ff"><label>Порядок (число)</label>
+        <input id="tech-order" type="number" value="${d.order||99}">
+      </div>
+    </div>
+    <div class="fgrid" style="margin-top:12px">
+      <div class="ff"><label>Заголовок темы</label>
+        <input id="tech-title" value="${escHtml(d.title||'')}" placeholder="Метод эха">
+      </div>
+      <div class="ff"><label>Подзаголовок (одна фраза сути)</label>
+        <input id="tech-tagline" value="${escHtml(d.tagline||'')}" placeholder="Повторяй последние слова клиента вопросом">
+      </div>
+    </div>
+  </div>
+
+  <div><div class="fsec">Что это</div>
+    <div class="ff"><textarea id="tech-what" style="min-height:120px">${escHtml(d.what||'')}</textarea>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Можно несколько абзацев — разделяй пустой строкой</div>
+    </div>
+  </div>
+
+  <div><div class="fsec">Когда применять (списком, по строке)</div>
+    <div class="ff"><textarea id="tech-when" style="min-height:90px">${escHtml((d.when||[]).join('\n'))}</textarea></div>
+  </div>
+
+  <div><div class="fsec">Как использовать — пошагово</div>
+    <div class="ff"><textarea id="tech-how" style="min-height:90px">${escHtml((d.how||[]).join('\n'))}</textarea>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">По строке на шаг. Нумерация сама.</div>
+    </div>
+    <div class="ff" style="margin-top:10px"><label>Уточнение к шагам (опционально)</label>
+      <textarea id="tech-how-after" style="min-height:50px">${escHtml(d.how_after||'')}</textarea>
+    </div>
+  </div>
+
+  <div><div class="fsec">Шаблон фразы</div>
+    <div class="ff"><textarea id="tech-template" style="min-height:80px">${escHtml(d.template||'')}</textarea></div>
+  </div>
+
+  <div><div class="fsec">Примеры с YAHYA</div>
+    <div id="examples-list">
+      ${examples.map((e,i) => exampleRowHTML(e, i)).join('')}
+    </div>
+    <button type="button" class="btn" style="margin-top:8px" onclick="addExampleRow()">+ Добавить пример</button>
+  </div>
+
+  <div><div class="fsec">Антипример (как НЕ надо)</div>
+    <div class="ff"><textarea id="tech-anti" style="min-height:90px">${escHtml((d.anti||[]).join('\n'))}</textarea>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">По строке. Каждая — пункт «не делай так».</div>
+    </div>
+  </div>
+
+  <div><div class="fsec">Дополнительная заметка (опционально)</div>
+    <div class="ff"><textarea id="tech-note" style="min-height:60px">${escHtml(d.note||'')}</textarea></div>
+  </div>
+  `;
+}
+
+function exampleRowHTML(e, i) {
+  return `
+    <div class="ff example-row" data-i="${i}" style="background:var(--bg-deep);padding:10px 12px;border-radius:8px;margin-bottom:8px">
+      <div class="fgrid">
+        <div class="ff"><label>Метка (Магазин / Бар / Ситуация)</label>
+          <input class="ex-label" value="${escAttr(e.label||'')}">
+        </div>
+        <div class="ff" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn danger" onclick="removeExampleRow(${i})">Удалить</button>
+        </div>
+      </div>
+      <div class="ff" style="margin-top:8px"><label>Текст примера / диалог</label>
+        <textarea class="ex-body" style="min-height:80px">${escHtml(e.body||'')}</textarea>
+      </div>
+    </div>
+  `;
+}
+
+function addExampleRow() {
+  const list = document.getElementById('examples-list');
+  const i = list.querySelectorAll('.example-row').length;
+  list.insertAdjacentHTML('beforeend', exampleRowHTML({label:'', body:''}, i));
+}
+function removeExampleRow(i) {
+  const row = document.querySelector(`.example-row[data-i="${i}"]`);
+  if (row) row.remove();
+}
+
+function introBlockRowHTML(b, i) {
+  return `
+    <div class="ff intro-block-row" data-i="${i}" style="background:var(--bg-deep);padding:10px 12px;border-radius:8px;margin-bottom:8px">
+      <div class="fgrid">
+        <div class="ff"><label>Заголовок блока</label>
+          <input class="ib-title" value="${escAttr(b.title||'')}">
+        </div>
+        <div class="ff" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn danger" onclick="removeIntroBlock(${i})">Удалить</button>
+        </div>
+      </div>
+      <div class="ff" style="margin-top:8px"><label>Текст блока</label>
+        <textarea class="ib-body" style="min-height:90px">${escHtml(b.body||'')}</textarea>
+      </div>
+    </div>
+  `;
+}
+function addIntroBlock() {
+  const list = document.getElementById('intro-blocks-list');
+  const i = list.querySelectorAll('.intro-block-row').length;
+  list.insertAdjacentHTML('beforeend', introBlockRowHTML({title:'', body:''}, i));
+}
+function removeIntroBlock(i) {
+  const row = document.querySelector(`.intro-block-row[data-i="${i}"]`);
+  if (row) row.remove();
+}
+
+async function saveTechnique() {
+  const id = (document.getElementById('tech-id').value || '').trim();
+  if (!id) { showToast('Введи ID темы (например 1.11)'); return; }
+  const moduleNum = parseInt(document.getElementById('tech-module').value, 10);
+  const title = (document.getElementById('tech-title').value || '').trim();
+  if (!title) { showToast('Введи заголовок'); return; }
+
+  const existing = TECHNIQUES_DATA.find(x => x.id === id);
+  const isIntro = existing && existing.data && existing.data.is_intro;
+
+  let data;
+  if (isIntro) {
+    const blocks = [...document.querySelectorAll('.intro-block-row')].map(row => ({
+      title: row.querySelector('.ib-title').value.trim(),
+      body: row.querySelector('.ib-body').value.trim()
+    })).filter(b => b.title || b.body);
+    data = {
+      module: moduleNum,
+      order: 0,
+      is_intro: true,
+      title,
+      blocks
+    };
+  } else {
+    const order = parseInt(document.getElementById('tech-order').value, 10) || 99;
+    const tagline = document.getElementById('tech-tagline').value.trim();
+    const what = document.getElementById('tech-what').value.trim();
+    const when = document.getElementById('tech-when').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const how = document.getElementById('tech-how').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const how_after = document.getElementById('tech-how-after').value.trim();
+    const template = document.getElementById('tech-template').value.trim();
+    const anti = document.getElementById('tech-anti').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const note = document.getElementById('tech-note').value.trim();
+    const examples = [...document.querySelectorAll('.example-row')].map(row => ({
+      label: row.querySelector('.ex-label').value.trim(),
+      body: row.querySelector('.ex-body').value.trim()
+    })).filter(e => e.label || e.body);
+    data = { module: moduleNum, order, title, tagline, what, when, how, how_after, template, examples, anti, note };
+  }
+
+  const ok = await dbUpsert('techniques', id, data);
+  if (!ok) return;
+
+  const row = { id, data };
+  const idx = TECHNIQUES_DATA.findIndex(x => x.id === id);
+  if (idx >= 0) TECHNIQUES_DATA[idx] = row;
+  else TECHNIQUES_DATA.push(row);
+  saveTechniquesLS();
+  closeModal();
+  renderTechniques();
+  showToast(idx >= 0 ? 'Тема обновлена' : 'Тема добавлена');
+}
+
+async function deleteTechnique() {
+  if (!editingId) return;
+  if (!confirm(`Удалить тему ${editingId}? Прогресс пользователей по этой теме тоже удалится.`)) return;
+  const ok = await dbDelete('techniques', editingId);
+  if (!ok) return;
+  TECHNIQUES_DATA = TECHNIQUES_DATA.filter(x => x.id !== editingId);
+  USER_PROGRESS = USER_PROGRESS.filter(p => p.technique_id !== editingId);
+  saveTechniquesLS();
+  closeModal();
+  renderTechniques();
+  showToast('Тема удалена');
+}
+
+// ── Admin: редактор теста ──
+function openQuizEditor(quizId) {
+  if (!isAdmin) { showToast('Доступно только админу'); return; }
+  editingType = 'quiz';
+  editingId = quizId;
+  const q = QUIZZES_DATA.find(x => x.id === quizId);
+  if (!q) { showToast('Тест не найден'); return; }
+  document.getElementById('modalTitle').textContent = `Редактировать ${q.data.title || quizId}`;
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('modalBody').innerHTML = buildQuizForm(q);
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function buildQuizForm(q) {
+  const d = q.data || {};
+  const questions = d.questions || [];
+  return `
+    <div><div class="fsec">Параметры теста</div>
+      <div class="fgrid">
+        <div class="ff"><label>Заголовок</label><input id="quiz-title" value="${escHtml(d.title||'')}"></div>
+        <div class="ff"><label>Проходной балл, %</label><input id="quiz-pass" type="number" min="0" max="100" value="${d.pass_score||80}"></div>
+        <div class="ff"><label>Кулдаун между попытками, мин</label><input id="quiz-cd" type="number" min="0" value="${d.cooldown_minutes||30}"></div>
+      </div>
+      <div class="ff" style="margin-top:12px"><label>Вступительный текст</label>
+        <textarea id="quiz-intro" style="min-height:60px">${escHtml(d.intro||'')}</textarea>
+      </div>
+    </div>
+    <div><div class="fsec">Вопросы (${questions.length})</div>
+      <div id="quiz-q-list">
+        ${questions.map((qq, qi) => quizQuestionRowHTML(qq, qi)).join('')}
+      </div>
+      <button type="button" class="btn" style="margin-top:8px" onclick="addQuizQuestion()">+ Добавить вопрос</button>
+    </div>
+  `;
+}
+
+function quizQuestionRowHTML(q, qi) {
+  const opts = q.options || [];
+  return `
+    <div class="ff quiz-q-row" data-q="${qi}" style="background:var(--bg-deep);padding:12px 14px;border-radius:8px;margin-bottom:10px">
+      <div class="fgrid">
+        <div class="ff" style="flex:1"><label>Вопрос ${qi+1}</label>
+          <textarea class="qq-text" style="min-height:50px">${escHtml(q.q||'')}</textarea>
+        </div>
+        <div class="ff" style="display:flex;align-items:flex-end">
+          <button type="button" class="btn danger" onclick="removeQuizQuestion(${qi})">Удалить</button>
+        </div>
+      </div>
+      <div class="ff" style="margin-top:8px">
+        <label>Варианты (отметь правильный)</label>
+        <div class="qq-options">
+          ${opts.map((o, oi) => quizOptionRowHTML(o, qi, oi)).join('')}
+        </div>
+        <button type="button" class="btn" style="margin-top:6px" onclick="addQuizOption(${qi})">+ Вариант</button>
+      </div>
+    </div>
+  `;
+}
+
+function quizOptionRowHTML(o, qi, oi) {
+  return `
+    <div class="qq-option-row" data-o="${oi}" style="display:flex;align-items:center;gap:8px;margin-top:6px">
+      <input type="checkbox" class="qq-correct" ${o.correct?'checked':''} title="Правильный">
+      <input class="qq-text-opt" value="${escAttr(o.text||'')}" style="flex:1">
+      <button type="button" class="btn danger" onclick="removeQuizOption(${qi},${oi})" style="padding:6px 10px">×</button>
+    </div>
+  `;
+}
+
+function addQuizQuestion() {
+  const list = document.getElementById('quiz-q-list');
+  const qi = list.querySelectorAll('.quiz-q-row').length;
+  list.insertAdjacentHTML('beforeend', quizQuestionRowHTML({q:'', options:[{text:'', correct:false},{text:'', correct:false}]}, qi));
+}
+function removeQuizQuestion(qi) {
+  const row = document.querySelector(`.quiz-q-row[data-q="${qi}"]`);
+  if (row) row.remove();
+}
+function addQuizOption(qi) {
+  const row = document.querySelector(`.quiz-q-row[data-q="${qi}"] .qq-options`);
+  if (!row) return;
+  const oi = row.querySelectorAll('.qq-option-row').length;
+  row.insertAdjacentHTML('beforeend', quizOptionRowHTML({text:'', correct:false}, qi, oi));
+}
+function removeQuizOption(qi, oi) {
+  const row = document.querySelector(`.quiz-q-row[data-q="${qi}"] .qq-option-row[data-o="${oi}"]`);
+  if (row) row.remove();
+}
+
+async function saveQuiz() {
+  const quizId = editingId;
+  const q = QUIZZES_DATA.find(x => x.id === quizId);
+  if (!q) return;
+  const moduleNum = q.data.module;
+  const title = document.getElementById('quiz-title').value.trim();
+  const passScore = parseInt(document.getElementById('quiz-pass').value, 10) || 80;
+  const cooldown = parseInt(document.getElementById('quiz-cd').value, 10) || 30;
+  const intro = document.getElementById('quiz-intro').value.trim();
+
+  const questions = [...document.querySelectorAll('.quiz-q-row')].map(qrow => {
+    const qText = qrow.querySelector('.qq-text').value.trim();
+    const options = [...qrow.querySelectorAll('.qq-option-row')].map(orow => ({
+      text: orow.querySelector('.qq-text-opt').value.trim(),
+      correct: orow.querySelector('.qq-correct').checked
+    })).filter(o => o.text);
+    return { q: qText, options };
+  }).filter(q => q.q && q.options.length >= 2);
+
+  if (!questions.length) { showToast('Должен быть хотя бы один вопрос'); return; }
+  // Каждый вопрос должен иметь минимум 1 правильный
+  const bad = questions.findIndex(q => !q.options.some(o => o.correct));
+  if (bad >= 0) { showToast(`Вопрос ${bad+1}: отметь правильный вариант`); return; }
+
+  const data = {
+    module: moduleNum,
+    title,
+    intro,
+    pass_score: passScore,
+    cooldown_minutes: cooldown,
+    questions
+  };
+  const ok = await dbUpsert('quizzes', quizId, data);
+  if (!ok) return;
+  q.data = data;
+  saveQuizzesLS();
+  closeModal();
+  renderTechniques();
+  showToast(`Тест обновлён · ${questions.length} вопросов`);
+}
+
+function deleteQuiz() {
+  // Удалять тест не даём — он один на модуль и зашит в логику
+  showToast('Тест нельзя удалить, можно только редактировать вопросы');
 }
 
 // ════════════════════════════════════════════════
