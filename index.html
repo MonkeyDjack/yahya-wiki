@@ -651,6 +651,15 @@ body.is-admin .rule-edit-btn{display:flex;}
 .tech-intro-block{margin-bottom:18px;}
 .tech-intro-block h3{font-size:16px;color:var(--text-heading);margin-bottom:8px;}
 .tech-intro-block .body{font-size:14px;line-height:1.6;color:var(--text-body);white-space:pre-wrap;}
+.tech-topic-nav{margin-top:24px;padding:18px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid var(--border-subtle);}
+.tech-topic-nav .nav-back{padding:11px 20px;font-size:14px;}
+.tech-topic-nav .nav-next{padding:11px 22px;font-size:14px;}
+@media(max-width:480px){
+  .tech-topic-nav{flex-direction:column-reverse;gap:10px;}
+  .tech-topic-nav button{width:100%;padding:14px;font-size:15px;}
+  .tech-topic-nav .nav-back{order:2;}
+  .tech-topic-nav .nav-next{order:1;}
+}
 /* ─── Тесты ─── */
 .tech-quiz-view{max-width:760px;}
 .tech-quiz-meta{color:var(--text-dim);font-size:13px;margin-bottom:24px;padding:10px 14px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;}
@@ -16899,14 +16908,36 @@ function renderTopicView(root) {
     </div>
   ` : '';
 
+  const nextId = getNextTopicId(t.id);
+  const navBar = `
+    <div class="tech-topic-nav">
+      <button class="btn nav-back" onclick="backToModules()">← К модулям</button>
+      ${nextId
+        ? `<button class="tech-mark-done-btn nav-next" onclick="openTopic('${nextId}')">Следующая →</button>`
+        : `<div style="font-size:13px;color:var(--text-dim);text-align:right;align-self:center">Последняя тема модуля</div>`}
+    </div>
+  `;
+
   root.innerHTML = `
     <div class="tech-topic-view">
       <button class="tech-back-btn" onclick="backToModules()">← К модулям</button>
       ${isAdmin ? `<button class="btn admin-only" style="margin-left:10px" onclick="openTechniqueEditor('${t.id}')">✎ Редактировать</button>` : ''}
       ${body}
       ${markBar}
+      ${navBar}
     </div>
   `;
+}
+
+function getNextTopicId(currentId) {
+  const t = TECHNIQUES_DATA.find(x => x.id === currentId);
+  if (!t || !t.data) return null;
+  const num = t.data.module;
+  const m = getModuleData(num);
+  const seq = m.intro ? [m.intro, ...m.topics] : m.topics;
+  const i = seq.findIndex(x => x.id === currentId);
+  if (i < 0 || i + 1 >= seq.length) return null;
+  return seq[i + 1].id;
 }
 
 async function markTechniqueDone(id) {
