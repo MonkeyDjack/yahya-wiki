@@ -19283,11 +19283,13 @@ async function checkPwd() {
         await seedFromBuiltin();
       }
     }
-    // Догружаем учебные модули и тесты, если их ещё нет
-    if (isAdmin && TECHNIQUES_DATA.length < BUILTIN_TECHNIQUES.length) {
+    // Догружаем учебные модули и тесты — ТОЛЬКО если таблица полностью пустая.
+    // Раньше тут было `< BUILTIN_*.length` — это перезаписывало правки и возвращало удалённые
+    // модули, когда другой админ логинился (его локальный счётчик мог быть < builtin).
+    if (isAdmin && TECHNIQUES_DATA.length === 0) {
       await seedTechniquesOnly();
     }
-    if (isAdmin && QUIZZES_DATA.length < BUILTIN_QUIZZES.length) {
+    if (isAdmin && QUIZZES_DATA.length === 0) {
       await seedQuizzesOnly();
     }
   } catch(e) {
