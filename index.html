@@ -353,6 +353,7 @@ body.is-admin .gloss-edit-btn,body.is-admin .tool-edit-btn{display:flex;}
 /* ── ADD TILE ── */
 .add-tile{display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;border:2px dashed rgba(var(--rgb-gold-500),.3);border-radius:var(--radius);padding:40px 20px;cursor:pointer;min-height:180px;transition:all .2s;color:var(--text-muted);text-align:center;}
 body.is-admin .add-tile{display:flex;}
+body.is-bar-editor .add-tile{display:flex;}
 .add-tile:hover{border-color:var(--accent);color:var(--accent);background:rgba(var(--rgb-gold-500),.04);}
 .add-tile .plus{font-size:42px;font-weight:300;line-height:1;color:var(--accent);}
 .add-tile p{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0;}
@@ -362,6 +363,7 @@ body.is-admin .add-tile{display:flex;}
 .fab{display:none;position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:var(--text-on-accent);font-size:32px;font-weight:300;line-height:1;cursor:pointer;box-shadow:var(--shadow-lg);transition:all .2s;}
 .fab:hover,.fab:active{background:var(--text-accent-soft);transform:scale(1.05);}
 body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
+body.is-bar-editor .fab{display:flex;align-items:center;justify-content:center;}
 
 /* ── MODAL BUTTON ROW ── */
 .modal-footer .footer-right{display:flex;gap:9px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
@@ -461,9 +463,9 @@ body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
   .page-header h2{font-size:23px;}
 }
 
-/* hide FAB on desktop (only appears on mobile via admin class) */
+/* hide FAB on desktop (only appears on mobile via admin / bar_editor) */
 @media(min-width:769px){
-  body .fab,body.is-admin .fab{display:none!important;}
+  body .fab,body.is-admin .fab,body.is-bar-editor .fab{display:none!important;}
 }
 
 /* ── SCRIPTS PAGE ── */
@@ -16051,6 +16053,26 @@ let currentTreePath = [];
 let editingId      = null;
 let editingType    = 'card'; // 'card' | 'gloss' | 'tool' | 'script' | 'rule' | 'tree' | 'checklist' | 'technique' | 'quiz'
 let isAdmin        = false;
+let isBarEditor    = false;  // 'bar_editor': редактирует только карточки локации 'бар'
+
+// Может ли текущий пользователь редактировать карточку?
+// admin — любую; bar_editor — только локацию 'бар'.
+function canEditCard(c) {
+  if (isAdmin) return true;
+  if (isBarEditor && c && c.location === 'бар') return true;
+  return false;
+}
+// Лейблы для роли в UI
+function roleLabel(role) {
+  if (role === 'admin') return 'Админ';
+  if (role === 'bar_editor') return 'Старший барист';
+  return 'Продавец';
+}
+function roleIcon(role) {
+  if (role === 'admin') return '👑 ';
+  if (role === 'bar_editor') return '🍵 ';
+  return '';
+}
 
 // ── PERSISTENCE HELPERS ──
 function loadGlossary() {
@@ -16111,6 +16133,17 @@ function deleteEntity() {
 
 // ── FAB ──
 function fabAction() {
+  // Бар-редактор может только добавлять бар-карточки — игнорируем текущую страницу.
+  if (isBarEditor && !isAdmin) {
+    if (currentPage !== 'products') navigateTo('products');
+    if (currentSection !== 'бар') {
+      currentSection = 'бар';
+      document.querySelectorAll('.section-tab').forEach(t => t.classList.toggle('active', t.dataset.section === 'бар'));
+      currentCat = 'Все';
+      renderCards();
+    }
+    return openModal(null);
+  }
   if (currentPage === 'techniques') return openTechniqueEditor(null);
   if (currentPage === 'glossary') return openGlossModal(null);
   if (currentPage === 'scripts')  return openScriptModal(null);
@@ -16295,15 +16328,12 @@ async function loadProfileAndProgress() {
     (attRes.data || []).forEach(a => {
       if (!LATEST_ATTEMPTS[a.quiz_id]) LATEST_ATTEMPTS[a.quiz_id] = a;
     });
-    // isAdmin определяется ролью в profile — это надёжнее чем «просто залогинен»
-    if (USER_PROFILE && USER_PROFILE.role === 'admin') {
-      isAdmin = true;
-      document.body.classList.add('is-admin');
-    } else {
-      // Залогинен но не админ — обычный seller
-      isAdmin = false;
-      document.body.classList.remove('is-admin');
-    }
+    // isAdmin / isBarEditor определяются ролью в profile.
+    const role = USER_PROFILE?.role;
+    isAdmin     = (role === 'admin');
+    isBarEditor = (role === 'bar_editor');
+    document.body.classList.toggle('is-admin', isAdmin);
+    document.body.classList.toggle('is-bar-editor', isBarEditor);
   } catch(e) {
     console.warn('profile/progress load failed', e);
   }
@@ -16325,7 +16355,9 @@ async function handleAuthExpired() {
   } catch(e) { /* ignore */ }
   // refresh failed → выходим и показываем модалку логина
   isAdmin = false;
+  isBarEditor = false;
   document.body.classList.remove('is-admin');
+  document.body.classList.remove('is-bar-editor');
   try { await sb.auth.signOut(); } catch(e) {}
   showToast('Сессия истекла — войдите заново');
   openPwdModal();
@@ -16425,6 +16457,7 @@ function renderCards() {
   const filtered = sect ? CARDS.filter(c => c.location === sect) : CARDS;
   const cats = sect ? getCardCategories(sect) : new Set(filtered.map(c => c.category).filter(Boolean));
   const navCat = document.getElementById('navCategories');
+  // Управление категориями — только для админа. Старший барист не трогает структуру.
   const catMgrBtn = isAdmin && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
   if (cats.size > 0 || isAdmin) {
     navCat.classList.remove('hidden');
@@ -16436,11 +16469,13 @@ function renderCards() {
     navCat.classList.add('hidden');
   }
 
+  // «+ Добавить карточку»: админу везде; бар-редактору — только в секции «бар».
+  const canAdd = isAdmin || (isBarEditor && sect === 'бар');
   const grid = document.getElementById('grid');
   const show = filtered.filter(c => currentCat === 'Все' || c.category === currentCat);
   grid.innerHTML = show.length === 0 ? '<div class="empty-state">Нет карточек в этом разделе</div>' :
     show.map(c => cardHTML(c)).join('') +
-    (isAdmin ? `<div class="card-add add-tile admin-only" onclick="openModal(null)"><div class="plus">+</div><p>Добавить карточку</p></div>` : '');
+    (canAdd ? `<div class="card-add add-tile" onclick="openModal(null)"><div class="plus">+</div><p>Добавить карточку</p></div>` : '');
 }
 
 function cardHTML(c) {
@@ -16454,7 +16489,7 @@ function cardHTML(c) {
   const faqs = (c.faq||[]).map(f=>`<div class="faq-item"><div class="faq-q">${f.q}</div><div class="faq-a">${f.a}</div></div>`).join('');
 
   return `<div class="card-wrap" id="cw-${c.id}" onclick="flipCard('${c.id}',event)">
-  ${isAdmin ? `<button class="card-edit-btn admin-only" onclick="openModal('${c.id}');event.stopPropagation()">✎</button>` : ''}
+  ${canEditCard(c) ? `<button class="card-edit-btn" onclick="openModal('${c.id}');event.stopPropagation()">✎</button>` : ''}
   <div class="card-inner">
     <div class="card-front">
       ${img}
@@ -16705,7 +16740,7 @@ function renderTechniques() {
     <div class="tech-userbar">
       <div>
         <div class="tech-userbar-name">${escHtml(USER_PROFILE.full_name || 'Без имени')}</div>
-        <div class="tech-userbar-meta">${escHtml(USER_PROFILE.branch || 'Филиал не указан')} · ${USER_PROFILE.role === 'admin' ? 'Админ' : 'Продавец'}</div>
+        <div class="tech-userbar-meta">${escHtml(USER_PROFILE.branch || 'Филиал не указан')} · ${roleLabel(USER_PROFILE.role)}</div>
       </div>
       <div class="tech-userbar-spacer"></div>
       ${isAdmin ? `<button class="btn" onclick="openDashboard()">👥 Сотрудники</button>` : ''}
@@ -17619,8 +17654,10 @@ function renderDashboardView(root) {
   const passedM1 = sellers.filter(p => latestAttemptFor('module1', p.id)?.passed).length;
   const passedM2 = sellers.filter(p => latestAttemptFor('module2', p.id)?.passed).length;
 
+  const roleOrder = r => r === 'admin' ? 0 : r === 'bar_editor' ? 1 : 2;
   const sortedProfiles = [...ALL_PROFILES].sort((a,b) => {
-    if (a.role !== b.role) return a.role === 'admin' ? -1 : 1;
+    const d = roleOrder(a.role) - roleOrder(b.role);
+    if (d !== 0) return d;
     return (a.full_name || '').localeCompare(b.full_name || '');
   });
 
@@ -17688,7 +17725,7 @@ function renderUserRow(p) {
     <div class="dash-user-row" onclick="openUserDetail('${p.id}')">
       <div class="dash-user-name">
         <div class="dash-user-name-main">
-          ${p.role === 'admin' ? '👑 ' : ''}${escHtml(p.full_name || '— без имени —')}
+          ${roleIcon(p.role)}${escHtml(p.full_name || '— без имени —')}
         </div>
         <div class="dash-user-meta">
           ${escHtml(p.branch || 'филиал не указан')}
@@ -17767,8 +17804,8 @@ function renderUserDetailView(root) {
   root.innerHTML = `
     <div class="tech-topic-view">
       <button class="tech-back-btn" onclick="openDashboard()">← К дашборду</button>
-      <h1>${p.role==='admin'?'👑 ':''}${escHtml(p.full_name || '— без имени —')}</h1>
-      <div class="tagline-big">${escHtml(p.branch || 'филиал не указан')} · ${p.role === 'admin' ? 'Админ' : 'Продавец'}</div>
+      <h1>${roleIcon(p.role)}${escHtml(p.full_name || '— без имени —')}</h1>
+      <div class="tagline-big">${escHtml(p.branch || 'филиал не указан')} · ${roleLabel(p.role)}</div>
 
       <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
         <button class="btn" onclick="openProfileEditor('${p.id}')">✎ Изменить профиль</button>
@@ -17815,9 +17852,10 @@ function openProfileEditor(userId) {
       <div class="ff" style="margin-top:12px"><label>Роль</label>
         <select id="prof-role">
           <option value="seller" ${p.role==='seller'?'selected':''}>Продавец</option>
+          <option value="bar_editor" ${p.role==='bar_editor'?'selected':''}>Старший барист (только бар-карточки)</option>
           <option value="admin" ${p.role==='admin'?'selected':''}>Админ</option>
         </select>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ может редактировать темы, тесты и видеть дашборд.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ редактирует всё. Старший барист — только карточки локации «бар», остальные разделы только читает.</div>
       </div>
     </div>
     <div><div class="fsec">Email (логин)</div>
@@ -17846,8 +17884,10 @@ async function saveProfile() {
   // Если редактируем самого себя — обновляем USER_PROFILE
   if (USER_PROFILE && USER_PROFILE.id === id) {
     Object.assign(USER_PROFILE, {full_name, branch, role});
-    isAdmin = (role === 'admin');
+    isAdmin     = (role === 'admin');
+    isBarEditor = (role === 'bar_editor');
     document.body.classList.toggle('is-admin', isAdmin);
+    document.body.classList.toggle('is-bar-editor', isBarEditor);
   }
   closeModal();
   renderTechniques();
@@ -17910,6 +17950,7 @@ function openCreateUserModal() {
         <div class="ff"><label>Роль</label>
           <select id="newuser-role">
             <option value="seller" selected>Продавец</option>
+            <option value="bar_editor">Старший барист (только бар)</option>
             <option value="admin">Админ</option>
           </select>
         </div>
@@ -18167,6 +18208,29 @@ function catMgrCtx(type, loc) {
   };
 }
 
+// Перечитать свежий список записей в категории прямо из БД (а не из локальной копии).
+// Нужно перед массовыми операциями, чтобы не затирать правки другого админа.
+async function dbFetchByCategory(table, catField, catValue, locValue) {
+  let q = sb.from(table).select('id,data').eq('data->>' + catField, catValue);
+  if (table === 'cards' && locValue) q = q.eq('data->>location', locValue);
+  const { data, error } = await q;
+  if (error) { showToast('Не удалось перечитать категорию: ' + error.message); return null; }
+  return data || [];
+}
+
+// Обновить локальный массив свежими версиями (in-place, чтобы ссылки в render не отвалились).
+function mergeFreshIntoLocal(allItems, freshList) {
+  const byId = new Map(freshList.map(d => [d.id, d]));
+  for (let i = 0; i < allItems.length; i++) {
+    const id = allItems[i].id;
+    if (byId.has(id)) {
+      allItems[i] = byId.get(id);
+      byId.delete(id);
+    }
+  }
+  for (const d of byId.values()) allItems.push(d);
+}
+
 async function handleCatRename(type, catEnc, btn, loc = null) {
   const row = btn.closest('.cat-mgr-row');
   const input = row.querySelector('.cat-rename-input');
@@ -18181,11 +18245,18 @@ async function handleCatRename(type, catEnc, btn, loc = null) {
     if (!confirm(`Категория «${newName}» уже есть. Объединить в одну?`)) return;
   }
 
-  const changed = ctx.allItems.filter(x => ctx.scopeMatch(x, oldName));
-  changed.forEach(x => { x[ctx.catField] = newName; });
+  // Берём свежий список из БД, чтобы не затереть правки коллег и не пропустить
+  // записи, добавленные ими в эту категорию параллельно.
+  const locValue = type === 'card' ? (loc || 'магазин') : null;
+  const fresh = await dbFetchByCategory(ctx.table, ctx.catField, oldName, locValue);
+  if (fresh === null) return;
+  if (!fresh.length) { showToast('Категория уже пуста'); ctx.rerender(); renderCatManagerModal(type, loc); return; }
 
-  const ok = await dbUpsertMany(ctx.table, changed.map(x => ({ id: x.id, data: x })));
+  const updated = fresh.map(r => ({ ...r.data, [ctx.catField]: newName }));
+  const ok = await dbUpsertMany(ctx.table, updated.map(d => ({ id: d.id, data: d })));
   if (!ok) return;
+
+  mergeFreshIntoLocal(ctx.allItems, updated);
 
   if (type === 'card') {
     const l = loc || 'магазин';
@@ -18197,7 +18268,7 @@ async function handleCatRename(type, catEnc, btn, loc = null) {
 
   ctx.saveLS(); ctx.rerender();
   renderCatManagerModal(type, loc);
-  showToast(`Переименовано, записей: ${changed.length}`);
+  showToast(`Переименовано, записей: ${updated.length}`);
 }
 
 function handleCatDelete(type, catEnc, btn, loc = null) {
@@ -18252,10 +18323,18 @@ async function handleCatMove(type, catEnc, btn, loc = null) {
   const target = sel.value;
   const name = decodeURIComponent(catEnc);
   const ctx = catMgrCtx(type, loc);
-  const changed = ctx.allItems.filter(x => ctx.scopeMatch(x, name));
-  changed.forEach(x => { x[ctx.catField] = target; });
-  const ok = await dbUpsertMany(ctx.table, changed.map(x => ({ id: x.id, data: x })));
+
+  const locValue = type === 'card' ? (loc || 'магазин') : null;
+  const fresh = await dbFetchByCategory(ctx.table, ctx.catField, name, locValue);
+  if (fresh === null) return;
+  if (!fresh.length) { showToast('Категория уже пуста'); ctx.rerender(); renderCatManagerModal(type, loc); return; }
+
+  const updated = fresh.map(r => ({ ...r.data, [ctx.catField]: target }));
+  const ok = await dbUpsertMany(ctx.table, updated.map(d => ({ id: d.id, data: d })));
   if (!ok) return;
+
+  mergeFreshIntoLocal(ctx.allItems, updated);
+
   if (type === 'card') {
     const l = loc || 'магазин';
     if (NAV[l]?.categories) {
@@ -18265,17 +18344,21 @@ async function handleCatMove(type, catEnc, btn, loc = null) {
   }
   ctx.saveLS(); ctx.rerender();
   renderCatManagerModal(type, loc);
-  showToast(`Перенесено в «${target}»: ${changed.length}`);
+  showToast(`Перенесено в «${target}»: ${updated.length}`);
 }
 
 async function handleCatDeleteAll(type, catEnc, btn, loc = null) {
   const name = decodeURIComponent(catEnc);
   const ctx = catMgrCtx(type, loc);
-  const toDelete = ctx.allItems.filter(x => ctx.scopeMatch(x, name)).map(x => x.id);
-  if (!toDelete.length) { showToast('Пусто'); return; }
-  const ok = await dbDeleteMany(ctx.table, toDelete);
+
+  const locValue = type === 'card' ? (loc || 'магазин') : null;
+  const fresh = await dbFetchByCategory(ctx.table, ctx.catField, name, locValue);
+  if (fresh === null) return;
+  const ids = fresh.map(r => r.id);
+  if (!ids.length) { showToast('Пусто'); return; }
+  const ok = await dbDeleteMany(ctx.table, ids);
   if (!ok) return;
-  const idSet = new Set(toDelete);
+  const idSet = new Set(ids);
   if (type === 'card')       CARDS         = CARDS.filter(x => !idSet.has(x.id));
   else if (type === 'gloss') GLOSSARY_DATA = GLOSSARY_DATA.filter(x => !idSet.has(x.id));
   else                       TOOLS_DATA    = TOOLS_DATA.filter(x => !idSet.has(x.id));
@@ -18288,7 +18371,7 @@ async function handleCatDeleteAll(type, catEnc, btn, loc = null) {
   }
   ctx.saveLS(); ctx.rerender();
   renderCatManagerModal(type, loc);
-  showToast(`Удалено: ${toDelete.length} ${ctx.word}`);
+  showToast(`Удалено: ${ids.length} ${ctx.word}`);
 }
 
 // escape for HTML attribute values (uses escHtml which is defined below)
@@ -18298,9 +18381,11 @@ function escAttr(s){return escHtml(s);}
 // ADMIN — CARD EDITOR
 // ════════════════════════════════════════════════
 function openModal(id) {
+  const c = id ? CARDS.find(x => x.id === id) : null;
+  if (id && !canEditCard(c)) { showToast('Нет прав редактировать эту карточку'); return; }
+  if (!id && !isAdmin && !isBarEditor) { showToast('Нет прав на создание'); return; }
   editingType = 'card';
   editingId = id;
-  const c = id ? CARDS.find(x => x.id === id) : null;
   document.getElementById('modalTitle').textContent = c ? 'Редактировать карточку' : 'Новая карточка';
   document.getElementById('btnDelete').style.display = c ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildForm(c);
@@ -19117,7 +19202,9 @@ function buildForm(c) {
   const occHTML = occasions.map((o,i) => `<div class="dyn-item"><input class="emoji-in" value="${o.emoji||''}" placeholder="🎁"><input placeholder="Повод" value="${o.text||''}"><button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button></div>`).join('');
 
   const locs = ['магазин','кухня','бар'];
-  const currentLoc = v('location','магазин');
+  // Бар-редактор: локация всегда 'бар', менять нельзя.
+  const lockToBar = !isAdmin && isBarEditor;
+  const currentLoc = lockToBar ? 'бар' : v('location','магазин');
   const currentCatVal = v('category');
   // полный список категорий для текущей локации + гарантированно текущая категория карточки
   const cats = getCardCategoriesSorted(currentLoc, currentCatVal);
@@ -19129,7 +19216,7 @@ function buildForm(c) {
       <div class="ff"><label>Тип / Коллекция <span style="font-weight:normal;opacity:.6;font-size:10px">(свободный текст)</span></label><input id="f-type" value="${v('type')}" placeholder="Напр. Корпусная коллекция"></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
-      <div class="ff"><label>Локация <span style="font-weight:normal;opacity:.6;font-size:10px">(вкладка сайта)</span></label><select id="f-location" onchange="updateCatSelect(this.value)">${locs.map(l=>`<option ${v('location')==l?'selected':''}>${l}</option>`).join('')}</select></div>
+      <div class="ff"><label>Локация <span style="font-weight:normal;opacity:.6;font-size:10px">(вкладка сайта)</span></label><select id="f-location" onchange="updateCatSelect(this.value)" ${lockToBar?'disabled':''}>${locs.map(l=>`<option ${currentLoc==l?'selected':''}>${l}</option>`).join('')}</select></div>
       <div class="ff"><label>Категория меню <span style="font-weight:normal;opacity:.6;font-size:10px">(фильтр в навигации)</span></label><select id="f-category">${cats.map(c=>`<option ${currentCatVal==c?'selected':''}>${escHtml(c)}</option>`).join('')}</select></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
@@ -19199,6 +19286,15 @@ async function saveCard() {
 
   const tags = document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
   const loc  = document.getElementById('f-location').value;
+  // Бар-редактор может писать только в локацию 'бар' (на случай, если кто-то полез в DOM).
+  if (!isAdmin && isBarEditor && loc !== 'бар') {
+    showToast('Старший барист редактирует только локацию «бар»'); return;
+  }
+  // Дополнительная страховка: запрещаем менять location существующей карточки, если у вас на неё нет прав в новой локации.
+  if (editingId) {
+    const orig = CARDS.find(c => c.id === editingId);
+    if (orig && !canEditCard(orig)) { showToast('Нет прав редактировать эту карточку'); return; }
+  }
   const id   = editingId || name.toLowerCase().replace(/[^а-яёa-z0-9\s-]/gi,'').replace(/\s+/g,'-').slice(0,60);
 
   const card = {
@@ -19232,6 +19328,8 @@ async function saveCard() {
 
 async function deleteCard() {
   if (!editingId) return;
+  const orig = CARDS.find(c => c.id === editingId);
+  if (!canEditCard(orig)) { showToast('Нет прав на удаление'); return; }
   if (!confirm('Удалить карточку?')) return;
   const ok = await dbDelete('cards', editingId);
   if (!ok) return;
@@ -19246,7 +19344,7 @@ async function deleteCard() {
 // ADMIN AUTH (Supabase)
 // ════════════════════════════════════════════════
 function openPwdModal() {
-  if (isAdmin) return;
+  if (isAdmin || isBarEditor) return;
   document.getElementById('pwdOverlay').classList.add('active');
   document.getElementById('pwdInput').value = '';
   document.getElementById('pwdError').textContent = '';
@@ -19274,6 +19372,8 @@ async function checkPwd() {
     if (typeof renderTechniques === 'function') renderTechniques();
     if (USER_PROFILE && USER_PROFILE.role === 'admin') {
       showToast('Режим редактора активирован');
+    } else if (USER_PROFILE && USER_PROFILE.role === 'bar_editor') {
+      showToast('Режим бар-редактора активирован');
     } else {
       showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
     }
@@ -19300,10 +19400,12 @@ async function checkPwd() {
 async function exitAdmin() {
   await sb.auth.signOut();
   isAdmin = false;
+  isBarEditor = false;
   USER_PROFILE = null;
   USER_PROGRESS = [];
   LATEST_ATTEMPTS = {};
   document.body.classList.remove('is-admin');
+  document.body.classList.remove('is-bar-editor');
   renderCards(); renderGlossary(); renderTools(); renderScripts();
   if (typeof renderTechniques === 'function') renderTechniques();
   showToast('Вышли');
@@ -19403,12 +19505,14 @@ async function init() {
 
   sb.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
-      if (isAdmin || USER_PROFILE) {
+      if (isAdmin || isBarEditor || USER_PROFILE) {
         isAdmin = false;
+        isBarEditor = false;
         USER_PROFILE = null;
         USER_PROGRESS = [];
         LATEST_ATTEMPTS = {};
         document.body.classList.remove('is-admin');
+        document.body.classList.remove('is-bar-editor');
         renderCards(); renderGlossary(); renderTools(); renderScripts();
         if (typeof renderTechniques === 'function') renderTechniques();
       }
