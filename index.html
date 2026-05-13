@@ -19535,7 +19535,44 @@ function showToast(msg) {
 // ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
+
+// Проверка URL на recovery-токен или ошибку. Должна вызываться синхронно в начале init,
+// до того как SDK обработает hash и снесёт его.
+function checkRecoveryURL() {
+  const hash = window.location.hash || '';
+  const search = window.location.search || '';
+
+  // Ошибки от Supabase (expired token и т.п.)
+  const errPart = hash.includes('error=') ? hash.slice(1) : (search.includes('error=') ? search.slice(1) : '');
+  if (errPart) {
+    const params = new URLSearchParams(errPart);
+    const desc = params.get('error_description') || params.get('error') || 'неизвестная ошибка';
+    try { history.replaceState(null, '', location.pathname); } catch(e) {}
+    setTimeout(() => alert('Ошибка восстановления пароля:\n\n' + decodeURIComponent(desc).replace(/\+/g, ' ') + '\n\nЗапроси новое письмо в Supabase Dashboard.'), 200);
+    return;
+  }
+
+  // Hash-флоу (implicit): #access_token=...&refresh_token=...&type=recovery
+  // PKCE-флоу: ?code=...
+  const isHashRecovery = hash.includes('type=recovery') || (hash.includes('access_token=') && hash.includes('refresh_token='));
+  const isCodeFlow = /[?&]code=/.test(search);
+
+  if (isHashRecovery || isCodeFlow) {
+    // Если SDK сам успеет открыть модалку через PASSWORD_RECOVERY — она уже будет open.
+    // Если нет (например, событие не сработало) — открываем сами.
+    setTimeout(() => {
+      const overlay = document.getElementById('modalOverlay');
+      if (!overlay || !overlay.classList.contains('active')) {
+        openRecoveryPasswordModal();
+      }
+    }, 1200);
+  }
+}
+
 async function init() {
+  // СРАЗУ проверяем URL — до того как SDK обработает hash
+  checkRecoveryURL();
+
   // offline cache first, so UI is instant
   CARDS = loadCards();
   if (!CARDS.length) CARDS = JSON.parse(JSON.stringify(BUILTIN_CARDS));
