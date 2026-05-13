@@ -875,7 +875,7 @@ body.is-admin .rule-edit-btn{display:flex;}
 const SUPABASE_URL  = 'https://hczsybtjcmlqbaxwhgyp.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjenN5YnRqY21scWJheHdoZ3lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1OTgxMDQsImV4cCI6MjA5MjE3NDEwNH0.BySz6EGxkX_fy_X9ZVqG8zIMJsU9e7P2ZleOrZmH9RM';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'yahya-auth' }
+  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'yahya-auth', detectSessionInUrl: true, flowType: 'implicit' }
 });
 
 // ════════════════════════════════════════════════
@@ -18083,6 +18083,32 @@ async function saveOwnPassword() {
   }
 }
 
+// Recovery flow: пришли по email-ссылке, Supabase подсунул токен — задаём новый пароль
+function openRecoveryPasswordModal() {
+  editingType = 'pwd-change';
+  editingId = null;
+  // Чистим hash чтобы при reload не открывать снова
+  try { history.replaceState(null, '', location.pathname + location.search); } catch(e) {}
+  document.getElementById('modalTitle').textContent = '🔑 Задай новый пароль';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('modalBody').innerHTML = `
+    <div><div class="fsec">Восстановление пароля</div>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">
+        Ты перешёл по ссылке восстановления. Задай новый пароль — после сохранения войдёшь автоматически.
+      </p>
+      <div class="ff"><label>Новый пароль</label>
+        <input id="pwd-new" type="password" placeholder="минимум 6 символов" autocomplete="new-password">
+      </div>
+      <div class="ff" style="margin-top:12px"><label>Повтори пароль</label>
+        <input id="pwd-new2" type="password" autocomplete="new-password">
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('pwd-new')?.focus(), 100);
+}
+
 // ════════════════════════════════════════════════
 // GLOSSARY PAGE
 // ════════════════════════════════════════════════
@@ -19546,6 +19572,12 @@ async function init() {
   });
 
   sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // Supabase подтвердил recovery-токен из URL и временно залогинил юзера.
+      // Показываем модалку для задания нового пароля.
+      openRecoveryPasswordModal();
+      return;
+    }
     if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
       if (isAdmin || isBarEditor || USER_PROFILE) {
         isAdmin = false;
