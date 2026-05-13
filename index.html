@@ -16118,6 +16118,7 @@ function saveModal() {
   if (editingType === 'quiz')      return saveQuiz();
   if (editingType === 'profile')   return saveProfile();
   if (editingType === 'newuser')   return saveNewUser();
+  if (editingType === 'pwd-change')return saveOwnPassword();
   return saveCard();
 }
 function deleteEntity() {
@@ -16744,6 +16745,7 @@ function renderTechniques() {
       </div>
       <div class="tech-userbar-spacer"></div>
       ${isAdmin ? `<button class="btn" onclick="openDashboard()">👥 Сотрудники</button>` : ''}
+      <button class="btn" onclick="openChangePasswordModal()" title="Сменить пароль">🔑 Пароль</button>
       <button class="btn" onclick="exitAdmin()">Выйти</button>
     </div>
   `;
@@ -18039,6 +18041,46 @@ async function saveNewUser() {
   closeModal();
   showToast(`Создан: ${login}`);
   await openDashboard(); // перезагружаем список
+}
+
+// ── Смена собственного пароля ──
+function openChangePasswordModal() {
+  if (!USER_PROFILE) { showToast('Сначала войди'); return; }
+  editingType = 'pwd-change';
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Сменить пароль';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('modalBody').innerHTML = `
+    <div><div class="fsec">Новый пароль для ${escHtml(USER_PROFILE.full_name || USER_PROFILE.id)}</div>
+      <div class="ff"><label>Новый пароль</label>
+        <input id="pwd-new" type="password" placeholder="минимум 6 символов" autocomplete="new-password">
+      </div>
+      <div class="ff" style="margin-top:12px"><label>Повтори пароль</label>
+        <input id="pwd-new2" type="password" autocomplete="new-password">
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-dim)">
+        После сохранения тебя не разлогинит — продолжай работать. В следующий раз входи новым паролем.
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('pwd-new').focus(), 80);
+}
+
+async function saveOwnPassword() {
+  const a = document.getElementById('pwd-new').value;
+  const b = document.getElementById('pwd-new2').value;
+  if (a.length < 6) { showToast('Минимум 6 символов'); return; }
+  if (a !== b) { showToast('Пароли не совпадают'); return; }
+  try {
+    const { error } = await sb.auth.updateUser({ password: a });
+    if (error) throw error;
+    closeModal();
+    showToast('Пароль обновлён ✓');
+  } catch(e) {
+    showToast('Ошибка: ' + (e.message || e));
+  }
 }
 
 // ════════════════════════════════════════════════
