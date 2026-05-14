@@ -16053,6 +16053,8 @@ let currentTreePath = [];
 let editingId      = null;
 let editingType    = 'card'; // 'card' | 'gloss' | 'tool' | 'script' | 'rule' | 'tree' | 'checklist' | 'technique' | 'quiz'
 let isAdmin        = false;
+let isContentEditor = false; // role='editor' — может редактировать темы/тесты, но не удалять
+function canEditContent() { return isAdmin || isContentEditor; }
 let isBarEditor    = false;  // 'bar_editor': редактирует только карточки локации 'бар'
 
 // Может ли текущий пользователь редактировать карточку?
@@ -16065,11 +16067,13 @@ function canEditCard(c) {
 // Лейблы для роли в UI
 function roleLabel(role) {
   if (role === 'admin') return 'Админ';
+  if (role === 'editor') return 'Редактор';
   if (role === 'bar_editor') return 'Старший барист';
   return 'Продавец';
 }
 function roleIcon(role) {
   if (role === 'admin') return '👑 ';
+  if (role === 'editor') return '✎ ';
   if (role === 'bar_editor') return '🍵 ';
   return '';
 }
@@ -16329,12 +16333,14 @@ async function loadProfileAndProgress() {
     (attRes.data || []).forEach(a => {
       if (!LATEST_ATTEMPTS[a.quiz_id]) LATEST_ATTEMPTS[a.quiz_id] = a;
     });
-    // isAdmin / isBarEditor определяются ролью в profile.
+    // isAdmin / isBarEditor / isContentEditor определяются ролью в profile.
     const role = USER_PROFILE?.role;
-    isAdmin     = (role === 'admin');
-    isBarEditor = (role === 'bar_editor');
+    isAdmin         = (role === 'admin');
+    isBarEditor     = (role === 'bar_editor');
+    isContentEditor = (role === 'editor');
     document.body.classList.toggle('is-admin', isAdmin);
     document.body.classList.toggle('is-bar-editor', isBarEditor);
+    document.body.classList.toggle('is-content-editor', isContentEditor);
   } catch(e) {
     console.warn('profile/progress load failed', e);
   }
@@ -16735,7 +16741,7 @@ function renderTechniques() {
   const m1 = getModuleData(1);
   const m2 = getModuleData(2);
   const m1Passed = isModulePassed(1);
-  const m2Locked = !m1Passed && !isAdmin;
+  const m2Locked = !m1Passed && !canEditContent();
 
   const userBar = `
     <div class="tech-userbar">
@@ -16764,7 +16770,7 @@ function renderTechniques() {
       return `
       <div class="tech-topic-tile ${done ? 'done' : ''}" onclick="openTopic('${t.id}')">
         ${done ? '<div class="check">✓</div>' : ''}
-        ${isAdmin ? `<button class="edit-btn admin-only" onclick="event.stopPropagation();openTechniqueEditor('${t.id}')" title="Редактировать">✎</button>` : ''}
+        ${canEditContent() ? `<button class="edit-btn admin-only" onclick="event.stopPropagation();openTechniqueEditor('${t.id}')" title="Редактировать">✎</button>` : ''}
         <div class="num">${escHtml(t.id)}</div>
         <div class="title">${escHtml(t.data.title || '')}</div>
         ${t.data.tagline ? `<div class="tagline">${escHtml(t.data.tagline)}</div>` : ''}
@@ -16775,7 +16781,7 @@ function renderTechniques() {
     const allDone = m.topics.length && m.topics.every(t => isTechniqueDone(t.id));
     const att = LATEST_ATTEMPTS['module' + num];
     const cdMs = quizCooldownRemainingMs(num);
-    const quizDisabled = !allDone && !isAdmin;
+    const quizDisabled = !allDone && !canEditContent();
     const quizCaption = quizDisabled
       ? `Доступна когда все ${m.topics.length} тем изучены`
       : (att && att.passed)
@@ -16791,7 +16797,7 @@ function renderTechniques() {
     const quizClick = (!quizDisabled && cdMs === 0)
       ? `startQuiz(${num})`
       : `showToast('Тест пока недоступен')`;
-    const adminEditBtn = isAdmin
+    const adminEditBtn = canEditContent()
       ? `<button class="edit-btn admin-only" style="position:absolute;top:10px;right:10px"
                   onclick="event.stopPropagation();openQuizEditor('module${num}')" title="Редактировать тест">✎</button>`
       : '';
@@ -16821,7 +16827,7 @@ function renderTechniques() {
         <div class="tech-topics">
           ${introTile}
           ${topicsHTML}
-          ${isAdmin ? `<div class="tech-topic-tile" style="border-style:dashed;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer" onclick="openTechniqueEditor(null)">
+          ${canEditContent() ? `<div class="tech-topic-tile" style="border-style:dashed;display:flex;align-items:center;justify-content:center;text-align:center;cursor:pointer" onclick="openTechniqueEditor(null)">
             <div>
               <div style="font-size:32px;color:var(--accent);margin-bottom:6px">+</div>
               <div style="font-size:13px;color:var(--text-dim)">Добавить тему в Модуль ${num}</div>
@@ -16838,8 +16844,8 @@ function renderTechniques() {
       ${userBar}
       ${renderModule(1, m1, false)}
       ${renderModule(2, m2, m2Locked)}
-      ${isAdmin ? `<div style="margin-top:24px;padding:14px 18px;background:var(--bg-card);border:1px dashed var(--accent);border-radius:10px;font-size:13px;color:var(--text-dim)">
-        Режим админа: клик по карандашу — редактировать тему/тест. Плитка «+ Добавить тему» создаёт новую. Дашборд по пользователям и попыткам — следующий этап.
+      ${canEditContent() ? `<div style="margin-top:24px;padding:14px 18px;background:var(--bg-card);border:1px dashed var(--accent);border-radius:10px;font-size:13px;color:var(--text-dim)">
+        ${isAdmin ? 'Режим админа: правка тем/тестов + удаление + дашборд + создание юзеров.' : 'Режим редактора: можешь править темы и тесты. Удаление и управление юзерами — только у админа.'}
       </div>` : ''}
     </div>
   `;
@@ -16958,7 +16964,7 @@ function renderTopicView(root) {
   root.innerHTML = `
     <div class="tech-topic-view">
       <button class="tech-back-btn" onclick="backToModules()">← К модулям</button>
-      ${isAdmin ? `<button class="btn admin-only" style="margin-left:10px" onclick="openTechniqueEditor('${t.id}')">✎ Редактировать</button>` : ''}
+      ${canEditContent() ? `<button class="btn admin-only" style="margin-left:10px" onclick="openTechniqueEditor('${t.id}')">✎ Редактировать</button>` : ''}
       ${body}
       ${markBar}
       ${navBar}
@@ -17200,12 +17206,13 @@ function renderQuizResultView(root) {
 
 // ── Admin: редактор темы ──
 function openTechniqueEditor(id) {
-  if (!isAdmin) { showToast('Доступно только админу'); return; }
+  if (!canEditContent()) { showToast('Доступно только админу или редактору'); return; }
   editingType = 'technique';
   editingId = id;
   const t = id ? TECHNIQUES_DATA.find(x => x.id === id) : null;
   document.getElementById('modalTitle').textContent = t ? `Редактировать тему ${t.id}` : 'Новая тема';
-  document.getElementById('btnDelete').style.display = t ? 'block' : 'none';
+  // Кнопка удаления — только для админа
+  document.getElementById('btnDelete').style.display = (t && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildTechniqueForm(t);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -17430,9 +17437,9 @@ async function deleteTechnique() {
   showToast('Тема удалена');
 }
 
-// ── Admin: редактор теста ──
+// ── Admin/Editor: редактор теста ──
 function openQuizEditor(quizId) {
-  if (!isAdmin) { showToast('Доступно только админу'); return; }
+  if (!canEditContent()) { showToast('Доступно только админу или редактору'); return; }
   editingType = 'quiz';
   editingId = quizId;
   const q = QUIZZES_DATA.find(x => x.id === quizId);
@@ -17855,9 +17862,10 @@ function openProfileEditor(userId) {
         <select id="prof-role">
           <option value="seller" ${p.role==='seller'?'selected':''}>Продавец</option>
           <option value="bar_editor" ${p.role==='bar_editor'?'selected':''}>Старший барист (только бар-карточки)</option>
-          <option value="admin" ${p.role==='admin'?'selected':''}>Админ</option>
+          <option value="editor" ${p.role==='editor'?'selected':''}>Редактор техник продаж (без удаления)</option>
+          <option value="admin" ${p.role==='admin'?'selected':''}>Админ (полные права)</option>
         </select>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ редактирует всё. Старший барист — только карточки локации «бар», остальные разделы только читает.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ — полный доступ + удаление. Редактор — может править темы и тесты, но не удалять и не управлять юзерами. Старший барист — только бар-карточки.</div>
       </div>
     </div>
     <div><div class="fsec">Email (логин)</div>
@@ -17953,8 +17961,9 @@ function openCreateUserModal() {
           <select id="newuser-role">
             <option value="seller" selected>Продавец</option>
             <option value="bar_editor">Старший барист (только бар)</option>
-            <option value="admin">Админ</option>
+            <option value="editor">Редактор техник (без удаления)</option>
           </select>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Полного админа создавай через SQL — для безопасности этой кнопки нет.</div>
         </div>
       </div>
       <div style="margin-top:14px;padding:10px 14px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;font-size:12px;color:var(--text-dim)">
