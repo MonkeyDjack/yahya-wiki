@@ -137,7 +137,7 @@ header{position:relative;z-index:10;padding:28px 40px 20px;border-bottom:1px sol
 .logo-area p{font-size:10px;letter-spacing:3.5px;color:var(--text-muted);text-transform:uppercase;margin-top:4px;}
 .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .admin-badge{display:none;align-items:center;gap:7px;padding:5px 13px;border:1px solid rgba(var(--rgb-gold-500),.4);border-radius:40px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);}
-body.is-admin .admin-badge{display:flex;}
+body.is-admin .admin-badge, body.is-content-editor .admin-badge{display:flex;}
 .admin-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
@@ -149,7 +149,10 @@ body.is-admin .admin-badge{display:flex;}
 .btn.danger{border-color:rgba(var(--rgb-alert),.2);color:rgba(var(--rgb-alert-soft),.55);}
 .btn.danger:hover{border-color:rgba(var(--rgb-alert),.5);color:var(--alert-text);background:rgba(var(--rgb-alert),.06);}
 .admin-only{display:none!important;}
-body.is-admin .admin-only{display:flex!important;}
+body.is-admin .admin-only, body.is-content-editor .admin-only{display:flex!important;}
+/* Кнопки/элементы, которые должны быть видны ТОЛЬКО полному админу (не редактору) */
+.admin-strict-only{display:none!important;}
+body.is-admin .admin-strict-only{display:flex!important;}
 
 /* ── PAGE NAVIGATION ── */
 .page-nav{position:relative;z-index:10;border-bottom:1px solid rgba(var(--rgb-gold-500),.2);background:rgba(var(--rgb-choco-900),.55);backdrop-filter:blur(6px);display:flex;padding:0 40px;}
@@ -347,12 +350,13 @@ body.is-admin .admin-only{display:flex!important;}
 .gloss-card{position:relative;}
 .tool-card{position:relative;}
 .gloss-edit-btn,.tool-edit-btn{position:absolute;top:10px;right:10px;z-index:5;width:32px;height:32px;border-radius:50%;border:1px solid rgba(var(--rgb-gold-500),.3);background:rgba(var(--rgb-choco-800),.8);color:var(--accent);font-size:13px;display:none;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px);transition:all .2s;}
-body.is-admin .gloss-edit-btn,body.is-admin .tool-edit-btn{display:flex;}
+body.is-admin .gloss-edit-btn,body.is-admin .tool-edit-btn,
+body.is-content-editor .gloss-edit-btn,body.is-content-editor .tool-edit-btn{display:flex;}
 .gloss-edit-btn:hover,.tool-edit-btn:hover{background:rgba(var(--rgb-gold-500),.2);border-color:var(--accent);}
 
 /* ── ADD TILE ── */
 .add-tile{display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;border:2px dashed rgba(var(--rgb-gold-500),.3);border-radius:var(--radius);padding:40px 20px;cursor:pointer;min-height:180px;transition:all .2s;color:var(--text-muted);text-align:center;}
-body.is-admin .add-tile{display:flex;}
+body.is-admin .add-tile, body.is-content-editor .add-tile{display:flex;}
 body.is-bar-editor .add-tile{display:flex;}
 .add-tile:hover{border-color:var(--accent);color:var(--accent);background:rgba(var(--rgb-gold-500),.04);}
 .add-tile .plus{font-size:42px;font-weight:300;line-height:1;color:var(--accent);}
@@ -362,7 +366,7 @@ body.is-bar-editor .add-tile{display:flex;}
 /* ── FLOATING ACTION BUTTON ── */
 .fab{display:none;position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:var(--text-on-accent);font-size:32px;font-weight:300;line-height:1;cursor:pointer;box-shadow:var(--shadow-lg);transition:all .2s;}
 .fab:hover,.fab:active{background:var(--text-accent-soft);transform:scale(1.05);}
-body.is-admin .fab{display:flex;align-items:center;justify-content:center;}
+body.is-admin .fab, body.is-content-editor .fab{display:flex;align-items:center;justify-content:center;}
 body.is-bar-editor .fab{display:flex;align-items:center;justify-content:center;}
 
 /* ── MODAL BUTTON ROW ── */
@@ -465,7 +469,7 @@ body.is-bar-editor .fab{display:flex;align-items:center;justify-content:center;}
 
 /* hide FAB on desktop (only appears on mobile via admin / bar_editor) */
 @media(min-width:769px){
-  body .fab,body.is-admin .fab,body.is-bar-editor .fab{display:none!important;}
+  body .fab,body.is-admin .fab,body.is-bar-editor .fab,body.is-content-editor .fab{display:none!important;}
 }
 
 /* ── SCRIPTS PAGE ── */
@@ -519,7 +523,7 @@ body.is-bar-editor .fab{display:flex;align-items:center;justify-content:center;}
 
 /* Админ-бар */
 .tree-admin-bar{display:none;gap:8px;margin-top:8px;padding-top:14px;border-top:1px dashed rgba(var(--rgb-gold-500),.2);flex-wrap:wrap;}
-body.is-admin .tree-admin-bar{display:flex;}
+body.is-admin .tree-admin-bar, body.is-content-editor .tree-admin-bar{display:flex;}
 .tree-admin-bar .btn{font-size:10px;}
 
 .tree-empty{padding:22px;text-align:center;color:var(--text-muted);font-size:12.5px;font-style:italic;}
@@ -545,7 +549,7 @@ body.is-admin .tree-admin-bar{display:flex;}
 .script-avoid{font-size:12px;color:var(--text-muted);line-height:1.6;padding:10px 12px;background:rgba(var(--rgb-danger),.07);border-radius:8px;border-left:2px solid var(--danger-border);}
 .script-back-flip{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);opacity:.45;margin-top:14px;text-align:right;}
 .script-edit-btn{position:absolute;top:10px;right:10px;z-index:5;width:32px;height:32px;border-radius:50%;border:1px solid rgba(var(--rgb-gold-500),.3);background:rgba(var(--rgb-choco-800),.8);color:var(--accent);font-size:13px;display:none;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(4px);}
-body.is-admin .script-edit-btn{display:flex;}
+body.is-admin .script-edit-btn, body.is-content-editor .script-edit-btn{display:flex;}
 
 /* Rule cards (no flip) */
 .rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:20px;}
@@ -557,7 +561,7 @@ body.is-admin .script-edit-btn{display:flex;}
 .rule-violation{font-size:11.5px;color:var(--danger-text);line-height:1.55;padding:8px 10px;background:var(--danger-bg);border-left:2px solid var(--danger-border);border-radius:0 6px 6px 0;}
 .rule-violation-label{display:block;font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--danger);margin-bottom:4px;opacity:.85;}
 .rule-edit-btn{position:absolute;top:10px;right:10px;z-index:5;width:28px;height:28px;border-radius:50%;border:1px solid rgba(var(--rgb-gold-500),.3);background:rgba(var(--rgb-choco-800),.8);color:var(--accent);font-size:11px;display:none;align-items:center;justify-content:center;cursor:pointer;}
-body.is-admin .rule-edit-btn{display:flex;}
+body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex;}
 
 /* Checklist */
 .checklist-box{background:var(--bg-card);border:1px solid rgba(var(--rgb-gold-500),.18);border-radius:var(--radius);padding:22px 26px;margin-bottom:20px;position:relative;box-shadow:var(--shadow-sm);}
@@ -16058,8 +16062,15 @@ function canEditContent() { return isAdmin || isContentEditor; }
 let isBarEditor    = false;  // 'bar_editor': редактирует только карточки локации 'бар'
 
 // Может ли текущий пользователь редактировать карточку?
-// admin — любую; bar_editor — только локацию 'бар'.
+// admin — любую; editor — любую (без удаления); bar_editor — только локацию 'бар'.
 function canEditCard(c) {
+  if (isAdmin) return true;
+  if (isContentEditor) return true;
+  if (isBarEditor && c && c.location === 'бар') return true;
+  return false;
+}
+// Может ли пользователь удалить контент? Редактор — НЕ может ничего удалять.
+function canDeleteCard(c) {
   if (isAdmin) return true;
   if (isBarEditor && c && c.location === 'бар') return true;
   return false;
@@ -16464,9 +16475,9 @@ function renderCards() {
   const filtered = sect ? CARDS.filter(c => c.location === sect) : CARDS;
   const cats = sect ? getCardCategories(sect) : new Set(filtered.map(c => c.category).filter(Boolean));
   const navCat = document.getElementById('navCategories');
-  // Управление категориями — только для админа. Старший барист не трогает структуру.
-  const catMgrBtn = isAdmin && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
-  if (cats.size > 0 || isAdmin) {
+  // Управление категориями — админу и редактору. Старший барист не трогает структуру.
+  const catMgrBtn = canEditContent() && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
+  if (cats.size > 0 || canEditContent()) {
     navCat.classList.remove('hidden');
     navCat.innerHTML = '<button class="cat-tab'+(currentCat==='Все'?' active':'')+'" onclick="setCat(\'Все\',this)">Все</button>' +
       [...cats].sort().map(c =>
@@ -16476,8 +16487,8 @@ function renderCards() {
     navCat.classList.add('hidden');
   }
 
-  // «+ Добавить карточку»: админу везде; бар-редактору — только в секции «бар».
-  const canAdd = isAdmin || (isBarEditor && sect === 'бар');
+  // «+ Добавить карточку»: админу и редактору — везде; бар-редактору — только в секции «бар».
+  const canAdd = canEditContent() || (isBarEditor && sect === 'бар');
   const grid = document.getElementById('grid');
   const show = filtered.filter(c => currentCat === 'Все' || c.category === currentCat);
   grid.innerHTML = show.length === 0 ? '<div class="empty-state">Нет карточек в этом разделе</div>' :
@@ -17426,6 +17437,7 @@ async function saveTechnique() {
 
 async function deleteTechnique() {
   if (!editingId) return;
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   if (!confirm(`Удалить тему ${editingId}? Прогресс пользователей по этой теме тоже удалится.`)) return;
   const ok = await dbDelete('techniques', editingId);
   if (!ok) return;
@@ -18128,14 +18140,14 @@ function renderGlossary() {
   const grid = document.getElementById('glossaryGrid');
   const cards = GLOSSARY_DATA.map(g => `
     <div class="gloss-card" data-id="${g.id}" data-cat="${escHtml(g.category)}" data-term="${escHtml((g.term||'').toLowerCase())}" data-def="${escHtml((g.definition||'').toLowerCase())}">
-      ${isAdmin ? `<button class="gloss-edit-btn admin-only" onclick="openGlossModal('${g.id}')" aria-label="Редактировать">✎</button>` : ''}
+      ${canEditContent() ? `<button class="gloss-edit-btn admin-only" onclick="openGlossModal('${g.id}')" aria-label="Редактировать">✎</button>` : ''}
       <div class="gloss-cat">${escHtml(g.category)}</div>
       <div class="gloss-term">${escHtml(g.term)}</div>
       <div class="gloss-def">${escHtml(g.definition)}</div>
       ${g.example ? `<div class="gloss-example">${escHtml(g.example)}</div>` : ''}
     </div>
   `).join('');
-  const addTile = isAdmin
+  const addTile = canEditContent()
     ? `<div class="add-tile admin-only" onclick="openGlossModal(null)"><div class="plus">+</div><p>Добавить термин</p></div>`
     : '';
   grid.innerHTML = cards + addTile;
@@ -18159,7 +18171,7 @@ function renderGlossaryFilters() {
   bar.innerHTML =
     `<button class="filter-btn ${glossaryCatFilter==='all'?'active':''}" onclick="setGlossFilter('all')">Все</button>` +
     cats.map(c => `<button class="filter-btn ${glossaryCatFilter===c?'active':''}" onclick="setGlossFilter(decodeURIComponent('${encodeURIComponent(c)}'))">${escHtml(c)}</button>`).join('') +
-    (isAdmin ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('gloss')">⚙ Категории</button>` : '');
+    (canEditContent() ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('gloss')">⚙ Категории</button>` : '');
 }
 
 function setGlossFilter(cat) {
@@ -18175,7 +18187,7 @@ function setGlossaryFilter(cat, btn) { setGlossFilter(cat); }
 // CATEGORY MANAGER (glossary & tools)
 // ════════════════════════════════════════════════
 function openCatManager(type, loc = null) {
-  if (!isAdmin) return;
+  if (!canEditContent()) return;
   editingType = 'catmgr';
   editingId = type === 'card' ? `card:${loc||'магазин'}` : type;
   renderCatManagerModal(type, loc);
@@ -18218,7 +18230,7 @@ function renderCatManagerModal(type, loc = null) {
           <input class="cat-rename-input" value="${escAttr(displayLabel)}" placeholder="Название">
           <span class="cat-mgr-count">${count}</span>
           <button class="btn" onclick="handleCatRename('${type}','${enc}',this${locArg})">Переименовать</button>
-          <button class="btn danger" onclick="handleCatDelete('${type}','${enc}',this${locArg})">Удалить</button>
+          ${isAdmin ? `<button class="btn danger" onclick="handleCatDelete('${type}','${enc}',this${locArg})">Удалить</button>` : ''}
         </div>`;
       }).join('');
 
@@ -18349,6 +18361,7 @@ async function handleCatRename(type, catEnc, btn, loc = null) {
 }
 
 function handleCatDelete(type, catEnc, btn, loc = null) {
+  if (!isAdmin) { showToast('Удаление категорий — только админу'); return; }
   const row = btn.closest('.cat-mgr-row');
   const name = decodeURIComponent(catEnc);
   const ctx = catMgrCtx(type, loc);
@@ -18425,6 +18438,7 @@ async function handleCatMove(type, catEnc, btn, loc = null) {
 }
 
 async function handleCatDeleteAll(type, catEnc, btn, loc = null) {
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   const name = decodeURIComponent(catEnc);
   const ctx = catMgrCtx(type, loc);
 
@@ -18460,11 +18474,11 @@ function escAttr(s){return escHtml(s);}
 function openModal(id) {
   const c = id ? CARDS.find(x => x.id === id) : null;
   if (id && !canEditCard(c)) { showToast('Нет прав редактировать эту карточку'); return; }
-  if (!id && !isAdmin && !isBarEditor) { showToast('Нет прав на создание'); return; }
+  if (!id && !canEditContent() && !isBarEditor) { showToast('Нет прав на создание'); return; }
   editingType = 'card';
   editingId = id;
   document.getElementById('modalTitle').textContent = c ? 'Редактировать карточку' : 'Новая карточка';
-  document.getElementById('btnDelete').style.display = c ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (c && canDeleteCard(c)) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildForm(c);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -18480,7 +18494,7 @@ function openGlossModal(id) {
   editingId = id;
   const g = id ? GLOSSARY_DATA.find(x => x.id === id) : null;
   document.getElementById('modalTitle').textContent = g ? 'Редактировать термин' : 'Новый термин';
-  document.getElementById('btnDelete').style.display = g ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (g && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildGlossForm(g);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -18530,6 +18544,7 @@ async function saveGloss() {
 
 async function deleteGloss() {
   if (!editingId) return;
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   if (!confirm('Удалить термин?')) return;
   const ok = await dbDelete('glossary', editingId);
   if (!ok) return;
@@ -18548,7 +18563,7 @@ function openToolModal(id) {
   editingId = id;
   const t = id ? TOOLS_DATA.find(x => x.id === id) : null;
   document.getElementById('modalTitle').textContent = t ? 'Редактировать инструмент' : 'Новый инструмент';
-  document.getElementById('btnDelete').style.display = t ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (t && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildToolForm(t);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -18611,6 +18626,7 @@ async function saveTool() {
 
 async function deleteTool() {
   if (!editingId) return;
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   if (!confirm('Удалить инструмент?')) return;
   const ok = await dbDelete('tools', editingId);
   if (!ok) return;
@@ -18646,11 +18662,11 @@ function renderScripts() {
   html += renderScriptsByStage(scripts, role);
   if (role === 'bar') {
     if (rules.length) html += renderRulesBlock(rules);
-    else if (isAdmin) html += `<div class="scripts-block"><div class="scripts-block-title">📏 Правила обслуживания</div><div class="rules-grid"><div class="add-tile admin-only" onclick="openRuleModal(null)"><div class="plus">+</div><p>Добавить правило</p></div></div></div>`;
+    else if (canEditContent()) html += `<div class="scripts-block"><div class="scripts-block-title">📏 Правила обслуживания</div><div class="rules-grid"><div class="add-tile admin-only" onclick="openRuleModal(null)"><div class="plus">+</div><p>Добавить правило</p></div></div></div>`;
   }
   if (checklists.length) {
     html += renderChecklistsBlock(checklists);
-  } else if (isAdmin && role !== 'common') {
+  } else if (canEditContent() && role !== 'common') {
     html += `<div class="scripts-block"><div class="scripts-block-title">✅ Чек-лист смены</div><div class="add-tile admin-only" style="max-width:380px" onclick="openChecklistModal(null)"><div class="plus">+</div><p>Добавить чек-лист</p></div></div>`;
   }
 
@@ -18665,7 +18681,7 @@ function renderTreeBlock(tree, role) {
 
   // Дерева нет
   if (!tree || !tree.nodes || !tree.start) {
-    const body = `<div class="tree-box"><div class="tree-empty">Дерево ещё не создано.${isAdmin ? ' Нажми «Создать дерево» ниже.' : ''}</div>${isAdmin ? `<div class="tree-admin-bar"><button class="btn" onclick="createEmptyTree('${escAttr(role)}')">+ Создать дерево</button></div>` : ''}</div>`;
+    const body = `<div class="tree-box"><div class="tree-empty">Дерево ещё не создано.${canEditContent() ? ' Нажми «Создать дерево» ниже.' : ''}</div>${canEditContent() ? `<div class="tree-admin-bar"><button class="btn" onclick="createEmptyTree('${escAttr(role)}')">+ Создать дерево</button></div>` : ''}</div>`;
     return `<div class="scripts-block"><div class="scripts-block-title">${title}</div><div class="scripts-block-subtitle">${sub}</div>${body}</div>`;
   }
 
@@ -18702,7 +18718,7 @@ function renderTreeBlock(tree, role) {
     activeNodeId = lastStep ? lastStep.next : tree.start;
     const node = tree.nodes[activeNodeId];
     if (!node) {
-      activeHTML = `<div class="tree-empty">Узел «${escHtml(activeNodeId || '')}» не найден в дереве.${isAdmin ? ' Создай его через «+ Новый узел» ниже.' : ''}</div>`;
+      activeHTML = `<div class="tree-empty">Узел «${escHtml(activeNodeId || '')}» не найден в дереве.${canEditContent() ? ' Создай его через «+ Новый узел» ниже.' : ''}</div>`;
     } else {
       const opts = (node.options || []).map((o, i) => `
         <button class="tree-option" onclick="pickTreeOption(${currentTreePath.length}, ${i})">
@@ -18724,7 +18740,7 @@ function renderTreeBlock(tree, role) {
     ? `<div class="tree-reset-row"><button class="tree-reset-small" onclick="treeReset()">↺ Сбросить все ответы</button></div>`
     : '';
 
-  const adminHTML = isAdmin ? renderTreeAdminBar(tree, activeNodeId) : '';
+  const adminHTML = canEditContent() ? renderTreeAdminBar(tree, activeNodeId) : '';
 
   return `
     <div class="scripts-block">
@@ -18798,7 +18814,7 @@ function renderScriptsByStage(scripts, role) {
   Object.keys(byStage).forEach(k => { if (!stages.find(st => st.key === k)) orderedStages.push({key:k, label:k}); });
 
   if (!orderedStages.length) {
-    if (!isAdmin) return '';
+    if (!canEditContent()) return '';
     return `<div class="scripts-block"><div class="scripts-block-title">📝 Скрипты по этапам</div><div class="scripts-block-subtitle">Пока нет скриптов для этой роли.</div></div>
     <div class="tools-section"><div class="tools-grid"><div class="add-tile admin-only" onclick="openScriptModal(null)"><div class="plus">+</div><p>Добавить скрипт</p></div></div></div>`;
   }
@@ -18809,7 +18825,7 @@ function renderScriptsByStage(scripts, role) {
       <div class="tools-section-title">${escHtml(st.label)}</div>
       <div class="tools-grid">
         ${list.map(s => scriptCardHTML(s)).join('')}
-        ${isAdmin ? `<div class="add-tile admin-only" onclick="openScriptModal(null,'${escAttr(st.key)}')"><div class="plus">+</div><p>Добавить скрипт</p></div>` : ''}
+        ${canEditContent() ? `<div class="add-tile admin-only" onclick="openScriptModal(null,'${escAttr(st.key)}')"><div class="plus">+</div><p>Добавить скрипт</p></div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -18824,7 +18840,7 @@ function scriptCardHTML(s) {
   const stages = SCRIPT_STAGES[s.role] || [];
   const stageLabel = stages.find(st => st.key === s.stage)?.label || s.stage || '—';
   return `<div class="script-card" id="scd-${escAttr(s.id)}" onclick="flipScript('${escAttr(s.id)}',event)">
-    ${isAdmin ? `<button class="script-edit-btn admin-only" onclick="openScriptModal('${escAttr(s.id)}');event.stopPropagation()" aria-label="Редактировать">✎</button>` : ''}
+    ${canEditContent() ? `<button class="script-edit-btn admin-only" onclick="openScriptModal('${escAttr(s.id)}');event.stopPropagation()" aria-label="Редактировать">✎</button>` : ''}
     <div class="script-inner">
       <div class="script-front">
         <div class="script-stage-badge">${escHtml(stageLabel)}</div>
@@ -18857,7 +18873,7 @@ function renderRulesBlock(rules) {
       <div class="tools-section-title">${escHtml(cat)}</div>
       <div class="rules-grid">
         ${byCat[cat].map(r => ruleCardHTML(r)).join('')}
-        ${isAdmin ? `<div class="add-tile admin-only" onclick="openRuleModal(null,'${escAttr(cat)}')"><div class="plus">+</div><p>Добавить правило</p></div>` : ''}
+        ${canEditContent() ? `<div class="add-tile admin-only" onclick="openRuleModal(null,'${escAttr(cat)}')"><div class="plus">+</div><p>Добавить правило</p></div>` : ''}
       </div>
     </div>
   `).join('');
@@ -18869,7 +18885,7 @@ function renderRulesBlock(rules) {
 
 function ruleCardHTML(r) {
   return `<div class="rule-card">
-    ${isAdmin ? `<button class="rule-edit-btn admin-only" onclick="openRuleModal('${escAttr(r.id)}')" aria-label="Редактировать">✎</button>` : ''}
+    ${canEditContent() ? `<button class="rule-edit-btn admin-only" onclick="openRuleModal('${escAttr(r.id)}')" aria-label="Редактировать">✎</button>` : ''}
     <div class="rule-cat">${escHtml(r.category || 'Правило')}</div>
     <div class="rule-title">${escHtml(r.title || '')}</div>
     ${r.why ? `<div class="rule-why">${escHtml(r.why)}</div>` : ''}
@@ -18880,7 +18896,7 @@ function ruleCardHTML(r) {
 function renderChecklistsBlock(checklists) {
   const inner = checklists.map(cl => `
     <div class="checklist-box">
-      ${isAdmin ? `<button class="rule-edit-btn admin-only" onclick="openChecklistModal('${escAttr(cl.id)}')" aria-label="Редактировать">✎</button>` : ''}
+      ${canEditContent() ? `<button class="rule-edit-btn admin-only" onclick="openChecklistModal('${escAttr(cl.id)}')" aria-label="Редактировать">✎</button>` : ''}
       <div class="checklist-title">${escHtml(cl.title || 'Чек-лист')}</div>
       ${(cl.items||[]).map(item => `<div class="checklist-item" onclick="this.classList.toggle('checked')"><div class="checklist-check">✓</div><div class="checklist-text">${escHtml(item)}</div></div>`).join('')}
     </div>
@@ -18900,7 +18916,7 @@ function openScriptModal(id, defaultStage) {
   editingId = id;
   const s = id ? SCRIPTS_DATA.find(x => x.id === id && x.type === 'script') : null;
   document.getElementById('modalTitle').textContent = s ? 'Редактировать скрипт' : 'Новый скрипт';
-  document.getElementById('btnDelete').style.display = s ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (s && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildScriptForm(s, defaultStage);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -18968,6 +18984,7 @@ async function saveScript() {
 
 async function deleteScript() {
   if (!editingId) return;
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   if (!confirm('Удалить скрипт?')) return;
   const ok = await dbDelete('scripts', editingId);
   if (!ok) return;
@@ -18984,7 +19001,7 @@ function openRuleModal(id, defaultCat) {
   editingId = id;
   const r = id ? SCRIPTS_DATA.find(x => x.id === id && x.type === 'rule') : null;
   document.getElementById('modalTitle').textContent = r ? 'Редактировать правило' : 'Новое правило';
-  document.getElementById('btnDelete').style.display = r ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (r && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildRuleForm(r, defaultCat);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -19031,6 +19048,7 @@ async function saveRule() {
 
 async function deleteRule() {
   if (!editingId) return;
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   if (!confirm('Удалить правило?')) return;
   const ok = await dbDelete('scripts', editingId);
   if (!ok) return;
@@ -19043,7 +19061,7 @@ async function deleteRule() {
 
 // ── TREE nodes ──
 async function createEmptyTree(role) {
-  if (!isAdmin) return;
+  if (!canEditContent()) return;
   const id = 'tree-' + role;
   if (SCRIPTS_DATA.find(x => x.id === id)) { showToast('Дерево уже есть'); return; }
   const tree = {id, type:'tree', role, title:(role==='retail'?'Дерево потребности':'Дерево гостя'), start:'root', nodes:{root:{question:'(введите корневой вопрос)', options:[]}}};
@@ -19062,7 +19080,7 @@ function openTreeNodeModal(treeId, nodeId) {
   if (!tree) { showToast('Дерево не найдено'); return; }
   const node = nodeId ? tree.nodes[nodeId] : null;
   document.getElementById('modalTitle').textContent = node ? 'Редактировать узел' : 'Новый узел';
-  document.getElementById('btnDelete').style.display = (node && nodeId !== 'root') ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (node && nodeId !== 'root' && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildTreeNodeForm(tree, nodeId || '', node);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -19172,6 +19190,7 @@ async function saveTreeNode() {
 }
 
 async function deleteTreeNode(treeIdOrUndef, nodeIdOrUndef) {
+  if (!isAdmin) { showToast('Удаление — только админу'); return; }
   let treeId, nId;
   if (nodeIdOrUndef === undefined) {
     [treeId, nId] = (editingId || '::').split('::');
@@ -19202,7 +19221,7 @@ function openChecklistModal(id) {
   editingId = id;
   const cl = id ? SCRIPTS_DATA.find(x => x.id === id && x.type === 'checklist') : null;
   document.getElementById('modalTitle').textContent = cl ? 'Редактировать чек-лист' : 'Новый чек-лист';
-  document.getElementById('btnDelete').style.display = cl ? 'block' : 'none';
+  document.getElementById('btnDelete').style.display = (cl && isAdmin) ? 'block' : 'none';
   document.getElementById('modalBody').innerHTML = buildChecklistForm(cl);
   document.getElementById('modalOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -19406,7 +19425,7 @@ async function saveCard() {
 async function deleteCard() {
   if (!editingId) return;
   const orig = CARDS.find(c => c.id === editingId);
-  if (!canEditCard(orig)) { showToast('Нет прав на удаление'); return; }
+  if (!canDeleteCard(orig)) { showToast('Нет прав на удаление'); return; }
   if (!confirm('Удалить карточку?')) return;
   const ok = await dbDelete('cards', editingId);
   if (!ok) return;
