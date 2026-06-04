@@ -16518,15 +16518,19 @@ function loadCards() {
 }
 function saveCards() { localStorage.setItem('yahya_cards_v4', JSON.stringify(CARDS)); }
 
-// Все категории, доступные для конкретной локации: базовые из DEFAULT_NAV +
-// пользовательские из NAV (localStorage) + реально использующиеся в CARDS +
-// опционально — явная категория редактируемой карточки (чтобы её option всегда
-// была в селекте, даже если NAV усечён).
+// Все категории, доступные для конкретной локации.
+// Источник истины — реальные карточки в CARDS: они синхронизируются через БД,
+// поэтому категория с товарами видна на всех устройствах, а удалённая
+// (через перенос/удаление её карточек) — исчезает у всех.
+// NAV (localStorage) — локальный черновик редактора: только что добавленная пустая
+// категория видна ему сразу, у продавцов появится когда в ней будут карточки.
+// DEFAULT_NAV больше НЕ подмешивается в выдачу (из-за этого категории «не удалялись»);
+// он остался только как стартовое наполнение NAV на новом устройстве.
+// extra — явная категория редактируемой карточки, чтобы её option всегда была в селекте.
 function getCardCategories(loc, extra = null) {
   const s = new Set();
-  (DEFAULT_NAV[loc]?.categories || []).forEach(c => s.add(c));
-  (NAV[loc]?.categories || []).forEach(c => s.add(c));
   CARDS.filter(c => c.location === loc && c.category).forEach(c => s.add(c.category));
+  if (canEditContent() || isBarEditor) (NAV[loc]?.categories || []).forEach(c => s.add(c));
   if (extra) s.add(extra);
   return s;
 }
@@ -18410,7 +18414,20 @@ async function handleCatRename(type, catEnc, btn, loc = null) {
   const locValue = type === 'card' ? (loc || 'магазин') : null;
   const fresh = await dbFetchByCategory(ctx.table, ctx.catField, oldName, locValue);
   if (fresh === null) return;
-  if (!fresh.length) { showToast('Категория уже пуста'); ctx.rerender(); renderCatManagerModal(type, loc); return; }
+  if (!fresh.length) {
+    // Записей в БД нет — это пустая локальная категория (NAV). Переименовываем её там.
+    if (type === 'card') {
+      const l = loc || 'магазин';
+      NAV[l] = NAV[l] || {categories:[], seasonal:[]};
+      NAV[l].categories = (NAV[l].categories || []).filter(c => c !== oldName);
+      if (!NAV[l].categories.includes(newName)) NAV[l].categories.push(newName);
+      saveNav();
+      showToast(`Переименовано: «${oldName}» → «${newName}»`);
+    } else {
+      showToast('Категория уже пуста');
+    }
+    ctx.rerender(); renderCatManagerModal(type, loc); return;
+  }
 
   const updated = fresh.map(r => ({ ...r.data, [ctx.catField]: newName }));
   const ok = await dbUpsertMany(ctx.table, updated.map(d => ({ id: d.id, data: d })));
