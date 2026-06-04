@@ -816,8 +816,7 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 <div id="page-products" class="page active">
   <div class="products-nav">
     <div class="nav-sections" id="navSections">
-      <button class="section-tab active" data-section="all">Все <span class="section-count" id="cnt-all">0</span></button>
-      <button class="section-tab" data-section="магазин">Магазин <span class="section-count" id="cnt-магазин">0</span></button>
+      <button class="section-tab active" data-section="магазин">Магазин <span class="section-count" id="cnt-магазин">0</span></button>
       <button class="section-tab" data-section="кухня">Кухня <span class="section-count" id="cnt-кухня">0</span></button>
       <button class="section-tab" data-section="бар">Бар <span class="section-count" id="cnt-бар">0</span></button>
       <div class="nav-spacer"></div>
@@ -16107,7 +16106,7 @@ let USER_PROGRESS   = [];   // [{user_id, technique_id, completed_at}]
 let LATEST_ATTEMPTS = {};   // {quiz_id: {score,total,passed,attempted_at}} — последняя попытка на тест
 
 let currentPage    = 'products';
-let currentSection = 'all';
+let currentSection = 'магазин';
 let currentCat     = 'Все';
 let currentToolFilter = 'all';
 let currentGFilter = 'all';
@@ -16536,13 +16535,11 @@ function getCardCategoriesSorted(loc, extra = null) {
 }
 
 function renderCards() {
-  const counts = {all: CARDS.length};
+  const counts = {};
   ['магазин','кухня','бар'].forEach(loc => {
     counts[loc] = CARDS.filter(c => c.location === loc).length;
-  });
-  ['all','магазин','кухня','бар'].forEach(k => {
-    const el = document.getElementById('cnt-'+k);
-    if (el) el.textContent = counts[k] || 0;
+    const el = document.getElementById('cnt-'+loc);
+    if (el) el.textContent = counts[loc] || 0;
   });
 
   const sect = currentSection === 'all' ? null : currentSection;
