@@ -37,7 +37,11 @@ function ProductSheet({ it, onClose, desktop }) {
       };
 
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 60 }}>
+    // fixed (не absolute): прикрепляет лист к окну/iframe, а не к концу прокрутки.
+    // У телефонной раскладки #app только min-height:100vh без definite height, поэтому
+    // цепочка height:100% не резолвится и absolute-оверлей растягивался на всю высоту
+    // контента — лист уезжал в самый низ. fixed считается от вьюпорта iframe.
+    <div style={{ position: "fixed", inset: 0, zIndex: 60 }}>
       <div onClick={close} style={{ position: "absolute", inset: 0, background: "rgba(15,8,3,0.6)",
         opacity: show ? 1 : 0, transition: "opacity .24s ease" }} />
       <div style={panelStyle}>
