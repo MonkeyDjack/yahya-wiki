@@ -1,0 +1,59 @@
+/* YAHYA — Color tokens
+   Derived from the yahya.kg storefront and the gold wordmark.
+   The palette is warm and edible: a single brand gold, a roasted-cacao
+   brown for actions, and a stack of creams that read like nougat / praline.
+*/
+
+:root {
+  /* ---- Brand core ---- */
+  --yahya-gold: #c59e5f;          /* the wordmark gold — primary brand color */
+  --yahya-gold-deep: #a9824a;     /* pressed / darker gold */
+  --yahya-gold-soft: #d8bd8e;     /* tints, dividers, hairlines */
+
+  --yahya-cacao: #845d3e;         /* roasted brown — primary buttons, hero fills */
+  --yahya-cacao-deep: #6d4a30;    /* pressed brown */
+  --yahya-cacao-soft: #b19884;    /* muted brown, disabled, secondary text on cream */
+
+  /* ---- Creams / neutrals (warm) ---- */
+  --cream-50:  #faf7f3;           /* lightest surface */
+  --cream-100: #f5f0ea;           /* card surface */
+  --cream-200: #ece6df;           /* page background */
+  --cream-300: #e1d9cf;           /* sunken / track */
+  --cream-400: #cfc4b6;           /* borders on cream */
+
+  --ink-900: #1c1b1a;             /* near-black headings & body */
+  --ink-700: #4a443e;             /* secondary text */
+  --ink-500: #7e756b;             /* tertiary / captions */
+
+  --white: #ffffff;
+
+  /* ---- Semantic (warm, kept muted to match the brand) ---- */
+  --success: #6f8b4f;             /* pistachio green */
+  --success-soft: #e6ecdb;
+  --danger:  #b4452f;             /* dried-chili red */
+  --danger-soft: #f3ddd7;
+  --info:    #5b7c8c;             /* muted teal */
+  --info-soft: #dde8ec;
+
+  /* ---- Semantic aliases (use these in components) ---- */
+  --bg-page: var(--cream-200);
+  --bg-surface: var(--cream-100);
+  --bg-raised: var(--cream-50);
+  --bg-inverse: var(--ink-900);
+
+  --text-strong: var(--ink-900);
+  --text-body: var(--ink-700);
+  --text-muted: var(--ink-500);
+  --text-on-brand: var(--cream-50);
+  --text-accent: var(--yahya-gold);
+
+  --border-subtle: var(--cream-400);
+  --border-gold: var(--yahya-gold-soft);
+
+  --action-primary: var(--yahya-cacao);
+  --action-primary-hover: var(--yahya-cacao-deep);
+  --action-accent: var(--yahya-gold);
+  --action-accent-hover: var(--yahya-gold-deep);
+
+  --focus-ring: color-mix(in srgb, var(--yahya-gold) 55%, transparent);
+}

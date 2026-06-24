@@ -817,6 +817,9 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   <button class="page-tab" data-page="regulations">
     <span class="tab-icon">📜</span> Регламенты
   </button>
+  <button class="page-tab" data-page="warehouse">
+    <span class="tab-icon">📦</span> Склад ХОЗ
+  </button>
 </nav>
 
 <!-- ══════════════ PRODUCTS PAGE ══════════════ -->
@@ -873,6 +876,17 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
     <p>Внутренние правила компании. Обязательны для всех сотрудников — ознакомление под подпись.</p>
   </div>
   <div id="regulationsContent"></div>
+</div>
+
+<!-- ══════════════ WAREHOUSE PAGE (Заявки на склад ХОЗ) ══════════════ -->
+<!-- Самостоятельное React-приложение в подпапке warehouse-training/.
+     Встроено через iframe (все пути внутри относительные). src ставится лениво
+     при первом открытии вкладки — чтобы React/Babel/фото не грузились заранее. -->
+<div id="page-warehouse" class="page">
+  <iframe id="warehouseFrame"
+          data-src="./warehouse-training/index.html"
+          title="Заявки на склад ХОЗ"
+          style="width:100%;border:0;display:block;background:var(--bg-page);"></iframe>
 </div>
 
 <!-- EDIT MODAL -->
@@ -16521,6 +16535,7 @@ document.querySelectorAll('.page-tab').forEach(btn => {
     document.getElementById('page-' + p).classList.add('active');
     currentPage = p;
     location.hash = p;
+    if (p === 'warehouse') sizeWarehouseFrame();
   });
 });
 
@@ -16528,6 +16543,18 @@ function navigateTo(page) {
   const tab = document.querySelector(`.page-tab[data-page="${page}"]`);
   if (tab) tab.click();
 }
+
+// Встроенное приложение «Склад ХОЗ»: ленивая загрузка src + подгон высоты iframe
+// под доступную область (под шапкой и навигацией). Высота считается от реального
+// положения iframe, поэтому корректна и на мобиле, и при ресайзе/повороте экрана.
+function sizeWarehouseFrame() {
+  const f = document.getElementById('warehouseFrame');
+  if (!f) return;
+  if (!f.src && f.dataset.src) f.src = f.dataset.src; // грузим только при первом открытии
+  const top = f.getBoundingClientRect().top;
+  f.style.height = Math.max(420, window.innerHeight - top) + 'px';
+}
+window.addEventListener('resize', () => { if (currentPage === 'warehouse') sizeWarehouseFrame(); });
 
 // ════════════════════════════════════════════════
 // PRODUCT CARDS
@@ -20056,7 +20083,7 @@ async function init() {
   if (typeof renderTechniques === 'function') renderTechniques();
 
   const hash = location.hash.replace('#','');
-  if (['products','tools','techniques','glossary','scripts','regulations'].includes(hash)) navigateTo(hash);
+  if (['products','tools','techniques','glossary','scripts','regulations','warehouse'].includes(hash)) navigateTo(hash);
 
   // restore session + load profile (isAdmin определяется через profile.role)
   try {

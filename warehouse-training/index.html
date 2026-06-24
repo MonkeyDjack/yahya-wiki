@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>YAHYA · Заявки на склад ХОЗ</title>
+<link rel="stylesheet" href="./styles.css" />
+<style>
+  :root {
+    /* Dark "milk chocolate" theme — warm brown surfaces, cream text, gold accents */
+    --app-bg: #2a1a10;
+    --choc-900: #221409;
+    --choc-800: #2f1e12;
+    --choc-700: #3b2818;
+    --choc-600: #4a3322;
+    --choc-500: #5d4530;
+    --line: rgba(231, 214, 190, 0.14);
+    --line-strong: rgba(231, 214, 190, 0.26);
+    --cream: #f3ebdf;
+    --cream-dim: #d8c7b1;
+    --cream-mute: #a9957d;
+    --gold: #d2a862;
+    --gold-deep: #b98e48;
+    --bar: #d8a657;        /* Бар badge */
+    --bar-bg: rgba(216,166,87,0.16);
+    --mag: #a9c178;        /* Магазин badge */
+    --mag-bg: rgba(169,193,120,0.16);
+    --oba: #e0d3bd;
+    --ok: #9fc06a;
+    --warn: #e0b15a;
+    --add: #e08a6a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-sans);
+    background:
+      radial-gradient(120% 80% at 50% -10%, #3b2616 0%, #2a1a10 55%, #1d1109 100%) fixed;
+    color: var(--cream);
+    display: flex; justify-content: center;
+    min-height: 100vh;
+  }
+  /* phone column */
+  #app {
+    width: 100%; max-width: 440px; min-height: 100vh;
+    background: var(--app-bg);
+    position: relative;
+    box-shadow: 0 0 70px rgba(0,0,0,0.5);
+    overflow-x: hidden;
+    display: flex; flex-direction: column;
+  }
+  #root { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  @media (min-width: 480px) {
+    body { padding: 24px 0; }
+    #app { min-height: calc(100vh - 48px); border-radius: 30px; overflow: hidden; }
+  }
+  @media (min-width: 900px) {
+    body { padding: 30px 0; }
+    #app { max-width: 1180px; width: calc(100vw - 60px); height: calc(100vh - 60px); min-height: 0; border-radius: 26px; }
+  }
+  .scroll { flex: 1; overflow-y: auto; padding-bottom: 88px; }
+  .scroll::-webkit-scrollbar { width: 0; }
+
+  a { color: var(--gold); }
+  ::selection { background: var(--gold); color: var(--choc-900); }
+
+  /* shared bits */
+  .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--gold); }
+  .h-screen { font-family: var(--font-sans); font-weight: 800; letter-spacing: .03em; text-transform: uppercase; color: var(--cream); margin: 0; }
+  .card { background: var(--choc-700); border: 1px solid var(--line); border-radius: 18px; }
+  .row-tap { cursor: pointer; transition: transform .12s ease, background .15s ease; }
+  .row-tap:active { transform: scale(0.985); }
+
+  /* badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; line-height: 1; }
+  .badge.bar { color: #2a1a10; background: #d8a657; }
+  .badge.mag { color: #ffffff; background: #6f8b4f; }
+  .badge.oba { color: #2a1a10; background: #e0d3bd; }
+
+  .fade-in { animation: fade .32s var(--ease-out); }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .fade-in { animation: none; } }
+  .lucide { stroke-width: 2; }
+</style>
+</head>
+<body>
+  <div id="app"><div id="root"></div></div>
+
+  <template id="__bundler_thumbnail">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <rect width="100" height="100" fill="#2a1a10"/>
+      <g transform="translate(30,30)" fill="none" stroke="#d2a862" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M2 12 L20 2 L38 12 L20 22 Z"/>
+        <path d="M2 12 L2 30 L20 40 L20 22"/>
+        <path d="M38 12 L38 30 L20 40"/>
+      </g>
+    </svg>
+  </template>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="data.js"></script>
+
+  <script type="text/babel" src="ui.jsx"></script>
+  <script type="text/babel" src="Home.jsx"></script>
+  <script type="text/babel" src="Guide.jsx"></script>
+  <script type="text/babel" src="Catalog.jsx"></script>
+  <script type="text/babel" src="ProductSheet.jsx"></script>
+  <script type="text/babel" src="Search.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
+</body>
+</html>

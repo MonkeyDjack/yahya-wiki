@@ -1,0 +1,51 @@
+/* YAHYA — base element defaults & a few helpers.
+   Lightweight: sets the page in Montserrat on warm cream, defines the
+   uppercase-tracked heading rhythm, and a couple of utility classes used
+   by specimen cards. Consumers can rely on these defaults or override. */
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-regular);
+  line-height: var(--lh-normal);
+  color: var(--text-body);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Headings: uppercase, tracked, near-black — the storefront signature */
+.yahya-display,
+.yahya-h1,
+.yahya-h2,
+.yahya-h3 {
+  font-family: var(--font-sans);
+  color: var(--text-strong);
+  text-transform: uppercase;
+  margin: 0;
+}
+.yahya-display { font-size: var(--fs-display); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-display); line-height: var(--lh-tight); }
+.yahya-h1 { font-size: var(--fs-h1); font-weight: var(--fw-bold); letter-spacing: var(--ls-heading); line-height: var(--lh-tight); }
+.yahya-h2 { font-size: var(--fs-h2); font-weight: var(--fw-bold); letter-spacing: var(--ls-heading); line-height: var(--lh-snug); }
+.yahya-h3 { font-size: var(--fs-h3); font-weight: var(--fw-semibold); letter-spacing: var(--ls-heading); line-height: var(--lh-snug); }
+
+/* Eyebrow / label */
+.yahya-eyebrow {
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+
+a { color: var(--yahya-cacao); }
+
+*:focus-visible {
+  outline: 2px solid var(--yahya-gold);
+  outline-offset: 2px;
+}

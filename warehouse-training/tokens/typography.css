@@ -1,0 +1,43 @@
+/* YAHYA — Typography tokens
+   One family (Montserrat) does everything. Brand voice is set by CASE and
+   TRACKING, not by switching typefaces: headings and labels are UPPERCASE
+   with positive letter-spacing; body is sentence-case at normal tracking.
+*/
+
+:root {
+  --font-sans: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  /* The wordmark is a custom serif; for display recreations fall back to a
+     high-contrast serif. Body/UI never uses serif. */
+  --font-wordmark: "Cormorant Garamond", "Times New Roman", serif;
+
+  /* Weights */
+  --fw-light: 300; /* @kind other */
+  --fw-regular: 400; /* @kind other */
+  --fw-medium: 500; /* @kind other */
+  --fw-semibold: 600; /* @kind other */
+  --fw-bold: 700; /* @kind other */
+  --fw-extrabold: 800; /* @kind other */
+  --fw-black: 900; /* @kind other */
+
+  /* Type scale (px) — display is uppercase + tracked */
+  --fs-display: 56px;
+  --fs-h1: 40px;
+  --fs-h2: 30px;
+  --fs-h3: 22px; /* @kind font */
+  --fs-title: 18px; /* @kind font */
+  --fs-body: 16px; /* @kind font */
+  --fs-sm: 14px; /* @kind font */
+  --fs-xs: 12px; /* @kind font */
+  --fs-label: 13px; /* @kind font */
+
+  /* Line heights */
+  --lh-tight: 1.1; /* @kind other */
+  --lh-snug: 1.25; /* @kind other */
+  --lh-normal: 1.55; /* @kind other */
+
+  /* Letter-spacing — the signature of the brand */
+  --ls-display: 0.06em; /* @kind other */
+  --ls-heading: 0.04em; /* @kind other */
+  --ls-label: 0.14em; /* @kind other */
+  --ls-body: 0; /* @kind other */
+}
