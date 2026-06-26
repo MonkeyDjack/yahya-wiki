@@ -33,6 +33,26 @@ function RecBadge({ rec, withIcon = true }) {
   );
 }
 
+// ---- 1С register badge (Номенклатура / Товары) ----
+// Подсказывает, какой тип выбрать в диалоге «Выбор типа данных» (шаг 6).
+function RegBadge({ reg, small }) {
+  if (!reg) return null;
+  const tov = reg.key === "tov";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: small ? 4 : 5, whiteSpace: "nowrap",
+      fontSize: small ? 10 : 11, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase",
+      padding: small ? "3px 7px" : "4px 9px", borderRadius: 999, lineHeight: 1,
+      border: "1px solid " + (tov ? "rgba(224,138,106,0.55)" : "var(--line-strong)"),
+      background: tov ? "rgba(224,138,106,0.16)" : "rgba(231,214,190,0.08)",
+      color: tov ? "#e8a98f" : "var(--cream-dim)",
+    }}>
+      <Icon name={tov ? "package" : "list-tree"} size={small ? 10 : 12} strokeWidth={2.2} />
+      {reg.label}
+    </span>
+  );
+}
+
 // ---- Pill button / chip ----
 function Chip({ active, onClick, children, icon }) {
   return (
@@ -190,4 +210,4 @@ function Sidebar({ tab, onTab }) {
   );
 }
 
-Object.assign(window, { Icon, RecBadge, Chip, Btn, TopBar, BottomNav, Sidebar, useIsDesktop });
+Object.assign(window, { Icon, RecBadge, RegBadge, Chip, Btn, TopBar, BottomNav, Sidebar, useIsDesktop });

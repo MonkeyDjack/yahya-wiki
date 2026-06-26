@@ -14,6 +14,7 @@ function ProductSheet({ it, onClose, desktop }) {
   };
   const close = () => { setShow(false); setTimeout(onClose, 240); };
 
+  const reg = window.WH.regInfo(it);
   const flagInfo = it.flag === "add"
     ? { c: "var(--add)", bg: "rgba(224,138,106,0.14)", icon: "plus-circle", t: "Нет в базе — нужно добавить" }
     : it.flag === "check"
@@ -64,6 +65,7 @@ function ProductSheet({ it, onClose, desktop }) {
           <div style={{ padding: "16px 18px 0" }}>
             <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
               <RecBadge rec={it.rec} />
+              <RegBadge reg={reg} />
               <span className="badge oba"><Icon name="warehouse" size={12} />{it.sklad}</span>
             </div>
 
@@ -86,6 +88,14 @@ function ProductSheet({ it, onClose, desktop }) {
               <div style={{ marginTop: 12, display: "flex", gap: 9, background: flagInfo.bg, borderRadius: 12, padding: "11px 13px" }}>
                 <Icon name={flagInfo.icon} size={17} color={flagInfo.c} />
                 <span style={{ fontSize: 13, color: "var(--cream-dim)" }}>{flagInfo.t}</span>
+              </div>
+            )}
+
+            {/* description / note (напр. список вкусов сиропов) */}
+            {it.note && (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontSize: 11, color: "var(--cream-mute)", letterSpacing: ".1em", textTransform: "uppercase", marginBottom: 6 }}>Описание</div>
+                <p style={{ fontSize: 13.5, color: "var(--cream-dim)", lineHeight: 1.5, margin: 0 }}>{it.note}</p>
               </div>
             )}
 

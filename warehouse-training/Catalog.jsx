@@ -69,6 +69,7 @@ function Catalog({ items, initialPart, onOpen, onTab, wide }) {
 }
 
 function Tile({ it, onOpen }) {
+  const reg = window.WH.regInfo(it);
   return (
     <button onClick={() => onOpen(it)} className="row-tap card" style={{
       padding: 0, overflow: "hidden", cursor: "pointer", textAlign: "left", display: "flex", flexDirection: "column",
@@ -82,7 +83,10 @@ function Tile({ it, onOpen }) {
       <div style={{ padding: "10px 11px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
         <span style={{ fontSize: 13, fontWeight: 600, color: "var(--cream)", lineHeight: 1.3,
           display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{it.title}</span>
-        <span style={{ fontSize: 11, color: "var(--cream-mute)", marginTop: "auto" }}>{it.unitLabel}{it.pack ? " · " + it.pack.unitPack : ""}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: "auto", flexWrap: "wrap" }}>
+          <RegBadge reg={reg} small />
+          <span style={{ fontSize: 11, color: "var(--cream-mute)" }}>{it.unitLabel}{it.pack ? " · " + it.pack.unitPack : ""}</span>
+        </div>
       </div>
     </button>
   );

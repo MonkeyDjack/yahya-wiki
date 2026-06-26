@@ -9,6 +9,14 @@ window.WH = (function () {
   ];
   const partOf = (k) => PARTS.find((p) => p.key === k);
 
+  // Регистр 1С, в котором числится позиция (определяет выбор в диалоге
+  // «Выбор типа данных» на шаге 6). Проставлен в catalog.json по коду.
+  const REG = {
+    nom: { key: "nom", label: "Номенклатура" },
+    tov: { key: "tov", label: "Товары" },
+  };
+  const regInfo = (it) => REG[it && it.reg] || null;
+
   // Receiver -> normalized {key,label}
   function receiver(it) {
     const r = (it.receiver || "").toLowerCase();
@@ -68,5 +76,5 @@ window.WH = (function () {
     return [...map.entries()];
   }
 
-  return { PARTS, partOf, receiver, packaging, load, groupBySection };
+  return { PARTS, partOf, receiver, packaging, regInfo, load, groupBySection };
 })();
