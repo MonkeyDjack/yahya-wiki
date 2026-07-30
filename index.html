@@ -841,6 +841,36 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   .tech-topics{grid-template-columns:1fr;}
   .tech-quiz-question{padding:16px 18px;}
 }
+
+/* ── ЛИЧНЫЙ ПРОФИЛЬ + QR-БЕЙДЖ ─────────────────────────────────── */
+.prof-wrap{padding:24px 32px;max-width:920px;margin:0 auto;}
+.prof-head{display:flex;align-items:center;gap:18px;padding:22px 24px;background:var(--bg-card);border:1px solid var(--border-default);border-radius:14px;margin-bottom:20px;}
+.prof-avatar{width:64px;height:64px;flex-shrink:0;border-radius:50%;background:rgba(var(--rgb-gold-500),.14);border:1px solid var(--border-active);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:var(--accent);letter-spacing:1px;}
+.prof-head-main{flex:1;min-width:0;}
+.prof-name{font-size:22px;font-weight:600;color:var(--text-heading);line-height:1.2;}
+.prof-meta{font-size:13px;color:var(--text-dim);margin-top:5px;}
+.prof-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.prof-section{background:var(--bg-card);border:1px solid var(--border-default);border-radius:14px;padding:20px 24px;margin-bottom:18px;}
+.prof-section h3{font-size:15px;color:var(--text-heading);margin-bottom:4px;letter-spacing:.5px;}
+.prof-section .hint{font-size:12px;color:var(--text-muted);margin-bottom:16px;}
+.prof-qr-body{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;}
+.prof-qr-preview{flex-shrink:0;width:236px;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-md);background:var(--bg-deep);}
+.prof-qr-preview canvas{display:block;width:100%;height:auto;}
+.prof-qr-side{flex:1;min-width:220px;}
+.prof-qr-side ol{margin:0 0 16px 18px;padding:0;}
+.prof-qr-side li{font-size:13px;color:var(--text-body);line-height:1.7;}
+.prof-locked{display:flex;gap:16px;align-items:flex-start;padding:20px 22px;background:var(--bg-deep);border:1px dashed var(--border-strong);border-radius:12px;}
+.prof-locked .lock-icon{font-size:30px;line-height:1;flex-shrink:0;}
+.prof-locked-title{font-size:15px;font-weight:600;color:var(--text-heading);margin-bottom:6px;}
+.prof-locked-text{font-size:13px;color:var(--text-dim);line-height:1.6;}
+.prof-progress-list{display:flex;flex-direction:column;gap:14px;}
+.prof-qr-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--text-muted);word-break:break-all;margin-top:14px;}
+@media(max-width:720px){
+  .prof-wrap{padding:18px 14px;}
+  .prof-head{flex-direction:column;align-items:flex-start;gap:14px;}
+  .prof-qr-body{flex-direction:column;}
+  .prof-qr-preview{width:100%;max-width:300px;margin:0 auto;}
+}
 </style>
 </head>
 <body>
@@ -881,6 +911,9 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   </button>
   <button class="page-tab" data-page="warehouse">
     <span class="tab-icon">📦</span> Склад ХОЗ
+  </button>
+  <button class="page-tab" data-page="profile">
+    <span class="tab-icon">👤</span> Профиль
   </button>
 </nav>
 
@@ -1001,6 +1034,11 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
           data-src="./warehouse-training/index.html"
           title="Заявки на склад ХОЗ"
           style="width:100%;border:0;display:block;background:var(--bg-page);"></iframe>
+</div>
+
+<!-- ══════════════ PROFILE PAGE (личный кабинет + QR-бейдж) ══════════════ -->
+<div id="page-profile" class="page">
+  <div id="profileRoot"></div>
 </div>
 
 <!-- EDIT MODAL -->
@@ -16650,6 +16688,7 @@ document.querySelectorAll('.page-tab').forEach(btn => {
     currentPage = p;
     location.hash = p;
     if (p === 'warehouse') sizeWarehouseFrame();
+    if (p === 'profile') renderProfile();
     if (p === 'scripts' && window._scriptSearchQuery) { window._scriptSearchQuery = ''; renderScripts(); }
   });
 });
@@ -17124,6 +17163,7 @@ async function techDoLogin() {
     await loadProfileAndProgress();
     logActivity('login');
     renderTechniques();
+    renderProfile();
     renderCards(); renderGlossary(); renderScripts(); renderRegulations();
     showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
   } catch(e) {
@@ -17396,6 +17436,7 @@ async function submitQuiz() {
 
   currentTechView = 'quiz-result';
   renderTechniques();
+  renderProfile();   // сдача Модуля 1 открывает QR-бейдж — страница профиля должна это подхватить
   window.scrollTo({top:0});
 }
 
@@ -17458,6 +17499,13 @@ function renderQuizResultView(root) {
         <div class="tech-result-pct">${pct}% правильных · проходной балл ${passScore}%</div>
         <div class="tech-result-msg">${escHtml(nextStep)}</div>
       </div>
+      ${(att.passed && moduleNum === QR_UNLOCK_MODULE) ? `
+        <div class="reg-seed-banner" style="border-style:solid">
+          <span>🎫 <b>Твой QR-код продавца открыт.</b> ${myQrId()
+            ? 'Скачай бейдж и показывай кассиру — продажи пойдут в твой личный бонус.'
+            : 'Код из 1С тебе ещё не привязали — напиши руководителю филиала.'}</span>
+          <button class="btn" style="margin-left:auto" onclick="navigateTo('profile')">Открыть профиль →</button>
+        </div>` : ''}
       ${wrongHTML}
     </div>
   `;
@@ -17834,10 +17882,357 @@ function deleteQuiz() {
 }
 
 // ════════════════════════════════════════════════
+// ЛИЧНЫЙ ПРОФИЛЬ + QR-КОД ПРОДАВЦА
+// ════════════════════════════════════════════════
+// QR содержит {"id":"<guid из 1С>"} — ровно тот формат, который читает 1С ЯРОС.
+// GUID лежит в profiles.qr_id (проставляет админ), менять его сам сотрудник не может
+// (триггер guard_profile_privileged_fields, см. qr_migration.sql).
+// Условие выдачи: сдана аттестация Модуля 1 — «учись → получаешь свой QR».
+
+const QR_UNLOCK_MODULE = 1;
+
+// Библиотека qrcode-generator лежит локально (assets/qrcode.js), а не на CDN:
+// сотрудники открывают вики с телефонов на слабом интернете, лишний внешний
+// запрос — лишняя точка отказа. Грузим лениво, только когда реально нужен QR.
+let _qrLibPromise = null;
+function loadQrLib() {
+  if (window.qrcode) return Promise.resolve(window.qrcode);
+  if (_qrLibPromise) return _qrLibPromise;
+  _qrLibPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = './assets/qrcode.js';
+    s.onload = () => window.qrcode ? resolve(window.qrcode) : reject(new Error('qrcode lib not exported'));
+    s.onerror = () => { _qrLibPromise = null; reject(new Error('qrcode lib failed to load')); };
+    document.head.appendChild(s);
+  });
+  return _qrLibPromise;
+}
+
+function qrPayload(guid) { return JSON.stringify({ id: guid }); }
+
+function myQrId()      { return (USER_PROFILE && USER_PROFILE.qr_id) || ''; }
+function isQrUnlocked() { return isModulePassed(QR_UNLOCK_MODULE); }
+
+// Инициалы для аватара: «Мирзаев Ариф Шергазыевич» → «МА»
+function nameInitials(fullName) {
+  const parts = (fullName || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  return (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+}
+
+// «Мирзаев Ариф Шергазыевич» → «Мирзаев Ариф Ш.» — чтобы влезало в бейдж одной строкой
+function shortName(fullName) {
+  const parts = (fullName || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 3) return parts.join(' ');
+  return `${parts[0]} ${parts[1]} ${parts[2][0]}.`;
+}
+
+// ── Отрисовка бейджа на canvas ──────────────────────────────────────
+// Печатаем на 2x — чтобы бейдж не мылился ни на retina-экране, ни на принтере.
+const BADGE_W = 600, BADGE_H = 790, BADGE_SCALE = 2;
+
+async function drawBadge(canvas, profile) {
+  const guid = profile.qr_id;
+  if (!guid) throw new Error('нет qr_id');
+  const qrcodeLib = await loadQrLib();
+  // Canvas рисует шрифтом только если тот уже загружен. Без ожидания первый
+  // бейдж после холодного старта уехал бы в Segoe UI вместо Montserrat.
+  if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch(e) {} }
+
+  // typeNumber 0 = автоподбор версии, 'M' = 15% избыточности:
+  // бейдж могут заламинировать и затереть, запас на восстановление нужен.
+  const qr = qrcodeLib(0, 'M');
+  qr.addData(qrPayload(guid));
+  qr.make();
+  const modules = qr.getModuleCount();
+
+  canvas.width  = BADGE_W * BADGE_SCALE;
+  canvas.height = BADGE_H * BADGE_SCALE;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(BADGE_SCALE, BADGE_SCALE);
+
+  // Фон — фирменный шоколад с мягким градиентом
+  const grad = ctx.createLinearGradient(0, 0, 0, BADGE_H);
+  grad.addColorStop(0, '#3D2010');
+  grad.addColorStop(1, '#2A1608');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, BADGE_W, BADGE_H);
+
+  // Золотая рамка
+  ctx.strokeStyle = '#C9A227';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(16, 16, BADGE_W - 32, BADGE_H - 32);
+
+  const font = (size, weight) => `${weight} ${size}px 'Montserrat','Segoe UI',sans-serif`;
+  ctx.textAlign = 'center';
+
+  // Шапка
+  ctx.fillStyle = '#E8C86A';
+  ctx.font = font(38, 600);
+  ctx.letterSpacing = '10px';           // поддерживается не везде — без него просто плотнее
+  ctx.fillText('YAHYA', BADGE_W / 2, 92);
+  ctx.letterSpacing = '0px';
+  ctx.fillStyle = 'rgba(232,200,106,.62)';
+  ctx.font = font(13, 500);
+  ctx.fillText('КОД ПРОДАВЦА-КОНСУЛЬТАНТА', BADGE_W / 2, 124);
+
+  // QR на белой плашке: сканеру нужен максимальный контраст и «тихая зона»,
+  // поэтому код всегда чёрный на белом, а не в цветах темы.
+  const plateSize = 396, plateX = (BADGE_W - plateSize) / 2, plateY = 168;
+  ctx.fillStyle = '#FFFFFF';
+  roundRect(ctx, plateX, plateY, plateSize, plateSize, 18);
+  ctx.fill();
+
+  const quiet = 4;                                   // тихая зона в модулях (стандарт QR)
+  const cell = (plateSize - 44) / (modules + quiet * 2);
+  const originX = plateX + 22 + quiet * cell;
+  const originY = plateY + 22 + quiet * cell;
+  ctx.fillStyle = '#000000';
+  for (let r = 0; r < modules; r++) {
+    for (let c = 0; c < modules; c++) {
+      if (!qr.isDark(r, c)) continue;
+      // +0.5 к размеру — чтобы между модулями не проступали белые щели после ресемплинга
+      ctx.fillRect(originX + c * cell, originY + r * cell, cell + 0.5, cell + 0.5);
+    }
+  }
+
+  // Имя и должность
+  ctx.fillStyle = '#F5E9D7';
+  ctx.font = font(30, 600);
+  fitText(ctx, shortName(profile.full_name) || '—', BADGE_W / 2, plateY + plateSize + 78, BADGE_W - 90, 30, 600);
+
+  const sub = [profile.job_title, profile.branch].filter(Boolean).join(' · ');
+  if (sub) {
+    ctx.fillStyle = 'rgba(232,200,106,.85)';
+    ctx.font = font(17, 500);
+    fitText(ctx, sub, BADGE_W / 2, plateY + plateSize + 112, BADGE_W - 90, 17, 500);
+  }
+
+  // Подпись снизу
+  ctx.fillStyle = 'rgba(245,233,215,.42)';
+  ctx.font = font(12, 400);
+  ctx.fillText('Покажите этот код кассиру при оформлении продажи', BADGE_W / 2, BADGE_H - 52);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y,     x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x,     y + h, r);
+  ctx.arcTo(x,     y + h, x,     y,     r);
+  ctx.arcTo(x,     y,     x + w, y,     r);
+  ctx.closePath();
+}
+
+// Длинные ФИО («Асыкбеков Сапармурат Б.») не должны вылезать за рамку —
+// ужимаем кегль, пока строка не влезет.
+function fitText(ctx, text, x, y, maxWidth, startSize, weight) {
+  let size = startSize;
+  const fam = `'Montserrat','Segoe UI',sans-serif`;
+  ctx.font = `${weight} ${size}px ${fam}`;
+  while (ctx.measureText(text).width > maxWidth && size > 11) {
+    size -= 1;
+    ctx.font = `${weight} ${size}px ${fam}`;
+  }
+  ctx.fillText(text, x, y);
+}
+
+async function downloadBadge() {
+  if (!USER_PROFILE) { showToast('Сначала войди'); return; }
+  if (!isQrUnlocked()) { showToast('QR откроется после аттестации Модуля 1'); return; }
+  if (!myQrId()) { showToast('QR-код ещё не привязан — обратись к руководителю'); return; }
+  try {
+    const canvas = document.createElement('canvas');
+    await drawBadge(canvas, USER_PROFILE);
+    const nameSlug = (USER_PROFILE.full_name || 'badge').trim().replace(/\s+/g, '_');
+    canvas.toBlob(blob => {
+      if (!blob) { showToast('Не удалось сохранить картинку'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `YAHYA_QR_${nameSlug}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('Бейдж скачан');
+    }, 'image/png');
+  } catch(e) {
+    console.error('badge render failed', e);
+    showToast('Ошибка генерации QR: ' + (e.message || e));
+  }
+}
+
+// ── Рендер страницы «Профиль» ───────────────────────────────────────
+function renderProfile() {
+  const root = document.getElementById('profileRoot');
+  if (!root) return;
+
+  if (!USER_PROFILE) {
+    root.innerHTML = `
+      <div class="tech-loginwall">
+        <h2>👤 Личный профиль</h2>
+        <p>Здесь твой прогресс обучения и персональный QR-код продавца. Войди в свой аккаунт.</p>
+        <div class="form-row">
+          <label>Логин (email)</label>
+          <input type="email" id="profLoginEmail" placeholder="example@yahya.local" autocomplete="username">
+        </div>
+        <div class="form-row">
+          <label>Пароль</label>
+          <input type="password" id="profLoginPwd" autocomplete="current-password" onkeydown="if(event.key==='Enter')profileDoLogin()">
+        </div>
+        <div class="err" id="profLoginErr"></div>
+        <button class="btn-save" onclick="profileDoLogin()" style="width:100%">Войти</button>
+        <p style="margin-top:18px;font-size:12px">Нет логина? Попроси у руководителя филиала.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const p = USER_PROFILE;
+  const m1 = moduleProgressPct(1), m2 = moduleProgressPct(2);
+  const a1 = LATEST_ATTEMPTS['module1'], a2 = LATEST_ATTEMPTS['module2'];
+  const attBadge = a => a
+    ? `<span class="dash-badge ${a.passed ? 'passed' : 'failed'}">${a.passed ? '✓' : '✗'} ${a.score}/${a.total}</span>`
+    : `<span class="dash-badge muted">не сдавал</span>`;
+
+  root.innerHTML = `
+    <div class="prof-wrap">
+      <div class="prof-head">
+        <div class="prof-avatar">${escHtml(nameInitials(p.full_name))}</div>
+        <div class="prof-head-main">
+          <div class="prof-name">${escHtml(p.full_name || 'Без имени')}</div>
+          <div class="prof-meta">
+            ${escHtml([p.job_title, p.branch].filter(Boolean).join(' · ') || 'Филиал не указан')}
+            · ${roleLabel(p.role)}
+          </div>
+        </div>
+        <div class="prof-actions">
+          <button class="btn" onclick="navigateTo('techniques')">🎓 К обучению</button>
+          <button class="btn" onclick="openChangePasswordModal()">🔑 Пароль</button>
+          <button class="btn" onclick="exitAdmin()">Выйти</button>
+        </div>
+      </div>
+
+      <div class="prof-section">
+        <h3>Мой QR-код продавца</h3>
+        <div class="hint">Личный код для 1С: кассир сканирует его, и продажа записывается на тебя.</div>
+        ${renderQrBlockHTML()}
+      </div>
+
+      <div class="prof-section">
+        <h3>Прогресс обучения</h3>
+        <div class="hint">Отмечай изученные темы во вкладке «Техники продаж».</div>
+        <div class="prof-progress-list">
+          <div class="dash-progress-row">
+            <span class="lbl">М1</span>
+            <div class="bar"><div class="fill" style="width:${m1}%"></div></div>
+            <span class="num">${m1}%</span>
+            ${attBadge(a1)}
+          </div>
+          <div class="dash-progress-row">
+            <span class="lbl">М2</span>
+            <div class="bar"><div class="fill" style="width:${m2}%"></div></div>
+            <span class="num">${m2}%</span>
+            ${attBadge(a2)}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (isQrUnlocked() && myQrId()) {
+    const canvas = document.getElementById('badgeCanvas');
+    if (canvas) {
+      drawBadge(canvas, p).catch(e => {
+        console.error('badge preview failed', e);
+        const holder = document.getElementById('badgePreviewHolder');
+        if (holder) holder.innerHTML = `<div style="padding:20px;font-size:13px;color:var(--danger-text)">Не удалось построить QR. Обнови страницу.</div>`;
+      });
+    }
+  }
+}
+
+function renderQrBlockHTML() {
+  const guid = myQrId();
+
+  if (!isQrUnlocked()) {
+    const m1 = moduleProgressPct(1);
+    const att = LATEST_ATTEMPTS['module1'];
+    const why = att && !att.passed
+      ? `Прошлая попытка: ${att.score}/${att.total}. Можно пересдать.`
+      : `Изучено тем Модуля 1: ${m1}%.`;
+    return `
+      <div class="prof-locked">
+        <div class="lock-icon">🔒</div>
+        <div>
+          <div class="prof-locked-title">QR откроется после аттестации Модуля 1</div>
+          <div class="prof-locked-text">
+            ${escHtml(why)} Сдай тест на 80%+ — и сможешь скачать свой бейдж с кодом.
+          </div>
+          <div style="margin-top:14px"><button class="btn" onclick="navigateTo('techniques')">Перейти к обучению →</button></div>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!guid) {
+    return `
+      <div class="prof-locked">
+        <div class="lock-icon">⏳</div>
+        <div>
+          <div class="prof-locked-title">Аттестация сдана — код ещё не привязан</div>
+          <div class="prof-locked-text">
+            Твой GUID из 1С пока не внесён в профиль. Напиши руководителю филиала — он проставит код,
+            и бейдж появится здесь автоматически.
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="prof-qr-body">
+      <div class="prof-qr-preview" id="badgePreviewHolder"><canvas id="badgeCanvas"></canvas></div>
+      <div class="prof-qr-side">
+        <ol>
+          <li>Скачай бейдж и сохрани в телефоне.</li>
+          <li>При оформлении продажи покажи QR кассиру.</li>
+          <li>Кассир сканирует — продажа падает в твой личный бонус.</li>
+        </ol>
+        <button class="btn-save" onclick="downloadBadge()">↓ Скачать бейдж PNG</button>
+        <div class="prof-qr-id">GUID: ${escHtml(guid)}</div>
+      </div>
+    </div>
+  `;
+}
+
+async function profileDoLogin() {
+  const email = document.getElementById('profLoginEmail').value.trim();
+  const pwd   = document.getElementById('profLoginPwd').value;
+  const err   = document.getElementById('profLoginErr');
+  if (!email || !pwd) { err.textContent = 'Введи логин и пароль'; return; }
+  err.textContent = 'Проверка…';
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+    if (error) { err.textContent = 'Неверный логин или пароль'; return; }
+    await loadProfileAndProgress();
+    logActivity('login');
+    renderProfile();
+    renderTechniques();
+    renderCards(); renderGlossary(); renderScripts(); renderRegulations();
+    showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
+  } catch(e) {
+    err.textContent = 'Ошибка входа: ' + (e.message || e);
+  }
+}
+
+// ════════════════════════════════════════════════
 // АДМИН-ДАШБОРД: сотрудники, прогресс, попытки
 // ════════════════════════════════════════════════
 
 const BRANCH_LIST = ['ЦУМ','Эркиндик','Азбука','Бишкек Парк','Азия Молл','NGROUP','Аэропорт'];
+const JOB_TITLES = ['Продавец-консультант','ПК универсал','Бариста','Продавец-бариста','Администратор','Техничка'];
 
 async function openDashboard() {
   if (!isAdmin) { showToast('Только для админа'); return; }
@@ -18141,11 +18536,23 @@ function renderUserDetailView(root) {
     <div class="tech-topic-view">
       <button class="tech-back-btn" onclick="openDashboard()">← К дашборду</button>
       <h1>${roleIcon(p.role)}${escHtml(p.full_name || '— без имени —')}</h1>
-      <div class="tagline-big">${escHtml(p.branch || 'филиал не указан')} · ${roleLabel(p.role)}</div>
+      <div class="tagline-big">${escHtml([p.job_title, p.branch].filter(Boolean).join(' · ') || 'филиал не указан')} · ${roleLabel(p.role)}</div>
 
       <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
         <button class="btn" onclick="openProfileEditor('${p.id}')">✎ Изменить профиль</button>
         <button class="btn danger" onclick="resetUserProgress('${p.id}')">↺ Сбросить прогресс</button>
+      </div>
+
+      <div class="tech-section">
+        <h3>QR-код продавца</h3>
+        ${(() => {
+          const passed = !!latestAttemptFor('module1', p.id)?.passed;
+          if (!p.qr_id) return `<p style="color:var(--text-dim);font-size:13px">GUID из 1С не привязан — сотрудник не сможет получить бейдж. Внеси код через «✎ Изменить профиль».</p>`;
+          return `<p style="font-size:13px;color:var(--text-body)">
+            <span class="dash-badge ${passed ? 'passed' : 'muted'}">${passed ? '✓ бейдж доступен' : '🔒 ждёт аттестации М1'}</span>
+            <span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--text-muted);margin-left:10px">${escHtml(p.qr_id)}</span>
+          </p>`;
+        })()}
       </div>
 
       <div class="tech-section">
@@ -18191,6 +18598,15 @@ function openProfileEditor(userId) {
       <div class="ff" style="margin-top:12px"><label>Филиал</label>
         <select id="prof-branch">${branchOptions}</select>
       </div>
+      <div class="ff" style="margin-top:12px"><label>Должность</label>
+        <input id="prof-job" list="jobTitleList" value="${escAttr(p.job_title || '')}" placeholder="Продавец-консультант">
+        <datalist id="jobTitleList">${JOB_TITLES.map(j => `<option value="${escAttr(j)}">`).join('')}</datalist>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Печатается на QR-бейдже под именем.</div>
+      </div>
+      <div class="ff" style="margin-top:12px"><label>QR-код 1С (GUID сотрудника)</label>
+        <input id="prof-qrid" value="${escAttr(p.qr_id || '')}" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Из выгрузки 1С. Сотрудник увидит бейдж после сдачи аттестации Модуля 1. Менять может только админ.</div>
+      </div>
       <div class="ff" style="margin-top:12px"><label>Роль</label>
         <select id="prof-role">
           <option value="seller" ${p.role==='seller'?'selected':''}>Продавец</option>
@@ -18215,18 +18631,30 @@ async function saveProfile() {
   const full_name = document.getElementById('prof-name').value.trim();
   const branch = document.getElementById('prof-branch').value;
   const role = document.getElementById('prof-role').value;
+  const job_title = document.getElementById('prof-job').value.trim();
+  const qr_id = document.getElementById('prof-qrid').value.trim().toLowerCase();
+
+  // Ошибка в GUID = продажи уходят не тому человеку, поэтому проверяем формат
+  // до записи, а не надеемся на внимательность.
+  if (qr_id && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(qr_id)) {
+    showToast('QR-код должен быть GUID вида 00000000-0000-0000-0000-000000000000');
+    return;
+  }
+  const clash = ALL_PROFILES.find(x => x.id !== id && qr_id && (x.qr_id || '') === qr_id);
+  if (clash) { showToast(`Этот QR уже у: ${clash.full_name || clash.id}`); return; }
+
   const ok = await dbWrite(
     () => sb.from('profiles').update({
-      full_name, branch, role, updated_at: new Date().toISOString()
+      full_name, branch, role, job_title, qr_id: qr_id || null, updated_at: new Date().toISOString()
     }).eq('id', id),
     'Ошибка сохранения профиля'
   );
   if (!ok) return;
   const i = ALL_PROFILES.findIndex(p => p.id === id);
-  if (i >= 0) Object.assign(ALL_PROFILES[i], {full_name, branch, role});
+  if (i >= 0) Object.assign(ALL_PROFILES[i], {full_name, branch, role, job_title, qr_id: qr_id || null});
   // Если редактируем самого себя — обновляем USER_PROFILE
   if (USER_PROFILE && USER_PROFILE.id === id) {
-    Object.assign(USER_PROFILE, {full_name, branch, role});
+    Object.assign(USER_PROFILE, {full_name, branch, role, job_title, qr_id: qr_id || null});
     isAdmin     = (role === 'admin');
     isBarEditor = (role === 'bar_editor');
     document.body.classList.toggle('is-admin', isAdmin);
@@ -18287,6 +18715,15 @@ function openCreateUserModal() {
         </div>
       </div>
       <div class="fgrid" style="margin-top:12px">
+        <div class="ff"><label>Должность</label>
+          <input id="newuser-job" list="newJobTitleList" placeholder="Продавец-консультант">
+          <datalist id="newJobTitleList">${JOB_TITLES.map(j => `<option value="${escAttr(j)}">`).join('')}</datalist>
+        </div>
+        <div class="ff"><label>QR-код 1С (GUID)</label>
+          <input id="newuser-qrid" placeholder="можно заполнить позже" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="fgrid" style="margin-top:12px">
         <div class="ff"><label>Филиал</label>
           <select id="newuser-branch">${branchOptions}</select>
         </div>
@@ -18316,10 +18753,17 @@ async function saveNewUser() {
   const password = document.getElementById('newuser-pwd').value;
   const branch = document.getElementById('newuser-branch').value;
   const role = document.getElementById('newuser-role').value;
+  const job_title = document.getElementById('newuser-job').value.trim();
+  const qr_id = document.getElementById('newuser-qrid').value.trim().toLowerCase();
 
   if (!name)   { showToast('Введи имя'); return; }
   if (!login)  { showToast('Введи логин'); return; }
   if (password.length < 6) { showToast('Пароль минимум 6 символов'); return; }
+  if (qr_id && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(qr_id)) {
+    showToast('QR-код должен быть GUID вида 00000000-0000-0000-0000-000000000000'); return;
+  }
+  const qrClash = ALL_PROFILES.find(x => qr_id && (x.qr_id || '') === qr_id);
+  if (qrClash) { showToast(`Этот QR уже у: ${qrClash.full_name || qrClash.id}`); return; }
 
   if (!login.includes('@')) login += '@yahya.local';
   // Простая валидация формата
@@ -18373,6 +18817,8 @@ async function saveNewUser() {
   // 3) Обновляем профиль (триггер уже создал базовый — допишем поля)
   const updates = { full_name: name };
   if (branch) updates.branch = branch;
+  if (job_title) updates.job_title = job_title;
+  if (qr_id) updates.qr_id = qr_id;
   if (role && role !== 'seller') updates.role = role;
   const { error: pErr } = await sb.from('profiles').update(updates).eq('id', newUserId);
   if (pErr) {
@@ -20187,6 +20633,7 @@ async function exitAdmin() {
   document.body.classList.remove('is-bar-editor');
   renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
   if (typeof renderTechniques === 'function') renderTechniques();
+  if (typeof renderProfile === 'function') renderProfile();
   showToast('Вышли');
 }
 
@@ -20299,9 +20746,10 @@ async function init() {
   renderScripts();
   renderRegulations();
   if (typeof renderTechniques === 'function') renderTechniques();
+  if (typeof renderProfile === 'function') renderProfile();
 
   const hash = location.hash.replace('#','');
-  if (['products','tools','techniques','glossary','scripts','regulations','warehouse'].includes(hash)) navigateTo(hash);
+  if (['products','tools','techniques','glossary','scripts','regulations','warehouse','profile'].includes(hash)) navigateTo(hash);
 
   // restore session + load profile (isAdmin определяется через profile.role)
   try {
@@ -20311,6 +20759,7 @@ async function init() {
       logVisitThrottled();
       renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
       if (typeof renderTechniques === 'function') renderTechniques();
+      if (typeof renderProfile === 'function') renderProfile();
       sb.auth.refreshSession().catch(e => console.warn('refresh on init failed', e));
     }
   } catch(e) { console.warn('session check failed', e); }
