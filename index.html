@@ -864,7 +864,6 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .prof-locked-title{font-size:15px;font-weight:600;color:var(--text-heading);margin-bottom:6px;}
 .prof-locked-text{font-size:13px;color:var(--text-dim);line-height:1.6;}
 .prof-progress-list{display:flex;flex-direction:column;gap:14px;}
-.prof-qr-id{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:var(--text-muted);word-break:break-all;margin-top:14px;}
 @media(max-width:720px){
   .prof-wrap{padding:18px 14px;}
   .prof-head{flex-direction:column;align-items:flex-start;gap:14px;}
@@ -18201,7 +18200,6 @@ function renderQrBlockHTML() {
           <li>Кассир сканирует — продажа падает в твой личный бонус.</li>
         </ol>
         <button class="btn-save" onclick="downloadBadge()">↓ Скачать бейдж PNG</button>
-        <div class="prof-qr-id">GUID: ${escHtml(guid)}</div>
       </div>
     </div>
   `;
