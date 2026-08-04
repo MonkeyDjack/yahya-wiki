@@ -16810,9 +16810,11 @@ function renderCards() {
   if (cats.size > 0 || canEditContent()) {
     navCat.classList.remove('hidden');
     navCat.innerHTML = '<button class="cat-tab'+(currentCat==='Все'?' active':'')+'" onclick="setCat(\'Все\',this)">Все</button>' +
-      [...cats].sort().map(c =>
-        `<button class="cat-tab${currentCat===c?' active':''}" onclick="setCat('${c}',this)">${c}</button>`
-      ).join('') + catMgrBtn;
+      [...cats].sort().map(c => {
+        // Категория — пользовательский текст: экранируем и для JS-строки в onclick, и для HTML
+        const cjs = String(c).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `<button class="cat-tab${currentCat===c?' active':''}" onclick="setCat('${escAttr(cjs)}',this)">${escHtml(c)}</button>`;
+      }).join('') + catMgrBtn;
   } else {
     navCat.classList.add('hidden');
   }
@@ -16827,14 +16829,17 @@ function renderCards() {
 }
 
 function cardHTML(c) {
+  // Все поля карточки — пользовательский ввод (в т.ч. от bar_editor):
+  // экранируем как в остальных модулях (toolCardHTML, scriptCardHTML и т.д.).
+  const accent = `background:linear-gradient(90deg,${escAttr(c.accentFrom)},${escAttr(c.accentTo)})`;
   const img = c.image
-    ? `<div class="card-img-area"><img src="${c.image}" alt="${c.name}" loading="lazy"><div class="card-accent" style="background:linear-gradient(90deg,${c.accentFrom},${c.accentTo})"></div></div>`
-    : `<div class="card-img-area"><div class="card-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="card-accent" style="background:linear-gradient(90deg,${c.accentFrom},${c.accentTo})"></div></div>`;
+    ? `<div class="card-img-area"><img src="${escAttr(c.image)}" alt="${escAttr(c.name)}" loading="lazy"><div class="card-accent" style="${accent}"></div></div>`
+    : `<div class="card-img-area"><div class="card-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="card-accent" style="${accent}"></div></div>`;
 
-  const tags = (c.tasteTags||[]).map(t=>`<span class="taste-tag">${t}</span>`).join('');
-  const occasions = (c.occasions||[]).map(o=>`<span class="occasion-tag">${o.emoji} ${o.text}</span>`).join('');
-  const phrases = (c.phrases||[]).map(p=>`<li>${p}</li>`).join('');
-  const faqs = (c.faq||[]).map(f=>`<div class="faq-item"><div class="faq-q">${f.q}</div><div class="faq-a">${f.a}</div></div>`).join('');
+  const tags = (c.tasteTags||[]).map(t=>`<span class="taste-tag">${escHtml(t)}</span>`).join('');
+  const occasions = (c.occasions||[]).map(o=>`<span class="occasion-tag">${escHtml(o.emoji)} ${escHtml(o.text)}</span>`).join('');
+  const phrases = (c.phrases||[]).map(p=>`<li>${escHtml(p)}</li>`).join('');
+  const faqs = (c.faq||[]).map(f=>`<div class="faq-item"><div class="faq-q">${escHtml(f.q)}</div><div class="faq-a">${escHtml(f.a)}</div></div>`).join('');
 
   return `<div class="card-wrap" id="cw-${c.id}" onclick="flipCard('${c.id}',event)">
   ${canEditCard(c) ? `<button class="card-edit-btn" onclick="openModal('${c.id}');event.stopPropagation()">✎</button>` : ''}
@@ -16842,12 +16847,12 @@ function cardHTML(c) {
     <div class="card-front">
       ${img}
       <div class="card-body">
-        <div class="card-badge">${c.badge||c.type}</div>
-        <div class="card-name">${c.name}</div>
-        <div class="card-type">${c.type}</div>
-        ${c.chocolate ? `<div class="card-chocolate">${c.chocolate}</div>` : ''}
+        <div class="card-badge">${escHtml(c.badge||c.type)}</div>
+        <div class="card-name">${escHtml(c.name)}</div>
+        <div class="card-type">${escHtml(c.type)}</div>
+        ${c.chocolate ? `<div class="card-chocolate">${escHtml(c.chocolate)}</div>` : ''}
         <div class="taste-tags">${tags}</div>
-        <div class="card-description">${c.description}</div>
+        <div class="card-description">${escHtml(c.description)}</div>
         <div class="card-occasions">${occasions}</div>
       </div>
       <div class="card-footer">
@@ -16857,16 +16862,16 @@ function cardHTML(c) {
     </div>
     <div class="card-back">
       <div class="back-header">
-        <div class="back-name">${c.name}</div>
+        <div class="back-name">${escHtml(c.name)}</div>
         <div class="back-label">Для продавца</div>
       </div>
       <div class="back-body">
         ${phrases ? `<div><div class="back-section-title">Ключевые фразы</div><ul class="phrase-list">${phrases}</ul></div>` : ''}
-        ${c.pairingText ? `<div class="pairing-row"><span class="pairing-icon">${c.pairingIcon||'☕'}</span><span class="pairing-text">Сочетается: ${c.pairingText}</span></div>` : ''}
+        ${c.pairingText ? `<div class="pairing-row"><span class="pairing-icon">${escHtml(c.pairingIcon||'☕')}</span><span class="pairing-text">Сочетается: ${escHtml(c.pairingText)}</span></div>` : ''}
         ${faqs ? `<div><div class="back-section-title">Частые вопросы</div><div class="faq-list">${faqs}</div></div>` : ''}
       </div>
       <div class="back-footer">
-        <span class="audience-chip">${c.audience||''}</span>
+        <span class="audience-chip">${escHtml(c.audience||'')}</span>
         <div class="flip-icon">↻</div>
       </div>
     </div>
@@ -17675,7 +17680,7 @@ function exampleRowHTML(e, i) {
           <input class="ex-label" value="${escAttr(e.label||'')}">
         </div>
         <div class="ff" style="display:flex;align-items:flex-end">
-          <button type="button" class="btn danger" onclick="removeExampleRow(${i})">Удалить</button>
+          <button type="button" class="btn danger" onclick="this.closest('.example-row').remove()">Удалить</button>
         </div>
       </div>
       <div class="ff" style="margin-top:8px"><label>Текст примера / диалог</label>
@@ -17690,10 +17695,9 @@ function addExampleRow() {
   const i = list.querySelectorAll('.example-row').length;
   list.insertAdjacentHTML('beforeend', exampleRowHTML({label:'', body:''}, i));
 }
-function removeExampleRow(i) {
-  const row = document.querySelector(`.example-row[data-i="${i}"]`);
-  if (row) row.remove();
-}
+// Удаление строк — через this.closest(...).remove() прямо в onclick:
+// поиск по data-i после удалений находил ЧУЖУЮ строку (индексы не
+// перенумеровываются) и молча удалял заполненные данные.
 
 function introBlockRowHTML(b, i) {
   return `
@@ -17703,7 +17707,7 @@ function introBlockRowHTML(b, i) {
           <input class="ib-title" value="${escAttr(b.title||'')}">
         </div>
         <div class="ff" style="display:flex;align-items:flex-end">
-          <button type="button" class="btn danger" onclick="removeIntroBlock(${i})">Удалить</button>
+          <button type="button" class="btn danger" onclick="this.closest('.intro-block-row').remove()">Удалить</button>
         </div>
       </div>
       <div class="ff" style="margin-top:8px"><label>Текст блока</label>
@@ -17716,10 +17720,6 @@ function addIntroBlock() {
   const list = document.getElementById('intro-blocks-list');
   const i = list.querySelectorAll('.intro-block-row').length;
   list.insertAdjacentHTML('beforeend', introBlockRowHTML({title:'', body:''}, i));
-}
-function removeIntroBlock(i) {
-  const row = document.querySelector(`.intro-block-row[data-i="${i}"]`);
-  if (row) row.remove();
 }
 
 async function saveTechnique() {
@@ -17835,7 +17835,7 @@ function quizQuestionRowHTML(q, qi) {
           <textarea class="qq-text" style="min-height:50px">${escHtml(q.q||'')}</textarea>
         </div>
         <div class="ff" style="display:flex;align-items:flex-end">
-          <button type="button" class="btn danger" onclick="removeQuizQuestion(${qi})">Удалить</button>
+          <button type="button" class="btn danger" onclick="this.closest('.quiz-q-row').remove()">Удалить</button>
         </div>
       </div>
       <div class="ff" style="margin-top:8px">
@@ -17843,7 +17843,7 @@ function quizQuestionRowHTML(q, qi) {
         <div class="qq-options">
           ${opts.map((o, oi) => quizOptionRowHTML(o, qi, oi)).join('')}
         </div>
-        <button type="button" class="btn" style="margin-top:6px" onclick="addQuizOption(${qi})">+ Вариант</button>
+        <button type="button" class="btn" style="margin-top:6px" onclick="addQuizOptionBtn(this)">+ Вариант</button>
       </div>
     </div>
   `;
@@ -17854,7 +17854,7 @@ function quizOptionRowHTML(o, qi, oi) {
     <div class="qq-option-row" data-o="${oi}" style="display:flex;align-items:center;gap:8px;margin-top:6px">
       <input type="checkbox" class="qq-correct" ${o.correct?'checked':''} title="Правильный">
       <input class="qq-text-opt" value="${escAttr(o.text||'')}" style="flex:1">
-      <button type="button" class="btn danger" onclick="removeQuizOption(${qi},${oi})" style="padding:6px 10px">×</button>
+      <button type="button" class="btn danger" onclick="this.closest('.qq-option-row').remove()" style="padding:6px 10px">×</button>
     </div>
   `;
 }
@@ -17864,19 +17864,13 @@ function addQuizQuestion() {
   const qi = list.querySelectorAll('.quiz-q-row').length;
   list.insertAdjacentHTML('beforeend', quizQuestionRowHTML({q:'', options:[{text:'', correct:false},{text:'', correct:false}]}, qi));
 }
-function removeQuizQuestion(qi) {
-  const row = document.querySelector(`.quiz-q-row[data-q="${qi}"]`);
-  if (row) row.remove();
-}
-function addQuizOption(qi) {
-  const row = document.querySelector(`.quiz-q-row[data-q="${qi}"] .qq-options`);
-  if (!row) return;
-  const oi = row.querySelectorAll('.qq-option-row').length;
-  row.insertAdjacentHTML('beforeend', quizOptionRowHTML({text:'', correct:false}, qi, oi));
-}
-function removeQuizOption(qi, oi) {
-  const row = document.querySelector(`.quiz-q-row[data-q="${qi}"] .qq-option-row[data-o="${oi}"]`);
-  if (row) row.remove();
+// «+ Вариант» ищет свой вопрос через closest от кнопки: после удаления
+// вопроса data-q дублируются, и поиск по индексу попадал в чужой вопрос.
+function addQuizOptionBtn(btn) {
+  const opts = btn.closest('.quiz-q-row')?.querySelector('.qq-options');
+  if (!opts) return;
+  const oi = opts.querySelectorAll('.qq-option-row').length;
+  opts.insertAdjacentHTML('beforeend', quizOptionRowHTML({text:'', correct:false}, 0, oi));
 }
 
 async function saveQuiz() {
@@ -18428,6 +18422,12 @@ function buildActivityFeed(userId = null, limit = 40) {
     events.push({when: a.attempted_at, userId: a.user_id, icon: a.passed ? '✅' : '❌',
       text: `тест ${mod}: ${a.score}/${a.total} (${a.passed ? 'сдан' : 'не сдан'})`});
   });
+  ALL_SCRIPT_ACK.forEach(a => {
+    if (userId && a.user_id !== userId) return;
+    const sec = SCRIPT_ACK_SECTIONS.find(s => s.key === a.section);
+    events.push({when: a.confirmed_at, userId: a.user_id, icon: '📜',
+      text: `ознакомился со скриптами «${sec ? sec.label.replace(/^\S+\s/, '') : a.section}»`});
+  });
   events.sort((a, b) => new Date(b.when) - new Date(a.when));
   return events.slice(0, limit).map(e => ({...e, name: nameOf(e.userId)}));
 }
@@ -18814,10 +18814,12 @@ async function saveProfile() {
   // Если редактируем самого себя — обновляем USER_PROFILE
   if (USER_PROFILE && USER_PROFILE.id === id) {
     Object.assign(USER_PROFILE, {full_name, branch, role, job_title, qr_id: qr_id || null});
-    isAdmin     = (role === 'admin');
-    isBarEditor = (role === 'bar_editor');
+    isAdmin         = (role === 'admin');
+    isBarEditor     = (role === 'bar_editor');
+    isContentEditor = (role === 'editor');
     document.body.classList.toggle('is-admin', isAdmin);
     document.body.classList.toggle('is-bar-editor', isBarEditor);
+    document.body.classList.toggle('is-content-editor', isContentEditor);
   }
   closeModal();
   renderTechniques();
@@ -20642,15 +20644,19 @@ function closeModal() {
 function handleOverlayClick(e) { /* no-op */ }
 
 function buildForm(c) {
-  const v = (k, def='') => c ? (c[k]||def) : def;
+  // v — сырое значение, ve — экранированное для value="..."/textarea.
+  // Без экранирования кавычка в названии ломала атрибут, а </textarea>
+  // в описании инжектил произвольный HTML в форму (XSS на редакторе).
+  const v  = (k, def='') => c ? (c[k]||def) : def;
+  const ve = (k, def='') => escAttr(v(k, def));
   const phrases = c?.phrases || ['','',''];
   while(phrases.length < 3) phrases.push('');
   const faqs = c?.faq || [{q:'',a:''}];
   const occasions = c?.occasions || [{emoji:'🎁',text:''}];
 
-  const phrHTML = phrases.map((p,i) => `<div class="dyn-item"><textarea class="ph-input">${p}</textarea>${i>0?'<button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button>':''}</div>`).join('');
-  const faqHTML = faqs.map((f,i) => `<div class="dyn-item"><div class="faq-pair"><input placeholder="Вопрос гостя" value="${f.q||''}"><textarea placeholder="Ответ продавца">${f.a||''}</textarea></div>${i>0?'<button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button>':''}</div>`).join('');
-  const occHTML = occasions.map((o,i) => `<div class="dyn-item"><input class="emoji-in" value="${o.emoji||''}" placeholder="🎁"><input placeholder="Повод" value="${o.text||''}"><button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button></div>`).join('');
+  const phrHTML = phrases.map((p,i) => `<div class="dyn-item"><textarea class="ph-input">${escHtml(p)}</textarea>${i>0?'<button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button>':''}</div>`).join('');
+  const faqHTML = faqs.map((f,i) => `<div class="dyn-item"><div class="faq-pair"><input placeholder="Вопрос гостя" value="${escAttr(f.q||'')}"><textarea placeholder="Ответ продавца">${escHtml(f.a||'')}</textarea></div>${i>0?'<button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button>':''}</div>`).join('');
+  const occHTML = occasions.map((o,i) => `<div class="dyn-item"><input class="emoji-in" value="${escAttr(o.emoji||'')}" placeholder="🎁"><input placeholder="Повод" value="${escAttr(o.text||'')}"><button class="btn-rm" onclick="this.closest(\'.dyn-item\').remove()">×</button></div>`).join('');
 
   const locs = ['магазин','кухня','бар'];
   // Бар-редактор: локация всегда 'бар', менять нельзя.
@@ -20663,32 +20669,32 @@ function buildForm(c) {
   return `
   <div><div class="fsec">Основное</div>
     <div class="fgrid">
-      <div class="ff"><label>Название</label><input id="f-name" value="${v('name')}"></div>
-      <div class="ff"><label>Тип / Коллекция <span style="font-weight:normal;opacity:.6;font-size:10px">(свободный текст)</span></label><input id="f-type" value="${v('type')}" placeholder="Напр. Корпусная коллекция"></div>
+      <div class="ff"><label>Название</label><input id="f-name" value="${ve('name')}"></div>
+      <div class="ff"><label>Тип / Коллекция <span style="font-weight:normal;opacity:.6;font-size:10px">(свободный текст)</span></label><input id="f-type" value="${ve('type')}" placeholder="Напр. Корпусная коллекция"></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
       <div class="ff"><label>Локация <span style="font-weight:normal;opacity:.6;font-size:10px">(вкладка сайта)</span></label><select id="f-location" onchange="updateCatSelect(this.value)" ${lockToBar?'disabled':''}>${locs.map(l=>`<option ${currentLoc==l?'selected':''}>${l}</option>`).join('')}</select></div>
       <div class="ff"><label>Категория меню <span style="font-weight:normal;opacity:.6;font-size:10px">(фильтр в навигации)</span></label><select id="f-category">${cats.map(c=>`<option ${currentCatVal==c?'selected':''}>${escHtml(c)}</option>`).join('')}</select></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
-      <div class="ff"><label>Бейдж (цена / вес)</label><input id="f-badge" value="${v('badge')}"></div>
-      <div class="ff"><label>Подкатегория <span style="font-weight:normal;opacity:.6;font-size:10px">(опционально)</span></label><input id="f-sub" value="${v('subcategory')}" placeholder="Напр. Корпусные"></div>
+      <div class="ff"><label>Бейдж (цена / вес)</label><input id="f-badge" value="${ve('badge')}"></div>
+      <div class="ff"><label>Подкатегория <span style="font-weight:normal;opacity:.6;font-size:10px">(опционально)</span></label><input id="f-sub" value="${ve('subcategory')}" placeholder="Напр. Корпусные"></div>
     </div>
   </div>
   <div><div class="fsec">Описание</div>
-    <div class="ff"><label>Вкус / описание (для карточки)</label><textarea id="f-desc">${v('description')}</textarea></div>
+    <div class="ff"><label>Вкус / описание (для карточки)</label><textarea id="f-desc">${escHtml(v('description'))}</textarea></div>
     <div class="fgrid" style="margin-top:12px">
-      <div class="ff"><label>Вид шоколада</label><input id="f-choc" value="${v('chocolate')}"></div>
-      <div class="ff"><label>Вкусовые теги (через запятую)</label><input id="f-tags" value="${(c?.tasteTags||[]).join(', ')}"></div>
+      <div class="ff"><label>Вид шоколада</label><input id="f-choc" value="${ve('chocolate')}"></div>
+      <div class="ff"><label>Вкусовые теги (через запятую)</label><input id="f-tags" value="${escAttr((c?.tasteTags||[]).join(', '))}"></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
-      <div class="ff"><label>С чем сочетается (значок)</label><input id="f-pi" value="${v('pairingIcon','☕')}" style="width:60px"></div>
-      <div class="ff"><label>С чем сочетается (текст)</label><input id="f-pt" value="${v('pairingText')}"></div>
+      <div class="ff"><label>С чем сочетается (значок)</label><input id="f-pi" value="${ve('pairingIcon','☕')}" style="width:60px"></div>
+      <div class="ff"><label>С чем сочетается (текст)</label><input id="f-pt" value="${ve('pairingText')}"></div>
     </div>
     <div class="ff" style="margin-top:12px">
       <label>Фото</label>
       <div class="photo-input-row">
-        <input id="f-img" value="${v('image')}" placeholder="https://... или загрузи файл →" style="flex:1">
+        <input id="f-img" value="${ve('image')}" placeholder="https://... или загрузи файл →" style="flex:1">
         <label class="photo-upload-btn" title="Загрузить файл с устройства">
           📷 Загрузить
           <input type="file" id="f-img-file" accept="image/*" onchange="handleCardPhotoUpload(event)" style="display:none">
