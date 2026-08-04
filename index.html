@@ -55,6 +55,9 @@
   --rgb-cream-200:  234, 215, 184;
   --rgb-gold-500:   197, 158, 95;
   --rgb-danger:     201, 106, 85;
+  --rgb-success:      126, 168, 112;   /* = --color-success, для rgba-подложек */
+  --rgb-success-deep:  46, 125, 74;    /* насыщенно-зелёные подложки (сдан/изучено) */
+  --rgb-danger-deep:  168, 58, 44;     /* тёмно-красные подложки (не сдан/анти-пример) */
 
   /* ═══════════════════════════════════════════════════════════════
    *  УРОВЕНЬ 2 — СЕМАНТИЧЕСКИЕ ТОКЕНЫ (purpose-named).
@@ -715,8 +718,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .tech-quiz-tile h4{font-size:18px;color:var(--text-heading);margin-bottom:6px;}
 .tech-quiz-tile p{font-size:13px;color:var(--text-dim);}
 .tech-quiz-tile .badge{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;}
-.tech-quiz-tile .badge.passed{background:rgba(46,125,74,.15);color:var(--color-success);}
-.tech-quiz-tile .badge.failed{background:rgba(168,58,44,.12);color:var(--danger-text);}
+.tech-quiz-tile .badge.passed{background:rgba(var(--rgb-success-deep),.15);color:var(--color-success);}
+.tech-quiz-tile .badge.failed{background:rgba(var(--rgb-danger-deep),.12);color:var(--danger-text);}
 .tech-topic-view{padding:24px 32px;max-width:880px;margin:0 auto;}
 .tech-back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:transparent;border:1px solid var(--border-default);color:var(--text-body);border-radius:8px;cursor:pointer;font-size:13px;margin-bottom:18px;}
 .tech-back-btn:hover{border-color:var(--accent);}
@@ -732,12 +735,12 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .tech-example{margin-bottom:14px;}
 .tech-example-label{font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;}
 .tech-example-body{padding:12px 16px;background:var(--bg-deep);border-radius:8px;white-space:pre-wrap;font-size:14px;line-height:1.55;color:var(--text-body);}
-.tech-anti{padding:14px 18px;background:rgba(168,58,44,.06);border-left:3px solid var(--danger);border-radius:6px;}
+.tech-anti{padding:14px 18px;background:rgba(var(--rgb-danger-deep),.06);border-left:3px solid var(--danger);border-radius:6px;}
 .tech-anti li{color:var(--text-body);}
 .tech-anti .x{color:var(--danger-text);font-weight:bold;margin-right:6px;}
 .tech-note{margin-top:16px;padding:12px 16px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;font-size:13px;color:var(--text-body);font-style:italic;}
 .tech-mark-done-bar{margin-top:36px;padding:20px;background:var(--bg-card);border:1px solid var(--border-default);border-radius:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-.tech-mark-done-bar.done{background:rgba(46,125,74,.06);border-color:var(--color-success);}
+.tech-mark-done-bar.done{background:rgba(var(--rgb-success-deep),.06);border-color:var(--color-success);}
 .tech-mark-done-bar .lbl{flex:1;font-size:14px;color:var(--text-body);}
 .tech-mark-done-btn{padding:10px 20px;background:var(--accent);color:var(--text-on-accent);border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
 .tech-mark-done-btn:hover{background:var(--accent-hover);}
@@ -769,14 +772,14 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .tech-quiz-submit-bar{position:sticky;bottom:14px;margin-top:24px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-lg);}
 .tech-quiz-submit-bar .lbl{flex:1;font-size:14px;color:var(--text-body);font-weight:500;}
 .tech-result-card{margin:24px 0;padding:36px 28px;background:var(--bg-card);border:2px solid var(--border-default);border-radius:14px;text-align:center;}
-.tech-result-card.passed{border-color:var(--color-success);background:linear-gradient(135deg,rgba(126,168,112,.10),var(--bg-card));}
-.tech-result-card.failed{border-color:var(--danger);background:linear-gradient(135deg,rgba(168,58,44,.08),var(--bg-card));}
+.tech-result-card.passed{border-color:var(--color-success);background:linear-gradient(135deg,rgba(var(--rgb-success),.10),var(--bg-card));}
+.tech-result-card.failed{border-color:var(--danger);background:linear-gradient(135deg,rgba(var(--rgb-danger-deep),.08),var(--bg-card));}
 .tech-result-icon{font-size:48px;margin-bottom:8px;}
 .tech-result-card h1{font-size:28px;color:var(--text-heading);margin-bottom:10px;}
 .tech-result-score{font-size:44px;font-weight:700;color:var(--text-heading);margin-bottom:4px;line-height:1;}
 .tech-result-pct{color:var(--text-dim);font-size:13px;margin-bottom:14px;}
 .tech-result-msg{font-size:15px;color:var(--text-body);line-height:1.55;max-width:480px;margin:0 auto;}
-.tech-quiz-wrong{padding:14px 18px;background:rgba(168,58,44,.06);border-left:3px solid var(--danger);border-radius:6px;margin-bottom:10px;}
+.tech-quiz-wrong{padding:14px 18px;background:rgba(var(--rgb-danger-deep),.06);border-left:3px solid var(--danger);border-radius:6px;margin-bottom:10px;}
 .tech-quiz-wrong .q{font-weight:600;font-size:14px;color:var(--text-heading);margin-bottom:8px;line-height:1.45;}
 .tech-quiz-wrong .your{color:var(--text-dim);font-size:13px;margin-bottom:4px;}
 .tech-quiz-wrong .right{color:var(--color-success);font-size:13px;font-weight:500;}
@@ -808,8 +811,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .dash-progress-row .bar .fill{height:100%;background:var(--accent);transition:width .3s;}
 .dash-progress-row .num{font-weight:600;color:var(--text-body);width:40px;text-align:right;flex-shrink:0;}
 .dash-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;flex-shrink:0;}
-.dash-badge.passed{background:rgba(126,168,112,.15);color:var(--color-success);}
-.dash-badge.failed{background:rgba(168,58,44,.12);color:var(--danger-text);}
+.dash-badge.passed{background:rgba(var(--rgb-success),.15);color:var(--color-success);}
+.dash-badge.failed{background:rgba(var(--rgb-danger-deep),.12);color:var(--danger-text);}
 .dash-badge.muted{background:rgba(var(--rgb-choco-800),.10);color:var(--text-muted);}
 .dash-arrow{font-size:20px;color:var(--text-dim);flex-shrink:0;}
 .dash-topic-list{display:flex;flex-direction:column;gap:4px;}
@@ -864,11 +867,40 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .prof-locked-title{font-size:15px;font-weight:600;color:var(--text-heading);margin-bottom:6px;}
 .prof-locked-text{font-size:13px;color:var(--text-dim);line-height:1.6;}
 .prof-progress-list{display:flex;flex-direction:column;gap:14px;}
+
+/* Заглушка «Мои продажи и бонус» — стат-плитки будущей статистики из 1С */
+.soon-badge{display:inline-block;vertical-align:middle;margin-left:8px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background:rgba(var(--rgb-gold-500),.14);color:var(--accent);border:1px solid var(--border-active);}
+.prof-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
+.prof-stat{padding:14px 16px;background:var(--bg-deep);border:1px solid var(--border-subtle);border-radius:12px;}
+.prof-stat .val{font-size:24px;font-weight:700;color:var(--text-heading);line-height:1.1;}
+.prof-stat .lbl{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.45;}
+.prof-soon-note{font-size:12px;color:var(--text-dim);line-height:1.65;padding:10px 14px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;}
+
+/* Ознакомление со скриптами: строки статуса в профиле */
+.prof-ack-list{display:flex;flex-direction:column;gap:8px;}
+.prof-ack-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-deep);border:1px solid var(--border-subtle);border-radius:10px;flex-wrap:wrap;}
+.prof-ack-label{font-size:13px;font-weight:600;color:var(--text-body);flex:1;min-width:110px;}
+.prof-ack-open{padding:4px 12px;font-size:12px;}
+
+/* Плашка «я ознакомился» внизу вкладки скриптов */
+.ack-box{display:flex;align-items:center;gap:16px;padding:18px 22px;background:var(--bg-card);border:1px solid var(--border-default);border-radius:14px;flex-wrap:wrap;}
+.ack-box.ack-done{border-color:rgba(var(--rgb-success),.4);}
+.ack-icon{font-size:28px;line-height:1;flex-shrink:0;}
+.ack-main{flex:1;min-width:200px;}
+.ack-title{font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:4px;}
+.ack-sub{font-size:12px;color:var(--text-dim);line-height:1.5;}
+.ack-undo{background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-muted);padding:6px 10px;border-radius:8px;}
+.ack-undo:hover{color:var(--text-body);background:rgba(var(--rgb-choco-800),.10);}
+
+/* Дашборд: «📜 скрипты 3/3» подсвечивается когда всё прочитано */
+.dash-ack-full{color:var(--color-success);}
+
 @media(max-width:720px){
   .prof-wrap{padding:18px 14px;}
   .prof-head{flex-direction:column;align-items:flex-start;gap:14px;}
   .prof-qr-body{flex-direction:column;}
   .prof-qr-preview{width:100%;max-width:300px;margin:0 auto;}
+  .prof-stats-grid{grid-template-columns:repeat(2,1fr);}
 }
 </style>
 </head>
@@ -16293,6 +16325,10 @@ let ALL_PROGRESS   = [];           // прогресс всех пользова
 let ALL_ATTEMPTS   = [];           // все попытки тестов всех пользователей
 let ALL_ACTIVITY   = [];           // журнал входов (activity_log) — грузится в дашборде админа
 let activityTableOk = true;        // false → таблица activity_log не создана (нужна миграция)
+let ALL_SCRIPT_ACK  = [];          // отметки «ознакомлен со скриптами» всех сотрудников (дашборд админа)
+let USER_SCRIPT_ACK = [];          // отметки текущего пользователя [{user_id, section, confirmed_at}]
+let scriptAckTableOk = true;       // false → таблица script_ack не создана (нужна script_ack_migration.sql)
+let ALL_AUTH_USERS  = {};          // {userId: {email, created_at, last_sign_in_at}} — через admin_list_auth_users()
 // currentTreePath — полный журнал прохождения дерева. Каждый элемент:
 //   {nodeId, question, optIdx, label, next, recommendation}
 // Пустой массив = мы на корневом вопросе. Последний шаг с recommendation = финал.
@@ -16387,6 +16423,7 @@ function deleteEntity() {
   if (editingType === 'rule')      return deleteRule();
   if (editingType === 'regulation')return deleteRegulation();
   if (editingType === 'tree')      return deleteTreeNode();
+  if (editingType === 'checklist') return deleteChecklist();
   if (editingType === 'technique') return deleteTechnique();
   if (editingType === 'quiz')      return deleteQuiz();
   return deleteCard();
@@ -16576,16 +16613,22 @@ async function loadProfileAndProgress() {
       USER_PROFILE = null;
       USER_PROGRESS = [];
       LATEST_ATTEMPTS = {};
+      USER_SCRIPT_ACK = [];
       return;
     }
     const uid = session.user.id;
-    const [profRes, progRes, attRes] = await Promise.all([
+    const [profRes, progRes, attRes, ackRes] = await Promise.all([
       sb.from('profiles').select('*').eq('id', uid).maybeSingle(),
       sb.from('user_progress').select('*').eq('user_id', uid),
-      sb.from('quiz_attempts').select('*').eq('user_id', uid).order('attempted_at', {ascending:false})
+      sb.from('quiz_attempts').select('*').eq('user_id', uid).order('attempted_at', {ascending:false}),
+      // Отметки «ознакомлен со скриптами» — таблицы может не быть (миграция не запущена)
+      sb.from('script_ack').select('*').eq('user_id', uid)
+        .then(r => r, e => ({data:null, error:e}))
     ]);
     USER_PROFILE = profRes.data || null;
     USER_PROGRESS = progRes.data || [];
+    scriptAckTableOk = !ackRes.error;
+    USER_SCRIPT_ACK = ackRes.error ? [] : (ackRes.data || []);
     // Последняя попытка по каждому тесту
     LATEST_ATTEMPTS = {};
     (attRes.data || []).forEach(a => {
@@ -16642,8 +16685,10 @@ async function handleAuthExpired() {
   // refresh failed → выходим и показываем модалку логина
   isAdmin = false;
   isBarEditor = false;
+  isContentEditor = false;
   document.body.classList.remove('is-admin');
   document.body.classList.remove('is-bar-editor');
+  document.body.classList.remove('is-content-editor');
   try { await sb.auth.signOut(); } catch(e) {}
   showToast('Сессия истекла — войдите заново');
   openPwdModal();
@@ -18120,6 +18165,22 @@ function renderProfile() {
       </div>
 
       <div class="prof-section">
+        <h3>Мои продажи и бонус <span class="soon-badge">скоро</span></h3>
+        <div class="hint">Личная статистика по системе мотивации: продажи по твоему QR, доля бонусного фонда и прогноз зарплаты.</div>
+        <div class="prof-stats-grid">
+          <div class="prof-stat"><div class="val">—</div><div class="lbl">💰 QR-выручка за месяц</div></div>
+          <div class="prof-stat"><div class="val">—</div><div class="lbl">🧾 Чеков с моим QR</div></div>
+          <div class="prof-stat"><div class="val">—</div><div class="lbl">🎯 Моя доля личного бонуса</div></div>
+          <div class="prof-stat"><div class="val">—</div><div class="lbl">📈 Прогноз зарплаты</div></div>
+        </div>
+        <div class="prof-soon-note">
+          Как это будет работать: кассир сканирует твой QR → продажа записывается на тебя в 1С →
+          здесь появляются твоя выручка, доля бонусного фонда и прогноз зарплаты за месяц.
+          Данные подтянутся из 1С после запуска QR-учёта в филиале.
+        </div>
+      </div>
+
+      <div class="prof-section">
         <h3>Прогресс обучения</h3>
         <div class="hint">Отмечай изученные темы во вкладке «Техники продаж».</div>
         <div class="prof-progress-list">
@@ -18136,6 +18197,28 @@ function renderProfile() {
             ${attBadge(a2)}
           </div>
         </div>
+      </div>
+
+      <div class="prof-section">
+        <h3>Скрипты продаж</h3>
+        <div class="hint">Прочитай скрипты и отметь ознакомление внизу каждого раздела — руководитель видит отметки.</div>
+        ${scriptAckTableOk ? `
+        <div class="prof-ack-list">
+          ${SCRIPT_ACK_SECTIONS.map(sec => {
+            const ack = myScriptAck(sec.key);
+            return `
+            <div class="prof-ack-row">
+              <span class="prof-ack-label">${sec.label}</span>
+              ${ack
+                ? `<span class="dash-badge passed">✓ ознакомлен ${escHtml(formatDateTime(ack.confirmed_at))}</span>`
+                : `<span class="dash-badge muted">не отмечено</span>`}
+              <button class="btn prof-ack-open" onclick="openScriptsSection('${sec.key}')">${ack ? 'Открыть' : 'Читать →'}</button>
+            </div>`;
+          }).join('')}
+        </div>` : `
+        <p style="font-size:13px;color:var(--text-dim)">${isAdmin
+          ? '⚠ Отметки не настроены: запусти <b>script_ack_migration.sql</b> в Supabase Dashboard → SQL Editor (один раз).'
+          : 'Раздел отметок готовится. Скрипты уже доступны во вкладке «Скрипты».'}</p>`}
       </div>
     </div>
   `;
@@ -18244,12 +18327,18 @@ async function openDashboard() {
     </div></div>`;
   }
   try {
-    const [pr, pg, at, ac] = await Promise.all([
+    const [pr, pg, at, ac, sa, au] = await Promise.all([
       sb.from('profiles').select('*').order('created_at', {ascending:false}),
       sb.from('user_progress').select('*'),
       sb.from('quiz_attempts').select('*').order('attempted_at', {ascending:false}),
-      // Журнал входов — таблицы может не быть (миграция не запущена): не валим весь дашборд
+      // Журнал входов и отметки скриптов — таблиц может не быть (миграции
+      // не запущены): не валим весь дашборд
       sb.from('activity_log').select('*').order('created_at', {ascending:false}).limit(500)
+        .then(r => r, e => ({data:null, error:e})),
+      sb.from('script_ack').select('*')
+        .then(r => r, e => ({data:null, error:e})),
+      // Логины + последний вход из auth.users (RPC из admin_users_migration.sql)
+      sb.rpc('admin_list_auth_users')
         .then(r => r, e => ({data:null, error:e}))
     ]);
     if (pr.error) throw pr.error;
@@ -18260,6 +18349,10 @@ async function openDashboard() {
     ALL_ATTEMPTS = at.data || [];
     activityTableOk = !ac.error;
     ALL_ACTIVITY = ac.error ? [] : (ac.data || []);
+    scriptAckTableOk = !sa.error;
+    ALL_SCRIPT_ACK = sa.error ? [] : (sa.data || []);
+    ALL_AUTH_USERS = {};
+    if (!au.error) (au.data || []).forEach(u => { ALL_AUTH_USERS[u.id] = u; });
     renderTechniques();
   } catch(e) {
     console.error('dashboard load failed', e);
@@ -18292,10 +18385,21 @@ function userLastActive(userId) {
   return new Date(Math.max(...ts));
 }
 
-// Последний ВХОД на сайт (по журналу activity_log)
+// Последний ВХОД на сайт: журнал activity_log, фолбэк — last_sign_in_at
+// из auth.users (журнал появился позже и мог быть не настроен)
 function userLastLogin(userId) {
   const ev = ALL_ACTIVITY.find(a => a.user_id === userId); // отсортированы desc
-  return ev ? new Date(ev.created_at) : null;
+  if (ev) return new Date(ev.created_at);
+  const au = ALL_AUTH_USERS[userId];
+  return au?.last_sign_in_at ? new Date(au.last_sign_in_at) : null;
+}
+
+// Отметки «ознакомлен со скриптами» сотрудника (для дашборда)
+function userScriptAck(userId, section) {
+  return ALL_SCRIPT_ACK.find(a => a.user_id === userId && a.section === section) || null;
+}
+function userScriptAckCount(userId) {
+  return ALL_SCRIPT_ACK.filter(a => a.user_id === userId).length;
 }
 
 // Объединённая лента событий: входы + изученные темы + попытки тестов.
@@ -18376,7 +18480,7 @@ function renderDashboardView(root) {
   });
 
   const usersHTML = sortedProfiles.length === 0
-    ? `<p style="color:var(--text-dim);text-align:center;padding:40px 20px">Нет зарегистрированных сотрудников. Создавай аккаунты в Supabase Dashboard → Auth → Users.</p>`
+    ? `<p style="color:var(--text-dim);text-align:center;padding:40px 20px">Нет зарегистрированных сотрудников. Нажми «+ Добавить сотрудника» выше.</p>`
     : sortedProfiles.map(renderUserRow).join('');
 
   root.innerHTML = `
@@ -18458,6 +18562,10 @@ function renderUserRow(p) {
             if (lastLogin) return ` · заходил ${escHtml(formatRelativeTime(lastLogin))}`;
             return lastActive ? ` · активен ${escHtml(formatRelativeTime(lastActive))}` : ' · не заходил';
           })()}
+          ${scriptAckTableOk ? (() => {
+            const n = userScriptAckCount(p.id);
+            return ` · <span class="${n === SCRIPT_ACK_SECTIONS.length ? 'dash-ack-full' : ''}">📜 скрипты ${n}/${SCRIPT_ACK_SECTIONS.length}</span>`;
+          })() : ''}
         </div>
       </div>
       <div class="dash-progress-block">
@@ -18535,10 +18643,17 @@ function renderUserDetailView(root) {
       <button class="tech-back-btn" onclick="openDashboard()">← К дашборду</button>
       <h1>${roleIcon(p.role)}${escHtml(p.full_name || '— без имени —')}</h1>
       <div class="tagline-big">${escHtml([p.job_title, p.branch].filter(Boolean).join(' · ') || 'филиал не указан')} · ${roleLabel(p.role)}</div>
+      ${(() => {
+        const au = ALL_AUTH_USERS[p.id];
+        if (!au?.email) return '';
+        return `<div style="font-size:13px;color:var(--text-dim);margin:-14px 0 20px">Логин: <b style="color:var(--text-body)">${escHtml(au.email)}</b></div>`;
+      })()}
 
       <div style="display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap">
         <button class="btn" onclick="openProfileEditor('${p.id}')">✎ Изменить профиль</button>
+        ${(p.role !== 'admin' || p.id === USER_PROFILE?.id) ? `<button class="btn" onclick="adminSetUserPassword('${p.id}')">🔑 Задать пароль</button>` : ''}
         <button class="btn danger" onclick="resetUserProgress('${p.id}')">↺ Сбросить прогресс</button>
+        ${p.role !== 'admin' ? `<button class="btn danger" onclick="adminDeleteUser('${p.id}')">🗑 Удалить аккаунт</button>` : ''}
       </div>
 
       <div class="tech-section">
@@ -18551,6 +18666,25 @@ function renderUserDetailView(root) {
             <span style="font-family:ui-monospace,monospace;font-size:11px;color:var(--text-muted);margin-left:10px">${escHtml(p.qr_id)}</span>
           </p>`;
         })()}
+      </div>
+
+      <div class="tech-section">
+        <h3>Ознакомление со скриптами</h3>
+        ${scriptAckTableOk ? `
+        <div class="dash-topic-list">
+          ${SCRIPT_ACK_SECTIONS.map(sec => {
+            const ack = userScriptAck(p.id, sec.key);
+            return `
+            <div class="dash-topic-item ${ack ? 'done' : ''}">
+              <span class="status">${ack ? '✓' : '○'}</span>
+              <span class="title">${sec.label}</span>
+              ${ack ? `<span class="dash-log-time">${escHtml(formatDateTime(ack.confirmed_at))}</span>
+                <button class="btn" style="padding:2px 10px;font-size:11px" onclick="adminResetScriptAck('${p.id}','${sec.key}')" title="Снять отметку (например, после большого обновления скриптов)">↺</button>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px">Сотрудник отмечает сам внизу каждого раздела вкладки «Скрипты». Кнопка ↺ снимает отметку — попроси перечитать после больших обновлений.</p>
+        ` : `<p style="color:var(--text-dim);font-size:13px">⚠ Отметки не настроены: запусти <b>script_ack_migration.sql</b> в Supabase Dashboard → SQL Editor (один раз).</p>`}
       </div>
 
       <div class="tech-section">
@@ -18615,8 +18749,13 @@ function openProfileEditor(userId) {
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ — полный доступ + удаление. Редактор — может править темы и тесты, но не удалять и не управлять юзерами. Старший барист — только бар-карточки.</div>
       </div>
     </div>
-    <div><div class="fsec">Email (логин)</div>
-      <div style="font-size:13px;color:var(--text-dim)">${escHtml(p.id)}<br>Email менять нельзя — только через Supabase Dashboard.</div>
+    <div><div class="fsec">Логин (email)</div>
+      ${ALL_AUTH_USERS[p.id]?.email ? `
+      <div class="ff"><label>Логин для входа</label>
+        <input id="prof-email" value="${escAttr(ALL_AUTH_USERS[p.id].email)}" placeholder="cum-aigul или полный email" autocomplete="off" spellcheck="false">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Простой логин дополнится @yahya.local. Смена логина сотрудника не разлогинивает — просто входить теперь по новому.</div>
+      </div>` : `
+      <div style="font-size:13px;color:var(--text-dim)">Логины загружаются через функцию <b>admin_list_auth_users</b> — открой дашборд заново; если не появились, запусти admin_users_migration.sql в Supabase SQL Editor.</div>`}
     </div>
   `;
   document.getElementById('modalOverlay').classList.add('active');
@@ -18641,6 +18780,16 @@ async function saveProfile() {
   const clash = ALL_PROFILES.find(x => x.id !== id && qr_id && (x.qr_id || '') === qr_id);
   if (clash) { showToast(`Этот QR уже у: ${clash.full_name || clash.id}`); return; }
 
+  // Смена логина — до записи профиля: если логин невалиден, не сохраняем ничего
+  const emailInput = document.getElementById('prof-email');
+  const oldEmail = (ALL_AUTH_USERS[id]?.email || '').toLowerCase();
+  let newEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  if (emailInput && newEmail && !newEmail.includes('@')) newEmail += '@yahya.local';
+  const emailChanged = emailInput && newEmail && oldEmail && newEmail !== oldEmail;
+  if (emailChanged && !/^[a-z0-9._+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(newEmail)) {
+    showToast('Неверный формат логина'); return;
+  }
+
   const ok = await dbWrite(
     () => sb.from('profiles').update({
       full_name, branch, role, job_title, qr_id: qr_id || null, updated_at: new Date().toISOString()
@@ -18648,6 +18797,18 @@ async function saveProfile() {
     'Ошибка сохранения профиля'
   );
   if (!ok) return;
+
+  if (emailChanged) {
+    const { error: eErr } = await sb.rpc('admin_set_user_email', { target_user: id, new_email: newEmail });
+    if (eErr) {
+      showToast(rpcMigrationError(eErr)
+        ? 'Профиль сохранён, но логин не изменён — запусти admin_users_migration.sql'
+        : 'Профиль сохранён, но логин не изменён: ' + eErr.message);
+    } else if (ALL_AUTH_USERS[id]) {
+      ALL_AUTH_USERS[id].email = newEmail;
+    }
+  }
+
   const i = ALL_PROFILES.findIndex(p => p.id === id);
   if (i >= 0) Object.assign(ALL_PROFILES[i], {full_name, branch, role, job_title, qr_id: qr_id || null});
   // Если редактируем самого себя — обновляем USER_PROFILE
@@ -18683,6 +18844,72 @@ async function resetUserProgress(userId) {
   }
   showToast('Прогресс сброшен');
   renderTechniques();
+}
+
+// ── Управление аккаунтами (RPC из admin_users_migration.sql) ──
+// Anon-ключ не умеет удалять юзеров из Auth и менять чужие пароли — обе
+// операции идут через SECURITY DEFINER функции, которые сами проверяют is_admin().
+function rpcMigrationError(error) {
+  // PGRST202 = функция не найдена в schema cache → миграция не запущена
+  const msg = (error?.message || '').toLowerCase();
+  return error?.code === 'PGRST202' || msg.includes('schema cache') || msg.includes('does not exist');
+}
+
+async function adminSetUserPassword(userId) {
+  if (!isAdmin) return;
+  const u = ALL_PROFILES.find(x => x.id === userId);
+  if (!u) return;
+  const pwd = prompt(`Новый пароль для «${u.full_name || u.id}» (минимум 6 символов):`);
+  if (pwd === null) return;
+  if (pwd.length < 6) { showToast('Минимум 6 символов'); return; }
+  const { error } = await sb.rpc('admin_set_user_password', { target_user: userId, new_password: pwd });
+  if (error) {
+    showToast(rpcMigrationError(error)
+      ? 'Функция не найдена — запусти admin_users_migration.sql в Supabase SQL Editor'
+      : 'Ошибка: ' + error.message);
+    return;
+  }
+  showToast('Пароль обновлён — сообщи сотруднику ✓');
+}
+
+async function adminDeleteUser(userId) {
+  if (!isAdmin) return;
+  const u = ALL_PROFILES.find(x => x.id === userId);
+  if (!u) return;
+  if (USER_PROFILE && USER_PROFILE.id === userId) { showToast('Нельзя удалить собственный аккаунт'); return; }
+  const label = u.full_name || u.id;
+  if (!confirm(`Удалить аккаунт «${label}»?\n\nПропадут: вход на сайт, прогресс обучения, попытки тестов, журнал активности. Восстановить нельзя.`)) return;
+  const typed = prompt('Для подтверждения введи слово УДАЛИТЬ:');
+  if (typed === null) return;
+  if (typed.trim().toUpperCase() !== 'УДАЛИТЬ') { showToast('Удаление отменено'); return; }
+  const { error } = await sb.rpc('admin_delete_user', { target_user: userId });
+  if (error) {
+    showToast(rpcMigrationError(error)
+      ? 'Функция не найдена — запусти admin_users_migration.sql в Supabase SQL Editor'
+      : 'Ошибка: ' + error.message);
+    return;
+  }
+  ALL_PROFILES   = ALL_PROFILES.filter(x => x.id !== userId);
+  ALL_PROGRESS   = ALL_PROGRESS.filter(x => x.user_id !== userId);
+  ALL_ATTEMPTS   = ALL_ATTEMPTS.filter(x => x.user_id !== userId);
+  ALL_ACTIVITY   = ALL_ACTIVITY.filter(x => x.user_id !== userId);
+  ALL_SCRIPT_ACK = ALL_SCRIPT_ACK.filter(x => x.user_id !== userId);
+  showToast(`Аккаунт «${label}» удалён`);
+  openDashboard();
+}
+
+async function adminResetScriptAck(userId, section) {
+  if (!isAdmin) return;
+  if (!confirm('Снять отметку об ознакомлении со скриптами?')) return;
+  const { error } = await sb.from('script_ack').delete()
+    .eq('user_id', userId).eq('section', section);
+  if (error) { showToast('Ошибка: ' + error.message); return; }
+  ALL_SCRIPT_ACK = ALL_SCRIPT_ACK.filter(a => !(a.user_id === userId && a.section === section));
+  if (USER_PROFILE && USER_PROFILE.id === userId) {
+    USER_SCRIPT_ACK = USER_SCRIPT_ACK.filter(a => a.section !== section);
+  }
+  renderTechniques();
+  showToast('Отметка снята — сотрудник увидит, что нужно перечитать');
 }
 
 // ── Создание нового сотрудника прямо из дашборда ──
@@ -19499,6 +19726,8 @@ function renderScripts() {
     } else if (canEditContent() && role !== 'common') {
       html += `<div class="scripts-block"><div class="scripts-block-title">✅ Чек-лист смены</div><div class="add-tile admin-only" style="max-width:380px" onclick="openChecklistModal(null)"><div class="plus">+</div><p>Добавить чек-лист</p></div></div>`;
     }
+    // Отметка «я ознакомился» — в самом низу, после всего контента раздела
+    html += renderScriptAckBlock(role);
   }
 
   container.innerHTML = html;
@@ -19513,6 +19742,90 @@ function renderScripts() {
 
 function handleScriptSearch(val) {
   window._scriptSearchQuery = val;
+  renderScripts();
+}
+
+// ── ОЗНАКОМЛЕНИЕ СО СКРИПТАМИ ───────────────────────────────────────
+// Сотрудник отмечает «я ознакомился» по каждому разделу скриптов.
+// Хранится в таблице script_ack (см. script_ack_migration.sql), руководитель
+// видит отметки в дашборде сотрудников — как аттестацию, но по скриптам.
+const SCRIPT_ACK_SECTIONS = [
+  { key: 'retail', label: '🛍 У кассы' },
+  { key: 'bar',    label: '☕ У столиков' },
+  { key: 'common', label: '📖 Общее' }
+];
+
+function myScriptAck(section) {
+  return USER_SCRIPT_ACK.find(a => a.section === section) || null;
+}
+
+async function toggleScriptAck(section) {
+  if (!USER_PROFILE) { showToast('Войди в профиль, чтобы отметить ознакомление'); navigateTo('profile'); return; }
+  const existing = myScriptAck(section);
+  if (existing) {
+    const { error } = await sb.from('script_ack').delete()
+      .eq('user_id', USER_PROFILE.id).eq('section', section);
+    if (error) { showToast('Ошибка: ' + error.message); return; }
+    USER_SCRIPT_ACK = USER_SCRIPT_ACK.filter(a => a.section !== section);
+    showToast('Отметка снята');
+  } else {
+    const { error } = await sb.from('script_ack').insert({ user_id: USER_PROFILE.id, section });
+    if (error) {
+      // Таблицы нет — миграция не запущена. Сотруднику это не починить, говорим прямо.
+      const msg = (error.message || '').toLowerCase();
+      if (error.code === 'PGRST205' || error.code === '42P01' || msg.includes('script_ack')) {
+        scriptAckTableOk = false;
+        showToast(isAdmin ? 'Запусти script_ack_migration.sql в Supabase SQL Editor' : 'Раздел ещё не настроен — скажи руководителю');
+      } else {
+        showToast('Ошибка: ' + error.message);
+      }
+      return;
+    }
+    USER_SCRIPT_ACK.push({ user_id: USER_PROFILE.id, section, confirmed_at: new Date().toISOString() });
+    showToast('Отмечено: со скриптами ознакомлен ✓');
+  }
+  renderScripts();
+  if (currentPage === 'profile') renderProfile();
+}
+
+// Плашка внизу вкладки скриптов: статус + кнопка отметки для текущего раздела
+function renderScriptAckBlock(role) {
+  if (!USER_PROFILE || !scriptAckTableOk) return '';
+  const sec = SCRIPT_ACK_SECTIONS.find(s => s.key === role);
+  if (!sec) return '';
+  const ack = myScriptAck(role);
+  if (ack) {
+    return `
+      <div class="scripts-block">
+        <div class="ack-box ack-done">
+          <div class="ack-icon">✅</div>
+          <div class="ack-main">
+            <div class="ack-title">Ты ознакомился со скриптами «${sec.label.replace(/^\S+\s/, '')}»</div>
+            <div class="ack-sub">Отмечено ${escHtml(formatDateTime(ack.confirmed_at))} · руководитель видит это в дашборде</div>
+          </div>
+          <button class="ack-undo" onclick="toggleScriptAck('${role}')">↺ снять отметку</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="scripts-block">
+      <div class="ack-box">
+        <div class="ack-icon">📋</div>
+        <div class="ack-main">
+          <div class="ack-title">Прочитал все скрипты раздела?</div>
+          <div class="ack-sub">Отметь ознакомление — руководитель увидит, что ты готов работать по скриптам.</div>
+        </div>
+        <button class="btn-save" onclick="toggleScriptAck('${role}')">✓ Я ознакомился</button>
+      </div>
+    </div>`;
+}
+
+// Открыть вкладку скриптов сразу на нужном разделе (из профиля)
+function openScriptsSection(role) {
+  currentScriptRole = role;
+  currentTreePath = [];
+  window._scriptSearchQuery = '';
+  navigateTo('scripts');
   renderScripts();
 }
 
@@ -20297,6 +20610,18 @@ async function saveChecklist() {
   showToast(idx >= 0 ? 'Чек-лист обновлён' : 'Чек-лист добавлен');
 }
 
+async function deleteChecklist() {
+  if (!isAdmin || !editingId) return;
+  if (!confirm('Удалить чек-лист?')) return;
+  const ok = await dbDelete('scripts', editingId);
+  if (!ok) return;
+  SCRIPTS_DATA = SCRIPTS_DATA.filter(x => x.id !== editingId);
+  saveScriptsLS();
+  closeModal();
+  renderScripts();
+  showToast('Чек-лист удалён');
+}
+
 function escHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));}
 
 function closeModal() {
@@ -20566,7 +20891,7 @@ async function deleteCard() {
 // ADMIN AUTH (Supabase)
 // ════════════════════════════════════════════════
 function openPwdModal() {
-  if (isAdmin || isBarEditor) return;
+  if (isAdmin || isBarEditor || isContentEditor) return;
   document.getElementById('pwdOverlay').classList.add('active');
   document.getElementById('pwdInput').value = '';
   document.getElementById('pwdError').textContent = '';
@@ -20597,6 +20922,8 @@ async function checkPwd() {
       showToast('Режим редактора активирован');
     } else if (USER_PROFILE && USER_PROFILE.role === 'bar_editor') {
       showToast('Режим бар-редактора активирован');
+    } else if (USER_PROFILE && USER_PROFILE.role === 'editor') {
+      showToast('Режим редактора техник активирован');
     } else {
       showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
     }
@@ -20624,11 +20951,14 @@ async function exitAdmin() {
   await sb.auth.signOut();
   isAdmin = false;
   isBarEditor = false;
+  isContentEditor = false;
   USER_PROFILE = null;
   USER_PROGRESS = [];
   LATEST_ATTEMPTS = {};
+  USER_SCRIPT_ACK = [];
   document.body.classList.remove('is-admin');
   document.body.classList.remove('is-bar-editor');
+  document.body.classList.remove('is-content-editor');
   renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
   if (typeof renderTechniques === 'function') renderTechniques();
   if (typeof renderProfile === 'function') renderProfile();
@@ -20776,16 +21106,20 @@ async function init() {
       return;
     }
     if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session)) {
-      if (isAdmin || isBarEditor || USER_PROFILE) {
+      if (isAdmin || isBarEditor || isContentEditor || USER_PROFILE) {
         isAdmin = false;
         isBarEditor = false;
+        isContentEditor = false;
         USER_PROFILE = null;
         USER_PROGRESS = [];
         LATEST_ATTEMPTS = {};
+        USER_SCRIPT_ACK = [];
         document.body.classList.remove('is-admin');
         document.body.classList.remove('is-bar-editor');
+        document.body.classList.remove('is-content-editor');
         renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
         if (typeof renderTechniques === 'function') renderTechniques();
+        if (typeof renderProfile === 'function') renderProfile();
       }
     }
   });
