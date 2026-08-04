@@ -868,7 +868,7 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .prof-locked-text{font-size:13px;color:var(--text-dim);line-height:1.6;}
 .prof-progress-list{display:flex;flex-direction:column;gap:14px;}
 
-/* Заглушка «Мои продажи и бонус» — стат-плитки будущей статистики из 1С */
+/* Заглушка «Мои продажи» — стат-плитки будущей статистики из 1С */
 .soon-badge{display:inline-block;vertical-align:middle;margin-left:8px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background:rgba(var(--rgb-gold-500),.14);color:var(--accent);border:1px solid var(--border-active);}
 .prof-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px;}
 .prof-stat{padding:14px 16px;background:var(--bg-deep);border:1px solid var(--border-subtle);border-radius:12px;}
@@ -18159,18 +18159,17 @@ function renderProfile() {
       </div>
 
       <div class="prof-section">
-        <h3>Мои продажи и бонус <span class="soon-badge">скоро</span></h3>
-        <div class="hint">Личная статистика по системе мотивации: продажи по твоему QR, доля бонусного фонда и прогноз зарплаты.</div>
+        <h3>Мои продажи <span class="soon-badge">скоро</span></h3>
+        <div class="hint">Личная статистика продаж по твоему QR.</div>
         <div class="prof-stats-grid">
           <div class="prof-stat"><div class="val">—</div><div class="lbl">💰 QR-выручка за месяц</div></div>
           <div class="prof-stat"><div class="val">—</div><div class="lbl">🧾 Чеков с моим QR</div></div>
-          <div class="prof-stat"><div class="val">—</div><div class="lbl">🎯 Моя доля личного бонуса</div></div>
-          <div class="prof-stat"><div class="val">—</div><div class="lbl">📈 Прогноз зарплаты</div></div>
+          <div class="prof-stat"><div class="val">—</div><div class="lbl">🧮 Мой средний чек</div></div>
         </div>
         <div class="prof-soon-note">
           Как это будет работать: кассир сканирует твой QR → продажа записывается на тебя в 1С →
-          здесь появляются твоя выручка, доля бонусного фонда и прогноз зарплаты за месяц.
-          Данные подтянутся из 1С после запуска QR-учёта в филиале.
+          здесь появляется твоя личная статистика за месяц. Данные подтянутся из 1С после
+          запуска QR-учёта в филиале.
         </div>
       </div>
 
