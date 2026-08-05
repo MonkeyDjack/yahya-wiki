@@ -16414,6 +16414,8 @@ function saveModal() {
   if (editingType === 'profile')   return saveProfile();
   if (editingType === 'newuser')   return saveNewUser();
   if (editingType === 'pwd-change')return saveOwnPassword();
+  if (editingType === 'admin-pwd') return saveAdminPassword();
+  if (editingType === 'admin-pwd-done') return closeModal();
   return saveCard();
 }
 function deleteEntity() {
@@ -18856,13 +18858,75 @@ function rpcMigrationError(error) {
   return error?.code === 'PGRST202' || msg.includes('schema cache') || msg.includes('does not exist');
 }
 
-async function adminSetUserPassword(userId) {
-  if (!isAdmin) return;
+// Тот же алфавит, что и в ops/-скриптах: без 0/O/1/l/I — пароль диктуют
+// голосом и переписывают с бумажки.
+const PWD_ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789';
+function genPassword(n = 8) {
+  const a = new Uint32Array(n);
+  crypto.getRandomValues(a);
+  return Array.from(a, x => PWD_ALPHABET[x % PWD_ALPHABET.length]).join('');
+}
+
+async function copyText(text, okMsg) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast(okMsg || 'Скопировано ✓');
+  } catch(e) {
+    // Старые мобильные браузеры без Clipboard API
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast(okMsg || 'Скопировано ✓'); }
+    catch(_) { showToast('Не удалось скопировать — выдели вручную'); }
+    ta.remove();
+  }
+}
+
+// Действующий пароль показать невозможно: GoTrue хранит bcrypt-хэш, а не сам
+// пароль. Поэтому «сотрудник забыл пароль» решается только выдачей нового —
+// показываем его один раз с кнопкой копирования.
+function adminSetUserPassword(userId) {
+  if (!isAdmin) { showToast('Только админ'); return; }
   const u = ALL_PROFILES.find(x => x.id === userId);
   if (!u) return;
-  const pwd = prompt(`Новый пароль для «${u.full_name || u.id}» (минимум 6 символов):`);
-  if (pwd === null) return;
+  const login = ALL_AUTH_USERS[userId]?.email || '';
+  editingType = 'admin-pwd';
+  editingId = userId;
+  document.getElementById('modalTitle').textContent = 'Пароль сотрудника';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('modalBody').innerHTML = `
+    <div>
+      <div class="fsec">${escHtml(u.full_name || u.id)}</div>
+      ${login ? `<div style="font-size:13px;color:var(--text-dim);margin-bottom:14px">
+        Логин: <b style="color:var(--text-body)">${escHtml(login)}</b>
+        <button class="btn" style="padding:3px 9px;font-size:12px;margin-left:6px"
+                onclick="copyText('${escAttr(login)}','Логин скопирован ✓')">📋</button>
+      </div>` : ''}
+      <div class="ff"><label>Новый пароль</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="adminpwd-new" type="text" value="${escAttr(genPassword())}" autocomplete="off"
+                 style="font-family:ui-monospace,monospace;font-size:17px;letter-spacing:1.5px">
+          <button class="btn" style="white-space:nowrap"
+                  onclick="document.getElementById('adminpwd-new').value = genPassword()">🎲 Другой</button>
+        </div>
+      </div>
+      <div style="margin-top:14px;font-size:12px;color:var(--text-dim)">
+        Действующий пароль посмотреть нельзя — база хранит не сам пароль, а его зашифрованный
+        отпечаток. Если сотрудник забыл пароль, выдай новый здесь и передай ему.
+      </div>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+async function saveAdminPassword() {
+  const pwd = document.getElementById('adminpwd-new').value.trim();
   if (pwd.length < 6) { showToast('Минимум 6 символов'); return; }
+  const userId = editingId;
+  const u = ALL_PROFILES.find(x => x.id === userId);
   const { error } = await sb.rpc('admin_set_user_password', { target_user: userId, new_password: pwd });
   if (error) {
     showToast(rpcMigrationError(error)
@@ -18870,7 +18934,31 @@ async function adminSetUserPassword(userId) {
       : 'Ошибка: ' + error.message);
     return;
   }
-  showToast('Пароль обновлён — сообщи сотруднику ✓');
+  const login = ALL_AUTH_USERS[userId]?.email || '';
+  const handout = `${u?.full_name || ''}\n${location.origin}${location.pathname}\nлогин: ${login}\nпароль: ${pwd}`;
+  editingType = 'admin-pwd-done';
+  document.getElementById('modalTitle').textContent = 'Пароль выдан';
+  document.getElementById('modalBody').innerHTML = `
+    <div>
+      <div class="fsec">${escHtml(u?.full_name || userId)}</div>
+      <div style="background:var(--bg-deep);border:1px solid var(--border-default);border-radius:10px;padding:14px 16px">
+        <div style="font-size:12px;color:var(--text-muted)">Логин</div>
+        <div style="font-family:ui-monospace,monospace;font-size:15px;color:var(--text-body);word-break:break-all">${escHtml(login)}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:12px">Пароль</div>
+        <div style="font-family:ui-monospace,monospace;font-size:22px;letter-spacing:2px;color:var(--text-heading)">${escHtml(pwd)}</div>
+      </div>
+      <button class="btn" style="margin-top:12px;width:100%"
+              onclick="copyText(${escAttr(JSON.stringify(handout))},'Логин и пароль скопированы ✓')">
+        📋 Скопировать для отправки
+      </button>
+      <div style="margin-top:14px;font-size:12px;color:var(--text-dim)">
+        Запиши или скопируй сейчас — после закрытия окна пароль больше нигде не показывается.
+        Сотрудник сможет сменить его сам: Профиль → 🔑 Пароль.
+      </div>
+    </div>
+  `;
+  const foot = document.querySelector('.modal-footer');
+  if (foot) foot.innerHTML = `<div class="footer-right"><button class="btn-save" onclick="closeModal()">Готово</button></div>`;
 }
 
 async function adminDeleteUser(userId) {
