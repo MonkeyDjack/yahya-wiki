@@ -745,6 +745,7 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .tech-mark-done-btn{padding:10px 20px;background:var(--accent);color:var(--text-on-accent);border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;}
 .tech-mark-done-btn:hover{background:var(--accent-hover);}
 .tech-mark-done-btn.done{background:var(--color-success);}
+.tech-mark-done-btn:disabled{opacity:.45;cursor:not-allowed;}
 .tech-intro-block{margin-bottom:18px;}
 .tech-intro-block h3{font-size:16px;color:var(--text-heading);margin-bottom:8px;}
 .tech-intro-block .body{font-size:14px;line-height:1.6;color:var(--text-body);white-space:pre-wrap;}
@@ -17427,9 +17428,41 @@ async function techDoLogin() {
   }
 }
 
+// Кнопка «Я изучил» открывается только через 30 сек после открытия темы —
+// защита от прощёлкивания (найдено 12.08.2026: медиана между отметками
+// у большинства была 3–15 сек). Админов и редакторов не задерживаем.
+const TOPIC_READ_SECONDS = 30;
+let topicOpenedAt = 0;         // Date.now() момента открытия текущей темы
+let topicTimerHandle = null;   // interval обратного отсчёта на кнопке
+
+function topicWaitLeftSec(done) {
+  if (done || canEditContent()) return 0;
+  const passed = (Date.now() - topicOpenedAt) / 1000;
+  return Math.max(0, Math.ceil(TOPIC_READ_SECONDS - passed));
+}
+
+function startTopicTimer(id) {
+  if (topicTimerHandle) { clearInterval(topicTimerHandle); topicTimerHandle = null; }
+  topicTimerHandle = setInterval(() => {
+    const btn = document.getElementById('markDoneBtn');
+    if (!btn || currentTechView !== 'topic' || currentTopicId !== id) {
+      clearInterval(topicTimerHandle); topicTimerHandle = null; return;
+    }
+    const left = topicWaitLeftSec(isTechniqueDone(id));
+    if (left > 0) {
+      btn.textContent = `⏳ ${left} сек`;
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Я изучил';
+      clearInterval(topicTimerHandle); topicTimerHandle = null;
+    }
+  }, 1000);
+}
+
 function openTopic(id) {
   currentTopicId = id;
   currentTechView = 'topic';
+  topicOpenedAt = Date.now();
   renderTechniques();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -17497,11 +17530,13 @@ function renderTopicView(root) {
     `;
   }
 
+  const waitLeft = isIntro ? 0 : topicWaitLeftSec(done);
   const markBar = !isIntro ? `
     <div class="tech-mark-done-bar ${done ? 'done' : ''}">
       <div class="lbl">${done ? '✓ Тема изучена' : 'Готов идти дальше?'}</div>
-      <button class="tech-mark-done-btn ${done ? 'done' : ''}" onclick="markTechniqueDone('${t.id}')">
-        ${done ? '✓ Изучено' : 'Я изучил'}
+      <button class="tech-mark-done-btn ${done ? 'done' : ''}" id="markDoneBtn"
+        ${waitLeft > 0 ? 'disabled' : ''} onclick="markTechniqueDone('${t.id}')">
+        ${done ? '✓ Изучено' : (waitLeft > 0 ? `⏳ ${waitLeft} сек` : 'Я изучил')}
       </button>
     </div>
   ` : '';
@@ -17525,6 +17560,8 @@ function renderTopicView(root) {
       ${navBar}
     </div>
   `;
+  if (waitLeft > 0) startTopicTimer(t.id);
+  else if (topicTimerHandle) { clearInterval(topicTimerHandle); topicTimerHandle = null; }
 }
 
 function getNextTopicId(currentId) {
@@ -17550,6 +17587,11 @@ async function markTechniqueDone(id) {
       USER_PROGRESS = USER_PROGRESS.filter(p => p.technique_id !== id);
       renderTechniques();
     }
+    return;
+  }
+  const waitLeft = topicWaitLeftSec(false);
+  if (waitLeft > 0) {
+    showToast(`Прочитай тему — кнопка откроется через ${waitLeft} сек`);
     return;
   }
   const ok = await dbWrite(
