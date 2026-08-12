@@ -16578,7 +16578,8 @@ let currentScriptRole = 'retail';  // retail | bar | common
 let currentTechView = 'modules';   // modules | topic | quiz | quiz-result | dashboard | user-detail
 let currentTopicId  = null;        // активная тема при currentTechView='topic'
 let currentQuizId   = null;        // активный тест при currentTechView='quiz'
-let currentQuizAnswers = {};       // {questionIndex: optionIndex} — ответы текущей попытки
+let currentQuizAnswers = {};       // {questionIndex: optionIndex} — ответы текущей попытки (индексы ОРИГИНАЛЬНЫЕ, из банка)
+let currentQuizSet  = null;        // случайная выборка попытки: [{qi, opts:[oi,...]}] — порядок вопросов и вариантов
 let currentDetailUserId = null;    // активный сотрудник при currentTechView='user-detail'
 let ALL_PROFILES   = [];           // все профили (грузятся в дашборде админа)
 let ALL_PROGRESS   = [];           // прогресс всех пользователей
@@ -17623,6 +17624,28 @@ async function markTechniqueDone(id) {
 }
 
 // ── Тесты (аттестация) ──
+// Все вопросы теста — это БАНК. Каждая попытка собирается заново:
+// случайные pick_count вопросов в случайном порядке, варианты ответов тоже
+// перемешаны. Ответы храним по оригинальным индексам банка — так результат
+// в БД (quiz_attempts.answers) остаётся читаемым независимо от перемешивания.
+const QUIZ_PICK_DEFAULT = 15;      // вопросов в попытке, если в тесте не задано своё число
+
+function shuffleArr(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildQuizSet(quiz) {
+  const bank = quiz.data.questions || [];
+  const pickN = Math.max(1, Math.min(quiz.data.pick_count || QUIZ_PICK_DEFAULT, bank.length));
+  return shuffleArr(bank.map((_, qi) => qi)).slice(0, pickN)
+    .map(qi => ({qi, opts: shuffleArr(bank[qi].options.map((_, oi) => oi))}));
+}
+
 function startQuiz(num) {
   const quiz = QUIZZES_DATA.find(q => q.id === 'module' + num);
   if (!quiz) { showToast('Тест не найден'); return; }
@@ -17633,6 +17656,7 @@ function startQuiz(num) {
   currentQuizId = 'module' + num;
   currentTechView = 'quiz';
   currentQuizAnswers = {};
+  currentQuizSet = buildQuizSet(quiz);
   renderTechniques();
   window.scrollTo({top:0});
 }
@@ -17644,22 +17668,26 @@ function renderQuizView(root) {
     return;
   }
   const d = quiz.data;
-  const questions = d.questions || [];
+  const bank = d.questions || [];
+  if (!currentQuizSet) currentQuizSet = buildQuizSet(quiz);
 
-  const questionsHTML = questions.map((q, qi) => {
-    const optionsHTML = q.options.map((opt, oi) => {
-      const checked = currentQuizAnswers[qi] === oi ? 'checked' : '';
-      const selectedClass = currentQuizAnswers[qi] === oi ? 'selected' : '';
+  const questionsHTML = currentQuizSet.map((item, di) => {
+    const q = bank[item.qi];
+    if (!q) return '';
+    const optionsHTML = item.opts.map(oi => {
+      const opt = q.options[oi];
+      const checked = currentQuizAnswers[item.qi] === oi ? 'checked' : '';
+      const selectedClass = currentQuizAnswers[item.qi] === oi ? 'selected' : '';
       return `
-        <label class="tech-quiz-option ${selectedClass}" data-q="${qi}" data-o="${oi}">
-          <input type="radio" name="q${qi}" value="${oi}" ${checked} onchange="selectQuizAnswer(${qi},${oi})">
+        <label class="tech-quiz-option ${selectedClass}" data-q="${item.qi}" data-o="${oi}">
+          <input type="radio" name="q${item.qi}" value="${oi}" ${checked} onchange="selectQuizAnswer(${item.qi},${oi})">
           <span class="tech-quiz-option-text">${escHtml(opt.text)}</span>
         </label>
       `;
     }).join('');
     return `
       <div class="tech-quiz-question">
-        <div class="tech-quiz-q-num">Вопрос ${qi + 1} из ${questions.length}</div>
+        <div class="tech-quiz-q-num">Вопрос ${di + 1} из ${currentQuizSet.length}</div>
         <div class="tech-quiz-q-text">${escHtml(q.q)}</div>
         <div class="tech-quiz-options">${optionsHTML}</div>
       </div>
@@ -17667,18 +17695,18 @@ function renderQuizView(root) {
   }).join('');
 
   const answered = Object.keys(currentQuizAnswers).length;
-  const allAnswered = answered === questions.length;
+  const allAnswered = answered === currentQuizSet.length;
 
   root.innerHTML = `
     <div class="tech-topic-view tech-quiz-view">
       <button class="tech-back-btn" onclick="cancelQuiz()">← Прервать</button>
       <h1>${escHtml(d.title || 'Аттестация')}</h1>
       <div class="tech-quiz-meta">
-        ${questions.length} вопросов · проходной балл ${d.pass_score || 80}%
+        ${currentQuizSet.length} вопросов${currentQuizSet.length < bank.length ? ` (случайные из банка в ${bank.length})` : ''} · проходной балл ${d.pass_score || 80}%
       </div>
       ${questionsHTML}
       <div class="tech-quiz-submit-bar">
-        <div class="lbl" id="quizAnsweredCount">Ответов: ${answered} из ${questions.length}</div>
+        <div class="lbl" id="quizAnsweredCount">Ответов: ${answered} из ${currentQuizSet.length}</div>
         <button class="tech-mark-done-btn" id="quizSubmitBtn"
           ${allAnswered ? '' : 'disabled style="opacity:.4;cursor:not-allowed"'}
           onclick="submitQuiz()">Сдать тест</button>
@@ -17696,7 +17724,7 @@ function selectQuizAnswer(qi, oi) {
   });
   const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
   if (!quiz) return;
-  const total = (quiz.data.questions || []).length;
+  const total = currentQuizSet ? currentQuizSet.length : (quiz.data.questions || []).length;
   const answered = Object.keys(currentQuizAnswers).length;
   const cnt = document.getElementById('quizAnsweredCount');
   if (cnt) cnt.textContent = `Ответов: ${answered} из ${total}`;
@@ -17714,6 +17742,7 @@ function cancelQuiz() {
   const answered = Object.keys(currentQuizAnswers).length;
   if (answered > 0 && !confirm('Прервать тест? Ответы будут потеряны.')) return;
   currentQuizAnswers = {};
+  currentQuizSet = null;
   backToModules();
 }
 
@@ -17721,12 +17750,14 @@ async function submitQuiz() {
   const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
   if (!quiz || !USER_PROFILE) return;
   const questions = quiz.data.questions || [];
+  // Считаем только по вопросам этой попытки (случайная выборка из банка)
+  const asked = currentQuizSet || questions.map((_, qi) => ({qi}));
   let score = 0;
-  questions.forEach((q, qi) => {
-    const ai = currentQuizAnswers[qi];
-    if (ai != null && q.options[ai]?.correct) score++;
+  asked.forEach(item => {
+    const ai = currentQuizAnswers[item.qi];
+    if (ai != null && questions[item.qi]?.options[ai]?.correct) score++;
   });
-  const total = questions.length;
+  const total = asked.length;
   const passScore = quiz.data.pass_score || 80;
   const passed = total > 0 && (score / total * 100) >= passScore;
 
@@ -17748,6 +17779,7 @@ async function submitQuiz() {
     answers: currentQuizAnswers,
     attempted_at: new Date().toISOString()
   };
+  currentQuizSet = null;
 
   currentTechView = 'quiz-result';
   renderTechniques();
@@ -17766,8 +17798,12 @@ function renderQuizResultView(root) {
   const pct = Math.round(att.score / att.total * 100);
   const moduleNum = parseInt(currentQuizId.replace('module', ''), 10);
 
-  // Разбор ошибок
-  const wrongs = questions.map((q, qi) => {
+  // Разбор ошибок — только по вопросам, которые попались в этой попытке
+  // (ключи answers; попытка сдаётся лишь когда отвечены все заданные)
+  const askedQis = Object.keys(att.answers || {}).map(Number)
+    .filter(qi => questions[qi]).sort((a, b) => a - b);
+  const wrongs = askedQis.map(qi => {
+    const q = questions[qi];
     const aIdx = (att.answers || {})[qi];
     const userOpt = q.options[aIdx];
     if (userOpt && userOpt.correct) return null;
@@ -17783,7 +17819,7 @@ function renderQuizResultView(root) {
   const wrongHTML = wrongs.length === 0 ? `
     <div class="tech-section">
       <h3>Идеально</h3>
-      <div class="body">Все 25 ответов верные. Так держать!</div>
+      <div class="body">Все ${att.total} ответов верные. Так держать!</div>
     </div>
   ` : `
     <div class="tech-section">
@@ -18078,7 +18114,9 @@ function buildQuizForm(q) {
         <div class="ff"><label>Заголовок</label><input id="quiz-title" value="${escHtml(d.title||'')}"></div>
         <div class="ff"><label>Проходной балл, %</label><input id="quiz-pass" type="number" min="0" max="100" value="${d.pass_score||80}"></div>
         <div class="ff"><label>Кулдаун между попытками, мин</label><input id="quiz-cd" type="number" min="0" value="${d.cooldown_minutes||30}"></div>
+        <div class="ff"><label>Вопросов в попытке (банк: ${questions.length})</label><input id="quiz-pick" type="number" min="1" value="${d.pick_count||QUIZ_PICK_DEFAULT}"></div>
       </div>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:6px">Каждая попытка — случайные N вопросов из банка в случайном порядке, варианты ответов тоже перемешиваются. Поставь число не меньше размера банка, чтобы спрашивать всё.</p>
       <div class="ff" style="margin-top:12px"><label>Вступительный текст</label>
         <textarea id="quiz-intro" style="min-height:60px">${escHtml(d.intro||'')}</textarea>
       </div>
@@ -18147,6 +18185,7 @@ async function saveQuiz() {
   const title = document.getElementById('quiz-title').value.trim();
   const passScore = parseInt(document.getElementById('quiz-pass').value, 10) || 80;
   const cooldown = parseInt(document.getElementById('quiz-cd').value, 10) || 30;
+  const pickCount = parseInt(document.getElementById('quiz-pick').value, 10) || QUIZ_PICK_DEFAULT;
   const intro = document.getElementById('quiz-intro').value.trim();
 
   const questions = [...document.querySelectorAll('.quiz-q-row')].map(qrow => {
@@ -18169,6 +18208,7 @@ async function saveQuiz() {
     intro,
     pass_score: passScore,
     cooldown_minutes: cooldown,
+    pick_count: pickCount,
     questions
   };
   const ok = await dbUpsert('quizzes', quizId, data);
