@@ -5,3 +5,9 @@ __pycache__/
 *.log
 .env
 .env.*
+
+# Дампы контента: сайту не нужны, а лежали в корне и качались одним файлом
+# по прямой ссылке. Копии — вне репозитория, в ops\repo_dumps_backup\.
+techniques_seed.js
+techniques_seed.json
+yahya_wiki_import.json
