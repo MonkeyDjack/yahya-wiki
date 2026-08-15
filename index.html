@@ -16510,6 +16510,8 @@ let userFeedLimit = 30;            // сколько событий раскры
 let ALL_SCRIPT_ACK  = [];          // отметки «ознакомлен со скриптами» всех сотрудников (дашборд админа)
 let USER_SCRIPT_ACK = [];          // отметки текущего пользователя [{user_id, section, confirmed_at}]
 let scriptAckTableOk = true;       // false → таблица script_ack не создана (нужна script_ack_migration.sql)
+let MY_SALES = null;               // свои продажи по QR [{day,branch,checks,revenue}]; null — ещё не грузили
+let waiterSalesTableOk = true;     // false → таблицы waiter_sales нет (нужна waiter_sales_migration.sql)
 let ALL_AUTH_USERS  = {};          // {userId: {email, created_at, last_sign_in_at}} — через admin_list_auth_users()
 // currentTreePath — полный журнал прохождения дерева. Каждый элемент:
 //   {nodeId, question, optIdx, label, next, recommendation}
@@ -16842,6 +16844,7 @@ async function loadProfileAndProgress() {
     (attRes.data || []).forEach(a => {
       if (!LATEST_ATTEMPTS[a.quiz_id]) LATEST_ATTEMPTS[a.quiz_id] = a;
     });
+    await loadMySales();
     // isAdmin / isBarEditor / isContentEditor определяются ролью в profile.
     const role = USER_PROFILE?.role;
     isAdmin         = (role === 'admin');
@@ -16853,6 +16856,26 @@ async function loadProfileAndProgress() {
   } catch(e) {
     console.warn('profile/progress load failed', e);
   }
+}
+
+// ── ЛИЧНЫЕ ПРОДАЖИ ПО QR (таблица waiter_sales, waiter_sales_migration.sql) ──
+// Заливает GitHub Action приватного репозитория yahya-yaros-data из 1С ЯРОС.
+// Там только выручка, привязанная СКАНИРОВАНИЕМ QR: чек, осевший на карточке,
+// которая стояла на кассе, личной продажей не считается.
+async function loadMySales() {
+  MY_SALES = [];
+  const myQr = USER_PROFILE?.qr_id;
+  if (!sb || !myQr) return;
+  // ⚠ Фильтр по своему qr_id обязателен. RLS отдаёт администратору ВСЮ таблицу
+  // (это нужно дашборду), и без фильтра в его кабинете сложилась бы выручка
+  // всей сети как его личная.
+  const res = await sb.from('waiter_sales')
+    .select('day,branch,checks,revenue')
+    .eq('qr_id', myQr)
+    .order('day', {ascending:false})
+    .then(r => r, e => ({data:null, error:e}));
+  waiterSalesTableOk = !res.error;
+  MY_SALES = res.error ? [] : (res.data || []);
 }
 
 // ── ЖУРНАЛ АКТИВНОСТИ (таблица activity_log, см. activity_log_migration.sql) ──
@@ -18446,20 +18469,7 @@ function renderProfile() {
         ${renderQrBlockHTML()}
       </div>
 
-      <div class="prof-section">
-        <h3>Мои продажи <span class="soon-badge">скоро</span></h3>
-        <div class="hint">Личная статистика продаж по твоему QR.</div>
-        <div class="prof-stats-grid">
-          <div class="prof-stat"><div class="val">—</div><div class="lbl">💰 QR-выручка за месяц</div></div>
-          <div class="prof-stat"><div class="val">—</div><div class="lbl">🧾 Чеков с моим QR</div></div>
-          <div class="prof-stat"><div class="val">—</div><div class="lbl">🧮 Мой средний чек</div></div>
-        </div>
-        <div class="prof-soon-note">
-          Как это будет работать: кассир сканирует твой QR → продажа записывается на тебя в 1С →
-          здесь появляется твоя личная статистика за месяц. Данные подтянутся из 1С после
-          запуска QR-учёта в филиале.
-        </div>
-      </div>
+      ${mySalesBlockHTML()}
 
       <div class="prof-section">
         <h3>Прогресс обучения</h3>
@@ -18514,6 +18524,66 @@ function renderProfile() {
       });
     }
   }
+}
+
+// ── БЛОК «МОИ ПРОДАЖИ» ────────────────────────────────────────────────────
+// Считается только то, что привязано СКАНИРОВАНИЕМ QR. Если чек просто осел на
+// карточке, которая стояла на кассе, — это не личная продажа, и сюда он не
+// попадает. Поэтому у тех, кому кассир не сканирует код, тут будут нули: так
+// и задумано, и об этом честно написано под плитками.
+function fmtSom(v) {
+  return Math.round(v || 0).toLocaleString('ru-RU') + ' сом';
+}
+
+function mySalesBlockHTML() {
+  const rows = MY_SALES || [];
+  const hasQr = !!myQrId();
+
+  const today = new Date();
+  const monthStart = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+  const week = new Date(today.getTime() - 6 * 864e5).toISOString().slice(0, 10);
+
+  const sum = (list, f) => list.reduce((a, r) => a + (Number(r[f]) || 0), 0);
+  const inMonth = rows.filter(r => r.day >= monthStart);
+  const inWeek  = rows.filter(r => r.day >= week);
+
+  const rev = sum(inMonth, 'revenue');
+  const chk = sum(inMonth, 'checks');
+  const avg = chk ? rev / chk : 0;
+  const lastDay = rows.length ? rows[0].day : null;   // отсортировано по убыванию
+
+  let note;
+  if (MY_SALES === null) {
+    note = 'Загружаю статистику…';
+  } else if (!waiterSalesTableOk) {
+    note = 'Статистика ещё не подключена: не создана таблица <code>waiter_sales</code> ' +
+           '(нужна миграция <code>waiter_sales_migration.sql</code>). Скажи руководителю.';
+  } else if (!hasQr) {
+    note = 'У тебя пока не привязан QR-код, поэтому продажи не считаются. ' +
+           'Напиши руководителю филиала.';
+  } else if (!rows.length) {
+    note = 'Пока ни одной продажи по твоему QR. Продажа засчитывается, только когда ' +
+           'кассир сканирует твой код: если чек пробили без скана, он остаётся на кассе. ' +
+           'QR запущен не во всех филиалах — если у вас его ещё нет, здесь будут нули.';
+  } else {
+    const parts = [];
+    if (inWeek.length) parts.push(`За последние 7 дней — ${fmtSom(sum(inWeek, 'revenue'))}.`);
+    if (lastDay) parts.push(`Последняя продажа: ${lastDay.split('-').reverse().join('.')}.`);
+    parts.push('Считается только то, что кассир привязал сканированием твоего QR.');
+    note = parts.join(' ');
+  }
+
+  return `
+      <div class="prof-section">
+        <h3>Мои продажи</h3>
+        <div class="hint">Личная статистика по твоему QR — обновляется каждое утро.</div>
+        <div class="prof-stats-grid">
+          <div class="prof-stat"><div class="val">${rows.length ? fmtSom(rev) : '—'}</div><div class="lbl">💰 QR-выручка за месяц</div></div>
+          <div class="prof-stat"><div class="val">${rows.length ? chk.toLocaleString('ru-RU') : '—'}</div><div class="lbl">🧾 Чеков с моим QR</div></div>
+          <div class="prof-stat"><div class="val">${chk ? fmtSom(avg) : '—'}</div><div class="lbl">🧮 Мой средний чек</div></div>
+        </div>
+        <div class="prof-soon-note">${note}</div>
+      </div>`;
 }
 
 function renderQrBlockHTML() {
