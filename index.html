@@ -16853,6 +16853,7 @@ async function loadProfileAndProgress() {
     document.body.classList.toggle('is-admin', isAdmin);
     document.body.classList.toggle('is-bar-editor', isBarEditor);
     document.body.classList.toggle('is-content-editor', isContentEditor);
+    await loadQrCards();   // грузится только админу, см. RLS на qr_cards
   } catch(e) {
     console.warn('profile/progress load failed', e);
   }
@@ -16876,6 +16877,56 @@ async function loadMySales() {
     .then(r => r, e => ({data:null, error:e}));
   waiterSalesTableOk = !res.error;
   MY_SALES = res.error ? [] : (res.data || []);
+}
+
+// ── КАРТОЧКИ 1С ДЛЯ ВЫБОРА QR (таблица qr_cards, qr_cards_migration.sql) ──
+// Чтобы админ ВЫБИРАЛ человека из списка, а не вставлял GUID руками: опечатка
+// в коде = продажи уходят не тому, и заметить это можно очень нескоро.
+// ⚠ Читают только админы (так настроен RLS). UIN — это то, что зашито в бейдж:
+// зная чужой UIN, можно нарисовать чужой QR и сканировать его.
+let QR_CARDS = [];
+
+async function loadQrCards() {
+  QR_CARDS = [];
+  if (!sb || !isAdmin) return;
+  const res = await sb.from('qr_cards')
+    .select('uin,code,full_name,folder,is_front_office')
+    .order('full_name', {ascending: true})
+    .then(r => r, e => ({data: null, error: e}));
+  QR_CARDS = res.error ? [] : (res.data || []);
+}
+
+// Селект карточек. Если справочник недоступен (миграция не запущена или ещё не
+// залит) — отдаём обычное поле ввода: запирать админа из-за этого нельзя.
+function qrCardSelectHTML(id, currentQrId, ownerId) {
+  const cur = (currentQrId || '').toLowerCase();
+  if (!QR_CARDS.length) {
+    return `<input id="${id}" value="${escAttr(currentQrId || '')}"
+      placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false">`;
+  }
+  const takenBy = {};
+  (ALL_PROFILES || []).forEach(p => {
+    if (p.qr_id && p.id !== ownerId) takenBy[p.qr_id.toLowerCase()] = p.full_name || p.id;
+  });
+  const known = QR_CARDS.some(c => (c.uin || '').toLowerCase() === cur);
+
+  let opts = `<option value="">— не привязан —</option>`;
+  // Код есть, а карточки в 1С нет: пометили на удаление или переименовали.
+  // Показываем как есть, иначе сохранение молча стёрло бы привязку.
+  if (cur && !known) {
+    opts += `<option value="${escAttr(cur)}" selected>текущий код ${escHtml(cur.slice(0, 8))}… — карточки нет в 1С</option>`;
+  }
+  QR_CARDS.forEach(c => {
+    const u = (c.uin || '').toLowerCase();
+    const who = takenBy[u];
+    // «выводится на кассе» = карточка есть в списке выбора на кассе, то есть это
+    // касса точки или администратор. Продажи на неё падают БЕЗ скана, а значит
+    // в кабинет сотрудника они не попадут — админ должен видеть это до привязки.
+    const till = c.is_front_office ? ' ⚠ выводится на кассе' : '';
+    const label = `${c.full_name}${c.code ? ' · ' + c.code : ''}${till}${who ? ' — уже у: ' + who : ''}`;
+    opts += `<option value="${escAttr(u)}"${u === cur ? ' selected' : ''}${who ? ' disabled' : ''}>${escHtml(label)}</option>`;
+  });
+  return `<select id="${id}">${opts}</select>`;
 }
 
 // ── ЖУРНАЛ АКТИВНОСТИ (таблица activity_log, см. activity_log_migration.sql) ──
@@ -19151,9 +19202,9 @@ function openProfileEditor(userId) {
         <datalist id="jobTitleList">${JOB_TITLES.map(j => `<option value="${escAttr(j)}">`).join('')}</datalist>
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Печатается на QR-бейдже под именем.</div>
       </div>
-      <div class="ff" style="margin-top:12px"><label>QR-код 1С (GUID сотрудника)</label>
-        <input id="prof-qrid" value="${escAttr(p.qr_id || '')}" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Из выгрузки 1С. Сотрудник увидит бейдж после сдачи аттестации Модуля 1. Менять может только админ.</div>
+      <div class="ff" style="margin-top:12px"><label>QR-код 1С</label>
+        ${qrCardSelectHTML('prof-qrid', p.qr_id, p.id)}
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Карточки приезжают из 1С каждое утро. Занятые другим сотрудником выбрать нельзя. Сотрудник увидит бейдж после сдачи аттестации Модуля 1. Менять может только админ.</div>
       </div>
       <div class="ff" style="margin-top:12px"><label>Роль</label>
         <select id="prof-role">
@@ -19448,8 +19499,8 @@ function openCreateUserModal() {
           <input id="newuser-job" list="newJobTitleList" placeholder="Продавец-консультант">
           <datalist id="newJobTitleList">${JOB_TITLES.map(j => `<option value="${escAttr(j)}">`).join('')}</datalist>
         </div>
-        <div class="ff"><label>QR-код 1С (GUID)</label>
-          <input id="newuser-qrid" placeholder="можно заполнить позже" autocomplete="off" spellcheck="false">
+        <div class="ff"><label>QR-код 1С</label>
+          ${qrCardSelectHTML('newuser-qrid', '', null)}
         </div>
       </div>
       <div class="fgrid" style="margin-top:12px">
