@@ -878,6 +878,18 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .prof-stat .val{font-size:24px;font-weight:700;color:var(--text-heading);line-height:1.1;}
 .prof-stat .lbl{font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.45;}
 .prof-soon-note{font-size:12px;color:var(--text-dim);line-height:1.65;padding:10px 14px;background:rgba(var(--rgb-gold-500),.06);border-radius:8px;}
+/* Кабинет администратора точки. Таблицы прокручиваются по горизонтали внутри
+   себя: на телефоне пять колонок иначе растянули бы всю страницу. */
+.br-h4{margin:18px 0 4px;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-dim);}
+.br-hint{font-size:11px;color:var(--text-muted);line-height:1.5;margin-bottom:8px;}
+.br-table{width:100%;border-collapse:collapse;font-size:12px;display:block;overflow-x:auto;white-space:nowrap;}
+.br-table th{text-align:left;font-weight:600;color:var(--text-muted);padding:6px 10px 6px 0;border-bottom:1px solid rgba(var(--rgb-gold-500),.18);}
+.br-table td{padding:6px 10px 6px 0;border-bottom:1px solid rgba(var(--rgb-gold-500),.07);vertical-align:top;}
+.br-table tr:last-child td{border-bottom:none;}
+.br-table .br-hint{margin:0;white-space:normal;}
+.br-delta{font-size:11px;margin-left:6px;}
+.br-delta.up{color:#4caf50;}
+.br-delta.down{color:#e57373;}
 
 /* Ознакомление со скриптами: строки статуса в профиле */
 .prof-ack-list{display:flex;flex-direction:column;gap:8px;}
@@ -16523,6 +16535,10 @@ let isAdmin        = false;
 let isContentEditor = false; // role='editor' — может редактировать темы/тесты, но не удалять
 function canEditContent() { return isAdmin || isContentEditor; }
 let isBarEditor    = false;  // 'bar_editor': редактирует только карточки локации 'бар'
+// 'branch_admin': администратор точки. Прав на контент и пользователей не даёт —
+// открывает только данные СВОЕГО филиала (границу держит RLS, см.
+// branch_admin_migration.sql; в интерфейсе это лишь показ, а не защита).
+let isBranchAdmin  = false;
 
 // Может ли текущий пользователь редактировать карточку?
 // admin — любую; editor — любую (без удаления); bar_editor — только локацию 'бар'.
@@ -16541,12 +16557,14 @@ function canDeleteCard(c) {
 // Лейблы для роли в UI
 function roleLabel(role) {
   if (role === 'admin') return 'Админ';
+  if (role === 'branch_admin') return 'Админ филиала';
   if (role === 'editor') return 'Редактор';
   if (role === 'bar_editor') return 'Старший барист';
   return 'Продавец';
 }
 function roleIcon(role) {
   if (role === 'admin') return '👑 ';
+  if (role === 'branch_admin') return '🏬 ';
   if (role === 'editor') return '✎ ';
   if (role === 'bar_editor') return '🍵 ';
   return '';
@@ -16848,12 +16866,15 @@ async function loadProfileAndProgress() {
     // isAdmin / isBarEditor / isContentEditor определяются ролью в profile.
     const role = USER_PROFILE?.role;
     isAdmin         = (role === 'admin');
+    isBranchAdmin   = (role === 'branch_admin');
     isBarEditor     = (role === 'bar_editor');
     isContentEditor = (role === 'editor');
     document.body.classList.toggle('is-admin', isAdmin);
+    document.body.classList.toggle('is-branch-admin', isBranchAdmin);
     document.body.classList.toggle('is-bar-editor', isBarEditor);
     document.body.classList.toggle('is-content-editor', isContentEditor);
     await loadQrCards();   // грузится только админу, см. RLS на qr_cards
+    await loadBranchData(); // кабинет админа точки; владельцу тоже показываем
   } catch(e) {
     console.warn('profile/progress load failed', e);
   }
@@ -16877,6 +16898,62 @@ async function loadMySales() {
     .then(r => r, e => ({data:null, error:e}));
   waiterSalesTableOk = !res.error;
   MY_SALES = res.error ? [] : (res.data || []);
+}
+
+// ── КАБИНЕТ АДМИНИСТРАТОРА ТОЧКИ (branch_admin_migration.sql) ────────────
+// Четыре таблицы: branch_sales (выручка/чеки/скидки по дням), branch_top_items
+// (топ-10 за месяц), branch_staff (состав и статус привязки), waiter_sales
+// (рейтинг — фильтруется по филиалу, а не по человеку). Плюс RPC
+// branch_training() — обучение по СПИСОЧНОМУ составу филиала.
+//
+// ⚠ Здесь НЕТ фильтра по филиалу в запросах, и это намеренно: границу держит
+// RLS через can_see_branch(). Админу точки база сама отдаёт только его строки,
+// владельцу — все. Дублировать фильтр в браузере значило бы делать вид, что
+// защита здесь; она в базе.
+let BRANCH_DATA = null;
+
+async function loadBranchData() {
+  BRANCH_DATA = null;
+  if (!sb || !(isBranchAdmin || isAdmin)) return;
+
+  const q = (t, sel, mod) => {
+    let r = sb.from(t).select(sel);
+    if (mod) r = mod(r);
+    return r.then(x => x, e => ({data: null, error: e}));
+  };
+  const month = new Date().toISOString().slice(0, 7);
+  const prevM = (() => {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - 1);
+    return d.toISOString().slice(0, 7);
+  })();
+
+  const [sales, tops, staff, ranking, training] = await Promise.all([
+    // 62 дня хватает на текущий и прошлый месяц целиком при любой их длине.
+    q('branch_sales', 'day,branch,checks,revenue,discount',
+      r => r.gte('day', new Date(Date.now() - 62 * 864e5).toISOString().slice(0, 10))
+            .order('day', {ascending: false})),
+    q('branch_top_items', 'month,branch,rank,item,qty,revenue',
+      r => r.eq('month', month).order('rank', {ascending: true})),
+    q('branch_staff', 'branch,code,full_name,qr_id,status,days_worked,last_day',
+      r => r.order('days_worked', {ascending: false})),
+    q('waiter_sales', 'qr_id,day,branch,checks,revenue',
+      r => r.gte('day', `${month}-01`)),
+    sb.rpc('branch_training').then(x => x, e => ({data: null, error: e})),
+  ]);
+
+  BRANCH_DATA = {
+    month, prevM,
+    ok:       !sales.error,
+    sales:    sales.data    || [],
+    tops:     tops.data     || [],
+    staff:    staff.data    || [],
+    ranking:  ranking.data  || [],
+    training: training.data || [],
+    // Отличаем «функции нет» от «в филиале никого»: иначе не запущенная
+    // миграция выглядела бы как пустой филиал, и искать причину было бы негде.
+    trainingOk: !training.error,
+    err: sales.error || null,
+  };
 }
 
 // ── КАРТОЧКИ 1С ДЛЯ ВЫБОРА QR (таблица qr_cards, qr_cards_migration.sql) ──
@@ -18522,6 +18599,8 @@ function renderProfile() {
 
       ${mySalesBlockHTML()}
 
+      ${branchBlockHTML()}
+
       <div class="prof-section">
         <h3>Прогресс обучения</h3>
         <div class="hint">Отмечай изученные темы во вкладке «Техники продаж».</div>
@@ -18634,6 +18713,166 @@ function mySalesBlockHTML() {
           <div class="prof-stat"><div class="val">${chk ? fmtSom(avg) : '—'}</div><div class="lbl">🧮 Мой средний чек</div></div>
         </div>
         <div class="prof-soon-note">${note}</div>
+      </div>`;
+}
+
+// ── БЛОК АДМИНИСТРАТОРА ТОЧКИ ────────────────────────────────────────────
+// Всё считается из того, что отдала база: RLS уже ограничила выборку своим
+// филиалом, поэтому здесь просто арифметика без повторного фильтра.
+function branchBlockHTML() {
+  if (!(isBranchAdmin || isAdmin)) return '';
+  const D = BRANCH_DATA;
+  if (!D) return '';
+
+  if (!D.ok) {
+    return `
+      <div class="prof-section">
+        <h3>Мой филиал</h3>
+        <div class="prof-soon-note">Данные филиала недоступны: не запущена миграция
+        <code>branch_admin_migration.sql</code>. Скажи руководителю.</div>
+      </div>`;
+  }
+
+  const branches = [...new Set(D.sales.map(r => r.branch))].sort();
+  if (!branches.length) {
+    return `
+      <div class="prof-section">
+        <h3>Мой филиал</h3>
+        <div class="prof-soon-note">Пока нет данных по твоему филиалу. Частая причина —
+        в профиле указан филиал, которого нет в 1С: тогда база не отдаёт ничего.
+        Проверь поле «Филиал» у себя в карточке.</div>
+      </div>`;
+  }
+
+  const sum = (list, f) => list.reduce((a, r) => a + (Number(r[f]) || 0), 0);
+  const cur = D.sales.filter(r => r.day.slice(0, 7) === D.month);
+  const prev = D.sales.filter(r => r.day.slice(0, 7) === D.prevM);
+
+  const stat = list => {
+    const rev = sum(list, 'revenue'), chk = sum(list, 'checks');
+    return {rev, chk, avg: chk ? rev / chk : 0, disc: sum(list, 'discount')};
+  };
+  const c = stat(cur), p = stat(prev);
+
+  // Сравнение среднего чека с прошлым месяцем. Текущий месяц неполный, поэтому
+  // сравниваем именно средний чек и долю скидок, а не суммы: суммы в начале
+  // месяца всегда «хуже», и такое сравнение только путало бы.
+  const delta = (now, was) => {
+    if (!was) return '';
+    const d = (now - was) / was * 100;
+    const cls = d >= 0 ? 'up' : 'down';
+    return `<span class="br-delta ${cls}">${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)}%</span>`;
+  };
+
+  // Доля выручки, привязанной сканированием QR. Знаменатель — вся выручка точки.
+  const qrRev = sum(D.ranking.filter(r => r.day.slice(0, 7) === D.month), 'revenue');
+  const qrShare = c.rev ? qrRev / c.rev * 100 : 0;
+
+  // Рейтинг: по факту скана на этой точке, а не по приписке человека к филиалу.
+  const byQr = {};
+  D.ranking.forEach(r => {
+    const k = r.qr_id;
+    if (!byQr[k]) byQr[k] = {rev: 0, chk: 0};
+    byQr[k].rev += Number(r.revenue) || 0;
+    byQr[k].chk += Number(r.checks) || 0;
+  });
+  const nameByQr = {};
+  D.staff.forEach(s => { if (s.qr_id) nameByQr[s.qr_id.toLowerCase()] = s.full_name; });
+  const rank = Object.entries(byQr)
+    // Имени может не быть, если карточка отсеяна как служебная («1Админ»,
+    // «Вынос»): она в составе не показывается, а сканировать ею формально можно.
+    .map(([qr, v]) => ({name: nameByQr[String(qr).toLowerCase()] || 'Служебная карточка', ...v}))
+    .sort((a, b) => b.rev - a.rev);
+
+  const rankHTML = rank.length
+    ? `<table class="br-table"><thead><tr><th>#</th><th>Сотрудник</th><th>Выручка</th><th>Чеков</th><th>Средний</th></tr></thead><tbody>` +
+      rank.map((r, i) => `<tr><td>${i + 1}</td><td>${escHtml(r.name)}</td>` +
+        `<td>${fmtSom(r.rev)}</td><td>${r.chk}</td>` +
+        `<td>${fmtSom(r.chk ? r.rev / r.chk : 0)}</td></tr>`).join('') +
+      `</tbody></table>`
+    : `<div class="prof-soon-note">За этот месяц никто не сканировал QR на точке.
+       Вся выручка осела на кассе, поэтому рейтинг пуст.</div>`;
+
+  const topHTML = D.tops.length
+    ? `<table class="br-table"><thead><tr><th>#</th><th>Позиция</th><th>Кол-во</th><th>Выручка</th></tr></thead><tbody>` +
+      D.tops.map(t => `<tr><td>${t.rank}</td><td>${escHtml(t.item)}</td>` +
+        `<td>${Number(t.qty).toLocaleString('ru-RU')}</td><td>${fmtSom(t.revenue)}</td></tr>`).join('') +
+      `</tbody></table>`
+    : `<div class="prof-soon-note">Топ позиций за текущий месяц ещё не собран.</div>`;
+
+  // Пробелы привязки. Показываем только их: строки «ok» — это просто список
+  // людей, а здесь нужен список дел.
+  const LBL = {
+    no_uin:     ['Нет QR в 1С',      'карточка есть, код не сгенерирован — завести в 1С'],
+    no_account: ['Нет аккаунта',     'продажи копятся, а человек их не видит — завести аккаунт'],
+    no_qr_link: ['QR не привязан',   'аккаунт есть, карточка 1С не выбрана — привязать в админке'],
+  };
+  const gaps = D.staff.filter(s => s.status !== 'ok');
+  const gapsHTML = gaps.length
+    ? `<table class="br-table"><thead><tr><th>Сотрудник</th><th>Что не так</th><th>Дней на смене</th></tr></thead><tbody>` +
+      gaps.map(s => `<tr><td>${escHtml(s.full_name || '—')}</td>` +
+        `<td><b>${LBL[s.status] ? LBL[s.status][0] : s.status}</b><br>` +
+        `<span class="br-hint">${LBL[s.status] ? LBL[s.status][1] : ''}</span></td>` +
+        `<td>${s.days_worked || 0}</td></tr>`).join('') +
+      `</tbody></table>`
+    : `<div class="prof-soon-note">Все сотрудники филиала привязаны — пробелов нет.</div>`;
+
+  const okCount = D.staff.filter(s => s.status === 'ok').length;
+
+  // Обучение — по списочному составу (profiles.branch), а не по чекам:
+  // тесты сдаёт тот, кто числится, даже если в этом месяце не выходил.
+  const tr = D.training || [];
+  const trHTML = tr.length
+    ? `<table class="br-table"><thead><tr><th>Сотрудник</th><th>Техники</th><th>Тесты</th><th>Скрипты</th><th>QR</th></tr></thead><tbody>` +
+      tr.map(t => `<tr><td>${escHtml(t.full_name || '—')}</td>` +
+        `<td>${t.techniques || 0}</td>` +
+        `<td>${t.quizzes_passed || 0}</td>` +
+        `<td>${(t.scripts || []).length ? (t.scripts || []).join(', ') : '—'}</td>` +
+        `<td>${t.has_qr ? '✓' : '—'}</td></tr>`).join('') +
+      `</tbody></table>`
+    : (D.trainingOk
+        ? `<div class="prof-soon-note">В твоём филиале пока нет других сотрудников с аккаунтом.</div>`
+        : `<div class="prof-soon-note">Данные обучения недоступны: нет функции
+           <code>branch_training()</code> — не запущена миграция
+           <code>branch_admin_migration.sql</code>.</div>`);
+
+  const title = branches.length === 1 ? branches[0] : `${branches.length} филиалов`;
+  const monthName = new Date(D.month + '-01').toLocaleDateString('ru-RU', {month: 'long'});
+
+  return `
+      <div class="prof-section">
+        <h3>Филиал: ${escHtml(title)}</h3>
+        <div class="hint">Данные за ${escHtml(monthName)}, обновляются каждое утро.
+        Сравнение — с прошлым месяцем.</div>
+
+        <div class="prof-stats-grid">
+          <div class="prof-stat"><div class="val">${fmtSom(c.rev)}</div><div class="lbl">💰 Выручка</div></div>
+          <div class="prof-stat"><div class="val">${c.chk.toLocaleString('ru-RU')}</div><div class="lbl">🧾 Чеков</div></div>
+          <div class="prof-stat"><div class="val">${fmtSom(c.avg)} ${delta(c.avg, p.avg)}</div><div class="lbl">🧮 Средний чек</div></div>
+          <div class="prof-stat"><div class="val">${qrShare.toFixed(0)}%</div><div class="lbl">📲 Привязано по QR</div></div>
+        </div>
+        <div class="prof-soon-note">
+          Скидок за месяц — ${fmtSom(c.disc)}${p.disc ? `, в прошлом было ${fmtSom(p.disc)}` : ''}.
+          Средний чек в прошлом месяце — ${fmtSom(p.avg)}.
+          По QR привязано ${fmtSom(qrRev)} из ${fmtSom(c.rev)}: остальное осело на кассе
+          и никому лично не засчитано.
+        </div>
+
+        <h4 class="br-h4">Рейтинг по QR за месяц</h4>
+        <div class="br-hint">Считается по факту: кто сканировал на этой точке, тот и в списке —
+        даже если вышел на подмену.</div>
+        ${rankHTML}
+
+        <h4 class="br-h4">Топ-10 позиций</h4>
+        ${topHTML}
+
+        <h4 class="br-h4">Привязка сотрудников${gaps.length ? ` — ${gaps.length} требуют внимания` : ''}</h4>
+        <div class="br-hint">Связаны полностью: ${okCount}. Ниже — только те, у кого чего-то не хватает.</div>
+        ${gapsHTML}
+
+        <h4 class="br-h4">Обучение</h4>
+        <div class="br-hint">По тем, кто числится в филиале в профиле.</div>
+        ${trHTML}
       </div>`;
 }
 
@@ -18938,7 +19177,7 @@ function renderDashboardView(root) {
   const passedM1 = sellers.filter(p => latestAttemptFor('module1', p.id)?.passed).length;
   const passedM2 = sellers.filter(p => latestAttemptFor('module2', p.id)?.passed).length;
 
-  const roleOrder = r => r === 'admin' ? 0 : r === 'bar_editor' ? 1 : 2;
+  const roleOrder = r => r === 'admin' ? 0 : r === 'branch_admin' ? 1 : r === 'bar_editor' ? 2 : 3;
   const sortedProfiles = [...ALL_PROFILES].sort((a,b) => {
     const d = roleOrder(a.role) - roleOrder(b.role);
     if (d !== 0) return d;
@@ -19211,6 +19450,7 @@ function openProfileEditor(userId) {
           <option value="seller" ${p.role==='seller'?'selected':''}>Продавец</option>
           <option value="bar_editor" ${p.role==='bar_editor'?'selected':''}>Старший барист (только бар-карточки)</option>
           <option value="editor" ${p.role==='editor'?'selected':''}>Редактор техник продаж (без удаления)</option>
+          <option value="branch_admin" ${p.role==='branch_admin'?'selected':''}>Админ филиала (только своя точка)</option>
           <option value="admin" ${p.role==='admin'?'selected':''}>Админ (полные права)</option>
         </select>
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Админ — полный доступ + удаление. Редактор — может править темы и тесты, но не удалять и не управлять юзерами. Старший барист — только бар-карточки.</div>
@@ -19512,6 +19752,7 @@ function openCreateUserModal() {
             <option value="seller" selected>Продавец</option>
             <option value="bar_editor">Старший барист (только бар)</option>
             <option value="editor">Редактор техник (без удаления)</option>
+            <option value="branch_admin">Админ филиала (только своя точка)</option>
           </select>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Полного админа создавай через SQL — для безопасности этой кнопки нет.</div>
         </div>
