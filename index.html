@@ -19172,7 +19172,10 @@ function formatDateTime(iso) {
 }
 
 function renderDashboardView(root) {
-  const sellers = ALL_PROFILES.filter(p => p.role === 'seller');
+  // Обучение проходят все, кроме владельца: старший барист, редактор и админ
+  // точки сдают те же модули. Раньше здесь стояло role === 'seller', и человек,
+  // которого повысили, пропадал из счётчиков — выглядело как «исчез с сайта».
+  const sellers = ALL_PROFILES.filter(p => p.role !== 'admin');
   const totalSellers = sellers.length;
   const passedM1 = sellers.filter(p => latestAttemptFor('module1', p.id)?.passed).length;
   const passedM2 = sellers.filter(p => latestAttemptFor('module2', p.id)?.passed).length;
@@ -19200,7 +19203,7 @@ function renderDashboardView(root) {
       <div class="dash-stats">
         <div class="dash-stat-card">
           <div class="dash-stat-num">${totalSellers}</div>
-          <div class="dash-stat-lbl">Продавцов</div>
+          <div class="dash-stat-lbl">Сотрудников</div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-num">${passedM1}<span class="of">/${totalSellers||1}</span></div>
