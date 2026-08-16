@@ -18847,7 +18847,7 @@ function branchBlockHTML() {
   // когда человек последний раз выходил.
   const dmy = d => d ? d.split('-').reverse().join('.') : '—';
   const gapsHTML = gaps.length
-    ? `<table class="br-table"><thead><tr><th>Сотрудник</th><th>Что не так</th><th>Смен</th><th>Последняя</th></tr></thead><tbody>` +
+    ? `<table class="br-table"><thead><tr><th>Сотрудник</th><th>Что не так</th><th>Дней с чеками</th><th>Последний</th></tr></thead><tbody>` +
       gaps.map(s => `<tr><td>${escHtml(s.full_name || '—')}</td>` +
         `<td><b>${LBL[s.status] ? LBL[s.status][0] : s.status}</b><br>` +
         `<span class="br-hint">${LBL[s.status] ? LBL[s.status][1] : ''}</span></td>` +
@@ -18908,8 +18908,11 @@ function branchBlockHTML() {
 
         <h4 class="br-h4">Привязка сотрудников${gaps.length ? ` — ${gaps.length} требуют внимания` : ''}</h4>
         <div class="br-hint">Связаны полностью: ${okCount}. Ниже — только те, у кого чего-то не хватает.
-        В списке лишь те, кто выходил на смену за последние 30 дней: признака «уволен»
-        в системах нет, и это единственный способ не тащить сюда бывших сотрудников.</div>
+        В списке те, по чьим карточкам были чеки за последние 30 дней, и чья карточка
+        не убрана в 1С в папку «удаленные».
+        <b>«Дней с чеками» — это не табель:</b> считаются дни, когда по карточке хоть что-то
+        пробили. Кто вышел и ничего не продал, сюда не попадёт, а две смены за день
+        считаются одной. Учёт рабочего времени ведётся отдельно, в OfficeTime.</div>
         ${gapsHTML}
 
         <h4 class="br-h4">Обучение</h4>
