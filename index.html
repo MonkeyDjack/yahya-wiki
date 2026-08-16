@@ -16911,6 +16911,13 @@ async function loadMySales() {
 // владельцу — все. Дублировать фильтр в браузере значило бы делать вид, что
 // защита здесь; она в базе.
 let BRANCH_DATA = null;
+// Какой филиал показывать, когда их отдано несколько (владельцу — все семь).
+// У админа точки филиал один, и селектор не рисуется.
+let BRANCH_PICK = null;
+
+function myBranchName() {
+  return (USER_PROFILE?.branch || '').trim();
+}
 
 async function loadBranchData() {
   BRANCH_DATA = null;
@@ -18721,7 +18728,8 @@ function mySalesBlockHTML() {
 // филиалом, поэтому здесь просто арифметика без повторного фильтра.
 function branchBlockHTML() {
   if (!(isBranchAdmin || isAdmin)) return '';
-  const D = BRANCH_DATA;
+  // let, а не const: ниже D пересобирается срезом по выбранному филиалу.
+  let D = BRANCH_DATA;
   if (!D) return '';
 
   if (!D.ok) {
@@ -18734,6 +18742,32 @@ function branchBlockHTML() {
   }
 
   const branches = [...new Set(D.sales.map(r => r.branch))].sort();
+
+  // Владельцу RLS отдаёт все точки сразу. Без выбора филиала блок склеивал их
+  // в одну кучу: топ-10 превращался в семьдесят строк с повторяющимися местами,
+  // а средний чек считался по всей сети. Админ точки видит одну — селектор
+  // ему не показывается.
+  if (branches.length > 1 && !branches.includes(BRANCH_PICK)) {
+    BRANCH_PICK = branches.includes(myBranchName()) ? myBranchName() : branches[0];
+  }
+  const only = branches.length > 1 ? BRANCH_PICK : branches[0];
+  const pickHTML = branches.length > 1
+    ? `<div class="ff" style="margin:0 0 14px"><label>Филиал</label>
+         <select onchange="BRANCH_PICK=this.value; renderProfile();">
+           ${branches.map(b => `<option value="${escAttr(b)}" ${b === only ? 'selected' : ''}>${escHtml(b)}</option>`).join('')}
+         </select>
+       </div>`
+    : '';
+  if (only) {
+    D = {
+      ...D,
+      sales:    D.sales.filter(r => r.branch === only),
+      tops:     D.tops.filter(r => r.branch === only),
+      staff:    D.staff.filter(r => r.branch === only),
+      ranking:  D.ranking.filter(r => r.branch === only),
+    };
+  }
+
   if (!branches.length) {
     return `
       <div class="prof-section">
@@ -18808,12 +18842,17 @@ function branchBlockHTML() {
     no_qr_link: ['QR не привязан',   'аккаунт есть, карточка 1С не выбрана — привязать в админке'],
   };
   const gaps = D.staff.filter(s => s.status !== 'ok');
+  // Дата последней смены — чтобы отличить действующего от уходящего: признака
+  // «уволен» нет ни в вики, ни в 1С, и единственное, что об этом говорит, —
+  // когда человек последний раз выходил.
+  const dmy = d => d ? d.split('-').reverse().join('.') : '—';
   const gapsHTML = gaps.length
-    ? `<table class="br-table"><thead><tr><th>Сотрудник</th><th>Что не так</th><th>Дней на смене</th></tr></thead><tbody>` +
+    ? `<table class="br-table"><thead><tr><th>Сотрудник</th><th>Что не так</th><th>Смен</th><th>Последняя</th></tr></thead><tbody>` +
       gaps.map(s => `<tr><td>${escHtml(s.full_name || '—')}</td>` +
         `<td><b>${LBL[s.status] ? LBL[s.status][0] : s.status}</b><br>` +
         `<span class="br-hint">${LBL[s.status] ? LBL[s.status][1] : ''}</span></td>` +
-        `<td>${s.days_worked || 0}</td></tr>`).join('') +
+        `<td>${s.days_worked || 0}</td>` +
+        `<td>${dmy(s.last_day)}</td></tr>`).join('') +
       `</tbody></table>`
     : `<div class="prof-soon-note">Все сотрудники филиала привязаны — пробелов нет.</div>`;
 
@@ -18836,7 +18875,7 @@ function branchBlockHTML() {
            <code>branch_training()</code> — не запущена миграция
            <code>branch_admin_migration.sql</code>.</div>`);
 
-  const title = branches.length === 1 ? branches[0] : `${branches.length} филиалов`;
+  const title = only || '—';
   const monthName = new Date(D.month + '-01').toLocaleDateString('ru-RU', {month: 'long'});
 
   return `
@@ -18844,6 +18883,7 @@ function branchBlockHTML() {
         <h3>Филиал: ${escHtml(title)}</h3>
         <div class="hint">Данные за ${escHtml(monthName)}, обновляются каждое утро.
         Сравнение — с прошлым месяцем.</div>
+        ${pickHTML}
 
         <div class="prof-stats-grid">
           <div class="prof-stat"><div class="val">${fmtSom(c.rev)}</div><div class="lbl">💰 Выручка</div></div>
@@ -18867,7 +18907,9 @@ function branchBlockHTML() {
         ${topHTML}
 
         <h4 class="br-h4">Привязка сотрудников${gaps.length ? ` — ${gaps.length} требуют внимания` : ''}</h4>
-        <div class="br-hint">Связаны полностью: ${okCount}. Ниже — только те, у кого чего-то не хватает.</div>
+        <div class="br-hint">Связаны полностью: ${okCount}. Ниже — только те, у кого чего-то не хватает.
+        В списке лишь те, кто выходил на смену за последние 30 дней: признака «уволен»
+        в системах нет, и это единственный способ не тащить сюда бывших сотрудников.</div>
         ${gapsHTML}
 
         <h4 class="br-h4">Обучение</h4>
