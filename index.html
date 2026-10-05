@@ -934,6 +934,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 /* ══════════════ ДОСТУПНОСТЬ И ФУНКЦИОНАЛЬНЫЕ ПРАВИЛА ══════════════
    Только поведение (фокус, скрытый текст, зоны нажатия) — оформление не меняет. */
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.toast{white-space:normal;width:max-content;max-width:calc(100vw - 32px);text-align:center;line-height:1.45;border-radius:18px;bottom:calc(26px + env(safe-area-inset-bottom));}
+.toast.toast-error{border-color:var(--danger-border);}
 .checklist-item:focus-within{outline:2px solid var(--accent-hover);outline-offset:2px;border-radius:6px;}
 </style>
 </head>
@@ -1165,7 +1167,7 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 <!-- FLOATING ACTION BUTTON (admin mode, mobile) -->
 <button class="fab" id="fab" onclick="fabAction()" aria-label="Добавить">+</button>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 // ════════════════════════════════════════════════
@@ -22206,12 +22208,16 @@ function importData(e) {
 // TOAST
 // ════════════════════════════════════════════════
 let toastTimer;
-function showToast(msg) {
+// kind: 'info' | 'error' (ошибки держим дольше — их нужно успеть прочитать)
+function showToast(msg, kind, ms) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  const text = String(msg == null ? '' : msg);
+  const isError = kind === 'error' || (kind == null && /^(Ошибка|Нет связи|Не удалось|Нет прав|Сессия истекла)/i.test(text));
+  t.textContent = text;
+  t.classList.toggle('toast-error', isError);
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms || (isError ? 5000 : Math.max(2600, Math.min(6000, text.length * 60))));
 }
 
 // ════════════════════════════════════════════════
