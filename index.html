@@ -961,17 +961,55 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .toast{white-space:normal;width:max-content;max-width:calc(100vw - 32px);text-align:center;line-height:1.45;border-radius:18px;bottom:calc(26px + env(safe-area-inset-bottom));}
 .toast.toast-error{border-color:var(--danger-border);}
+.skip-link{position:absolute;left:8px;top:-60px;z-index:5000;padding:10px 16px;background:var(--bg-deep);color:var(--text-heading);border:2px solid var(--accent);border-radius:8px;}
+.skip-link:focus{top:8px;}
+main:focus{outline:none;}
+.glossary-empty{margin:4px 40px 0;padding:18px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--text-heading);background:var(--bg-card);border:1px dashed var(--border-strong);border-radius:12px;}
+.glossary-empty[hidden]{display:none;}
+.modal-title{font-weight:300;}
+/* Неактивные модалки не должны получать фокус и клики */
+.modal-overlay:not(.active),.pwd-overlay:not(.active){visibility:hidden;transition:opacity .28s,visibility 0s linear .28s;}
+.modal-overlay.active,.pwd-overlay.active{visibility:visible;}
+/* Видимый фокус с клавиатуры (у полей был outline:none) */
+:focus-visible{outline:2px solid var(--accent-hover)!important;outline-offset:2px;}
+input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:1px;}
+.tree-step-q-active:focus,.tree-recommendation:focus{outline:none;}
+/* Зоны нажатия ≥44 px на сенсорных экранах — без изменения внешнего вида */
+@media (pointer:coarse){
+  .cat-tab,.filter-btn,.scripts-stage-nav-btn,.script-accordion-toggle,.sp-redzone-link,.subnav-btn,.btn,.btn-save,.btn-cancel,
+  .btn-pwd-cancel,.btn-rm,.tree-reset-small,.scripts-quick-btn,.link-btn,.tree-step-a,.ack-undo,.tech-back-btn{position:relative;}
+  .cat-tab::after,.filter-btn::after,.scripts-stage-nav-btn::after,.script-accordion-toggle::after,.sp-redzone-link::after,.subnav-btn::after,
+  .btn::after,.btn-save::after,.btn-cancel::after,.btn-pwd-cancel::after,.btn-rm::after,.tree-reset-small::after,.scripts-quick-btn::after,
+  .link-btn::after,.tree-step-a::after,.ack-undo::after,.tech-back-btn::after,.modal-close::after,.card-edit-btn::after,.gloss-edit-btn::after,
+  .tool-edit-btn::after,.script-edit-btn::after,.rule-edit-btn::after,.reg-edit-btn::after{
+    content:'';position:absolute;left:50%;top:50%;width:100%;height:100%;min-width:44px;min-height:44px;transform:translate(-50%,-50%);}
+  .modal-close,.reg-edit-btn{position:relative;}
+}
+/* iOS не увеличивает страницу при фокусе, если шрифт поля ≥16 px */
+@media(max-width:768px){
+  input,select,textarea{font-size:16px!important;}
+  .modal{height:100vh;height:100dvh;min-height:100vh;min-height:100dvh;}
+  .modal-footer{padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+  .glossary-empty{margin:4px 14px 0;}
+}
+.fab{bottom:calc(24px + env(safe-area-inset-bottom));}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important;scroll-behavior:auto!important;}
+  .tree-option:hover,.tech-topic-tile:hover,.dash-user-row:hover{transform:none;}
+}
 .checklist-item:focus-within{outline:2px solid var(--accent-hover);outline-offset:2px;border-radius:6px;}
 </style>
 </head>
 <body>
 
+<a class="skip-link" href="#main" onclick="event.preventDefault();document.getElementById('main').focus()">Перейти к содержимому</a>
 <div class="loading-bar" id="loadingBar"></div>
 
 <!-- HEADER -->
 <header>
   <div class="logo-area" ondblclick="openPwdModal()">
-    <img src="assets/brand/yahya-logo-white.png" alt="YAHYA" class="logo-img">
+    <h1 class="sr-only">YAHYA Wiki — учебник для сотрудников</h1>
+    <img src="assets/brand/yahya-logo-white.png" alt="YAHYA" class="logo-img" width="152" height="46">
     <p>Вики для сотрудников · Бишкек</p>
   </div>
   <div class="header-right">
@@ -986,27 +1024,27 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 </header>
 
 <!-- PAGE NAVIGATION -->
-<nav class="page-nav">
+<nav class="page-nav" aria-label="Разделы">
   <button class="page-tab active" data-page="products">
-    <span class="tab-icon">🍫</span> Продукты
+    <span class="tab-icon" aria-hidden="true">🍫</span> Продукты
   </button>
   <button class="page-tab" data-page="scripts">
-    <span class="tab-icon">🎯</span> Скрипты
+    <span class="tab-icon" aria-hidden="true">🎯</span> Скрипты
   </button>
   <button class="page-tab" data-page="techniques">
-    <span class="tab-icon">🎓</span> Техники продаж
+    <span class="tab-icon" aria-hidden="true">🎓</span> Техники продаж
   </button>
   <button class="page-tab" data-page="glossary">
-    <span class="tab-icon">📖</span> Терминология
+    <span class="tab-icon" aria-hidden="true">📖</span> Терминология
   </button>
   <button class="page-tab" data-page="regulations">
-    <span class="tab-icon">📜</span> Регламенты
+    <span class="tab-icon" aria-hidden="true">📜</span> Регламенты
   </button>
   <button class="page-tab" data-page="warehouse">
-    <span class="tab-icon">📦</span> Склад ХОЗ
+    <span class="tab-icon" aria-hidden="true">📦</span> Склад ХОЗ
   </button>
   <button class="page-tab" data-page="profile">
-    <span class="tab-icon">👤</span> Профиль
+    <span class="tab-icon" aria-hidden="true">👤</span> Профиль
   </button>
 </nav>
 
@@ -1015,8 +1053,10 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   <button type="button" class="btn" onclick="retrySync()">Повторить</button>
 </div>
 
+<main id="main" tabindex="-1">
 <!-- ══════════════ PRODUCTS PAGE ══════════════ -->
 <div id="page-products" class="page active">
+  <h2 class="sr-only">Продукты</h2>
   <div class="products-nav">
     <div class="nav-sections" id="navSections">
       <button class="section-tab active" data-section="магазин">Магазин <span class="section-count" id="cnt-магазин">0</span></button>
@@ -1029,7 +1069,7 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
     <div class="products-search-wrap" role="search">
       <label for="productSearch" class="sr-only">Поиск по продуктам</label>
       <input class="glossary-search products-search" type="search" id="productSearch"
-        placeholder="Поиск: название, вкус, ингредиент…" autocomplete="off" enterkeyhint="search"
+        placeholder="Поиск: название, вкус…" autocomplete="off" enterkeyhint="search"
         oninput="handleProductSearch(this.value)">
     </div>
     <div class="nav-categories" id="navCategories"></div>
@@ -1129,10 +1169,13 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
     <h2>Терминология</h2>
     <p>Словарь терминов: виды шоколада, начинки, технологии, местные ингредиенты, инструменты продаж.</p>
   </div>
-  <div class="glossary-search-bar">
-    <input class="glossary-search" type="text" placeholder="Поиск термина..." id="glossarySearch" oninput="filterGlossary()">
+  <div class="glossary-search-bar" role="search">
+    <label for="glossarySearch" class="sr-only">Поиск термина</label>
+    <input class="glossary-search" type="search" placeholder="Поиск термина..." id="glossarySearch" oninput="filterGlossary()" autocomplete="off" enterkeyhint="search">
     <div class="page-filter" id="glossaryFilter" style="padding:0;border:none;flex-wrap:wrap;"></div>
   </div>
+  <div class="glossary-empty" id="glossaryEmpty" role="status" hidden><span>Ничего не найдено.</span>
+    <button type="button" class="btn" onclick="resetGlossarySearch()">Сбросить поиск</button></div>
   <div class="glossary-grid" id="glossaryGrid"></div>
 </div>
 
@@ -1161,12 +1204,14 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   <div id="profileRoot"></div>
 </div>
 
+</main>
+
 <!-- EDIT MODAL -->
-<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
-  <div class="modal">
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)" inert>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-header">
-      <div class="modal-title" id="modalTitle">Новая карточка</div>
-      <button class="modal-close" onclick="closeModal()">×</button>
+      <h2 class="modal-title" id="modalTitle">Новая карточка</h2>
+      <button class="modal-close" onclick="closeModal()" aria-label="Закрыть">×</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer">
@@ -1180,8 +1225,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 </div>
 
 <!-- LOGIN MODAL -->
-<div class="pwd-overlay" id="pwdOverlay" onclick="if(event.target===this)closePwdModal()">
-  <div class="pwd-modal">
+<div class="pwd-overlay" id="pwdOverlay" onclick="if(event.target===this)closePwdModal()" inert>
+  <div class="pwd-modal" role="dialog" aria-modal="true" aria-labelledby="pwdTitle">
     <h2 id="pwdTitle">Вход</h2>
     <p>Логин и пароль от твоего аккаунта YAHYA</p>
     <label for="pwdEmail" class="sr-only">Логин (email)</label>
@@ -17872,14 +17917,14 @@ function renderTechniques() {
         <h2>🎓 Техники продаж</h2>
         <p>Внутренний учебный центр YAHYA. Войди в свой аккаунт, чтобы изучать темы и сдавать аттестацию.</p>
         <div class="form-row">
-          <label>Логин (email)</label>
+          <label for="techLoginEmail">Логин (email)</label>
           <input type="email" id="techLoginEmail" placeholder="example@yahya.local" autocomplete="username">
         </div>
         <div class="form-row">
-          <label>Пароль</label>
+          <label for="techLoginPwd">Пароль</label>
           <input type="password" id="techLoginPwd" autocomplete="current-password" onkeydown="if(event.key==='Enter')techDoLogin()">
         </div>
-        <div class="err" id="techLoginErr"></div>
+        <div class="err" id="techLoginErr" role="alert"></div>
         <button class="btn-save" onclick="techDoLogin()" style="width:100%">Войти</button>
         <p style="margin-top:18px;font-size:12px">Нет логина? Попроси у руководителя филиала.</p>
       </div>
@@ -19083,14 +19128,14 @@ function renderProfile() {
         <h2>👤 Личный профиль</h2>
         <p>Здесь твой прогресс обучения и персональный QR-код продавца. Войди в свой аккаунт.</p>
         <div class="form-row">
-          <label>Логин (email)</label>
+          <label for="profLoginEmail">Логин (email)</label>
           <input type="email" id="profLoginEmail" placeholder="example@yahya.local" autocomplete="username">
         </div>
         <div class="form-row">
-          <label>Пароль</label>
+          <label for="profLoginPwd">Пароль</label>
           <input type="password" id="profLoginPwd" autocomplete="current-password" onkeydown="if(event.key==='Enter')profileDoLogin()">
         </div>
-        <div class="err" id="profLoginErr"></div>
+        <div class="err" id="profLoginErr" role="alert"></div>
         <button class="btn-save" onclick="profileDoLogin()" style="width:100%">Войти</button>
         <p style="margin-top:18px;font-size:12px">Нет логина? Попроси у руководителя филиала.</p>
       </div>
@@ -20508,7 +20553,7 @@ function renderGlossary() {
   renderGlossaryFilters();
   const grid = document.getElementById('glossaryGrid');
   const cards = GLOSSARY_DATA.map(g => `
-    <div class="gloss-card" data-id="${g.id}" data-cat="${escHtml(g.category)}" data-term="${escHtml((g.term||'').toLowerCase())}" data-def="${escHtml((g.definition||'').toLowerCase())}">
+    <div class="gloss-card" data-id="${g.id}" data-cat="${escHtml(g.category)}" data-search="${escAttr(normSearch([g.term, g.definition, g.example, g.category].join(' ')))}">
       ${canEditContent() ? `<button class="gloss-edit-btn admin-only" onclick="openGlossModal('${g.id}')" aria-label="Редактировать">✎</button>` : ''}
       <div class="gloss-cat">${escHtml(g.category)}</div>
       <div class="gloss-term">${escHtml(g.term)}</div>
@@ -20524,12 +20569,29 @@ function renderGlossary() {
 }
 
 function filterGlossary() {
-  const q = document.getElementById('glossarySearch').value.toLowerCase();
+  const raw = document.getElementById('glossarySearch').value;
+  const terms = scriptSearchTerms(raw);
+  let shown = 0;
   document.querySelectorAll('.gloss-card').forEach(card => {
     const matchCat = glossaryCatFilter === 'all' || card.dataset.cat === glossaryCatFilter;
-    const matchQ   = !q || card.dataset.term.includes(q) || card.dataset.def.includes(q);
+    const matchQ   = !terms.length || terms.every(w => card.dataset.search.includes(w));
     card.classList.toggle('hidden', !(matchCat && matchQ));
+    if (matchCat && matchQ) shown++;
   });
+  const empty = document.getElementById('glossaryEmpty');
+  if (empty) {
+    empty.hidden = shown > 0;
+    if (!shown) empty.querySelector('span').textContent = raw.trim()
+      ? `Ничего не найдено по запросу «${raw.trim()}».`
+      : 'В этой категории пока нет терминов.';
+  }
+}
+function resetGlossarySearch() {
+  const inp = document.getElementById('glossarySearch');
+  inp.value = '';
+  setGlossFilter('all');
+  filterGlossary();
+  inp.focus();
 }
 
 function renderGlossaryFilters() {
@@ -21323,7 +21385,7 @@ function renderTreeBlock(tree, role) {
   if (lastStep && lastStep.recommendation) {
     // Путь завершён — показываем рекомендацию
     activeHTML = `
-      <div class="tree-recommendation">
+      <div class="tree-recommendation" id="treeActiveQ" tabindex="-1">
         <div class="tree-rec-label">Рекомендация</div>
         <div class="tree-rec-text">${escHtml(lastStep.recommendation).replace(/\n/g,'<br>')}</div>
         <button class="btn tree-reset-big" onclick="treeReset()">🔄 Начать заново</button>
@@ -21346,7 +21408,7 @@ function renderTreeBlock(tree, role) {
       `).join('');
       activeHTML = `
         <div class="tree-step tree-step-active">
-          <div class="tree-step-q-active">${escHtml(node.question || '')}</div>
+          <div class="tree-step-q-active" id="treeActiveQ" tabindex="-1">${escHtml(node.question || '')}</div>
           <div class="tree-options">${opts || '<div class="tree-empty">У этого узла нет вариантов.</div>'}</div>
         </div>
       `;
@@ -21412,17 +21474,25 @@ function pickTreeOption(stepIdx, optIdx) {
   });
 
   renderScripts();
+  focusTreeActive();
 }
 
 // Вернуться к шагу stepIdx — раскрыть его снова для изменения.
 function editTreeStep(stepIdx) {
   currentTreePath = currentTreePath.slice(0, stepIdx);
   renderScripts();
+  focusTreeActive();
 }
 
 function treeReset() {
   currentTreePath = [];
   renderScripts();
+  focusTreeActive();
+}
+// После перерисовки дерева фокус переводим на новый вопрос/рекомендацию
+// (иначе он падал на <body>, и с клавиатуры/диктором терялось место)
+function focusTreeActive() {
+  document.getElementById('treeActiveQ')?.focus({ preventScroll: true });
 }
 
 function renderScriptsByStage(scripts, role) {
@@ -22119,8 +22189,55 @@ function closeModal() {
       <button class="btn-save" onclick="saveModal()">Сохранить</button>
     </div>`;
 }
-// клик мимо модалки больше не закрывает — только X / Отмена / Сохранить / Удалить
+// клик мимо модалки больше не закрывает — только X / Отмена / Сохранить / Удалить / Esc
 function handleOverlayClick(e) { /* no-op */ }
+
+// Доступность диалогов. Модалки открываются из ~20 мест добавлением класса .active,
+// поэтому следим за классом: при открытии фон становится inert (фокус не уходит
+// за модалку), фокус — в первое поле; при закрытии фокус возвращается туда, откуда открыли.
+const DIALOG_IDS = ['modalOverlay', 'pwdOverlay'];
+const _dialogReturnFocus = {};
+let _modalDirty = false;
+function dialogBackground() {
+  return [...document.body.children].filter(el =>
+    !DIALOG_IDS.includes(el.id) && !el.matches('#toast, .loading-bar, script'));
+}
+function syncDialogState(ov) {
+  const open = ov.classList.contains('active');
+  if (open === !ov.hasAttribute('inert')) return;        // состояние не изменилось
+  if (open) {
+    _dialogReturnFocus[ov.id] = document.activeElement;
+    ov.removeAttribute('inert');
+    dialogBackground().forEach(el => el.setAttribute('inert', ''));
+    if (ov.id === 'modalOverlay') _modalDirty = false;
+    setTimeout(() => {
+      if (ov.contains(document.activeElement)) return;
+      const first = ov.querySelector('.modal-body input:not([type=hidden]):not([disabled]), .modal-body textarea, .modal-body select, input:not([type=hidden]):not([disabled]), button:not([disabled])');
+      (first || ov.querySelector('.modal-close'))?.focus();
+    }, 60);
+  } else {
+    ov.setAttribute('inert', '');
+    if (!DIALOG_IDS.some(id => document.getElementById(id)?.classList.contains('active'))) {
+      dialogBackground().forEach(el => el.removeAttribute('inert'));
+    }
+    const back = _dialogReturnFocus[ov.id];
+    if (back && document.contains(back) && !back.closest('[inert]')) back.focus({ preventScroll: true });
+  }
+}
+DIALOG_IDS.forEach(id => {
+  const ov = document.getElementById(id);
+  if (!ov) return;
+  new MutationObserver(() => syncDialogState(ov)).observe(ov, { attributes: true, attributeFilter: ['class'] });
+  if (id === 'modalOverlay') ov.addEventListener('input', () => { _modalDirty = true; });
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (document.getElementById('pwdOverlay')?.classList.contains('active')) { closePwdModal(); return; }
+  if (document.getElementById('modalOverlay')?.classList.contains('active')) {
+    if (_modalDirty && !confirm('Закрыть без сохранения? Изменения пропадут.')) return;
+    closeModal();
+  }
+});
 
 function buildForm(c) {
   // v — сырое значение, ve — экранированное для value="..."/textarea.
