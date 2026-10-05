@@ -630,6 +630,13 @@ body.is-admin .script-edit-btn, body.is-content-editor .script-edit-btn{display:
 .scripts-stage-nav-btn{padding:5px 14px;border:1px solid rgba(var(--rgb-gold-500),.2);border-radius:20px;background:transparent;color:var(--text-dim);font-family:var(--font-sans);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;}
 .scripts-stage-nav-btn:hover{border-color:rgba(var(--rgb-gold-500),.5);color:var(--text-accent-soft);}
 .scripts-stage-nav-btn.active{background:var(--accent);border-color:var(--accent);color:var(--color-choco-950);font-weight:600;}
+.scripts-stage-nav-btn.active{border-color:var(--accent);color:var(--text-accent-soft);background:var(--bg-accent-medium);}
+.scripts-quick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;}
+.scripts-quick-lbl{font-size:12px;color:var(--text-dim);margin-right:2px;}
+.scripts-quick-btn{padding:6px 12px;border:1px solid rgba(var(--rgb-gold-500),.3);border-radius:20px;background:rgba(var(--rgb-choco-900),.22);color:var(--text-body);font-family:var(--font-sans);font-size:12px;cursor:pointer;transition:all .18s;}
+.scripts-quick-btn:hover{border-color:var(--accent);color:var(--text-accent-soft);}
+.link-btn{background:none;border:none;padding:0;color:var(--text-accent-soft);font:inherit;text-decoration:underline;cursor:pointer;}
+button.scripts-principles-header{width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;}
 /* Стоп-фразы — приоритетный визуальный блок */
 .stopphrases-banner{margin-bottom:12px;padding:12px 16px;background:rgba(var(--rgb-danger),.10);border:1px solid var(--danger-border);border-radius:10px;font-size:11px;color:var(--danger-text);letter-spacing:.5px;line-height:1.5;}
 /* Сетка карточек */
@@ -917,6 +924,11 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   .prof-qr-preview{width:100%;max-width:300px;margin:0 auto;}
   .prof-stats-grid{grid-template-columns:repeat(2,1fr);}
 }
+
+/* ══════════════ ДОСТУПНОСТЬ И ФУНКЦИОНАЛЬНЫЕ ПРАВИЛА ══════════════
+   Только поведение (фокус, скрытый текст, зоны нажатия) — оформление не меняет. */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.checklist-item:focus-within{outline:2px solid var(--accent-hover);outline-offset:2px;border-radius:6px;}
 </style>
 </head>
 <body>
@@ -990,15 +1002,15 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
     <p>Что говорить гостю на каждом этапе. Выбери свой участок — касса или столики.</p>
   </div>
   <!-- ── Принципы работы с гостем (сворачиваемый, общий для всех ролей) ── -->
-  <div class="scripts-principles" id="scriptsPrinciples">
-    <div class="scripts-principles-header" onclick="togglePrinciples()">
-      <div class="scripts-principles-header-left">
-        <span class="scripts-principles-icon">✦</span>
+  <div class="scripts-principles collapsed" id="scriptsPrinciples">
+    <button type="button" class="scripts-principles-header" onclick="togglePrinciples()" aria-expanded="false" aria-controls="scriptsPrinciplesBody">
+      <span class="scripts-principles-header-left">
+        <span class="scripts-principles-icon" aria-hidden="true">✦</span>
         <span class="scripts-principles-title">Принципы работы с гостем</span>
-      </div>
-      <span class="scripts-principles-chevron">▼</span>
-    </div>
-    <div class="scripts-principles-body">
+      </span>
+      <span class="scripts-principles-chevron" aria-hidden="true">▼</span>
+    </button>
+    <div class="scripts-principles-body" id="scriptsPrinciplesBody">
       <!-- Колонка 1: Отношение + Принципы -->
       <div class="sp-cell">
         <div class="sp-label">Наше отношение к гостю</div>
@@ -1041,12 +1053,27 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
     </div>
   </div>
 
-  <div class="scripts-subnav" id="scriptsSubnav">
-    <button class="subnav-btn active" data-role="retail"><span class="tab-icon">🛍</span> У кассы</button>
-    <button class="subnav-btn" data-role="bar"><span class="tab-icon">☕</span> У столиков</button>
-    <button class="subnav-btn" data-role="common"><span class="tab-icon">🧩</span> Общее</button>
+  <div class="scripts-subnav" id="scriptsSubnav" role="group" aria-label="Участок">
+    <button class="subnav-btn active" data-role="retail" aria-pressed="true"><span class="tab-icon" aria-hidden="true">🛍</span> У кассы</button>
+    <button class="subnav-btn" data-role="bar" aria-pressed="false"><span class="tab-icon" aria-hidden="true">☕</span> У столиков</button>
+    <button class="subnav-btn" data-role="common" aria-pressed="false"><span class="tab-icon" aria-hidden="true">🧩</span> Общее</button>
   </div>
-  <div id="scriptsContent"></div>
+  <!-- Поиск — вне перерисовываемого #scriptsContent: иначе при каждом символе
+       поле пересоздавалось, терялись пробелы/регистр и закрывалась клавиатура -->
+  <div class="scripts-search-wrap" role="search">
+    <label for="scriptsSearchInput" class="sr-only">Поиск по скриптам и правилам</label>
+    <input class="scripts-search" type="search" id="scriptsSearchInput" placeholder="Поиск по всем скриптам и правилам…"
+      autocomplete="off" enterkeyhint="search" oninput="handleScriptSearch(this.value)">
+    <div class="scripts-quick" role="group" aria-label="Быстрый поиск: что говорит гость">
+      <span class="scripts-quick-lbl">Гость говорит:</span>
+      <button type="button" class="scripts-quick-btn" onclick="quickScriptSearch('дорог')">«Дорого»</button>
+      <button type="button" class="scripts-quick-btn" onclick="quickScriptSearch('подума')">«Подумаю»</button>
+      <button type="button" class="scripts-quick-btn" onclick="quickScriptSearch('дешевле')">«У конкурента дешевле»</button>
+      <button type="button" class="scripts-quick-btn" onclick="quickScriptSearch('сладк')">«Не люблю сладкое»</button>
+      <button type="button" class="scripts-quick-btn" onclick="quickScriptSearch('просто смотр')">«Просто смотрю»</button>
+    </div>
+  </div>
+  <div id="scriptsContent" aria-live="polite" aria-busy="false"></div>
 </div>
 
 <!-- ══════════════ GLOSSARY PAGE ══════════════ -->
@@ -20625,8 +20652,10 @@ const PRINCIPLES_LS_KEY = 'yahya_principles_collapsed';
 function initPrinciples() {
   const el = document.getElementById('scriptsPrinciples');
   if (!el) return;
-  const collapsed = localStorage.getItem(PRINCIPLES_LS_KEY) === '1';
-  if (collapsed) el.classList.add('collapsed');
+  // По умолчанию свёрнут — раскрыт, только если сотрудник сам его раскрыл
+  const collapsed = localStorage.getItem(PRINCIPLES_LS_KEY) !== '0';
+  el.classList.toggle('collapsed', collapsed);
+  el.querySelector('.scripts-principles-header')?.setAttribute('aria-expanded', String(!collapsed));
 }
 
 function togglePrinciples() {
@@ -20634,13 +20663,14 @@ function togglePrinciples() {
   if (!el) return;
   const willCollapse = !el.classList.contains('collapsed');
   el.classList.toggle('collapsed', willCollapse);
-  localStorage.setItem(PRINCIPLES_LS_KEY, willCollapse ? '1' : '0');
+  el.querySelector('.scripts-principles-header')?.setAttribute('aria-expanded', String(!willCollapse));
+  try { localStorage.setItem(PRINCIPLES_LS_KEY, willCollapse ? '1' : '0'); } catch(e) {}
 }
 
 function goToStopPhrases() {
   // Переключаем роль на 'common', перерисовываем, скроллим к стоп-фразам
   currentScriptRole = 'common';
-  window._scriptSearchQuery = '';
+  setScriptSearch('');
   document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.role === 'common');
   });
@@ -20658,6 +20688,7 @@ function renderScripts() {
   const role = currentScriptRole;
   document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.role === role);
+    b.setAttribute('aria-pressed', String(b.dataset.role === role));
   });
 
   const roleScripts = SCRIPTS_DATA.filter(s => s.role === role);
@@ -20668,23 +20699,13 @@ function renderScripts() {
 
   let html = '';
 
-  // Поиск
-  const searchQ = (window._scriptSearchQuery || '').trim().toLowerCase();
-  html += `<div class="scripts-search-wrap"><input class="scripts-search" type="search" placeholder="Поиск по скриптам..." value="${escAttr(searchQ)}" oninput="handleScriptSearch(this.value)" id="scriptsSearchInput"></div>`;
+  // Поиск — по ВСЕМ разделам (касса / столики / общее), скриптам, правилам и чек-листам.
+  // Поле поиска статичное (см. разметку #page-scripts), здесь только результаты.
+  const searchQ = window._scriptSearchQuery || '';
+  const terms = scriptSearchTerms(searchQ);
 
-  if (searchQ) {
-    // Режим поиска — плоский список без разбивки по этапам
-    const matches = scripts.filter(s =>
-      (s.situation||'').toLowerCase().includes(searchQ) ||
-      (s.script||'').toLowerCase().includes(searchQ) ||
-      (s.title||'').toLowerCase().includes(searchQ)
-    );
-    if (matches.length) {
-      html += `<div class="scripts-block"><div class="scripts-block-title">🔍 Результаты поиска</div><div class="scripts-block-subtitle">Найдено: ${matches.length} скриптов</div></div>`;
-      html += `<div class="tools-section" style="padding-top:4px"><div class="scripts-grid">${matches.map(s => scriptCardHTML(s)).join('')}</div></div>`;
-    } else {
-      html += `<div class="scripts-block"><div class="scripts-block-title">🔍 Ничего не найдено</div><div class="scripts-block-subtitle">Попробуй другой запрос.</div></div>`;
-    }
+  if (terms.length) {
+    html += renderScriptSearchResults(terms);
   } else {
     // Обычный режим
     html += renderScriptsByStage(scripts, role);
@@ -20706,19 +20727,85 @@ function renderScripts() {
   }
 
   container.innerHTML = html;
-  // Восстанавливаем фокус в поиске если он был активен
-  if (searchQ) {
-    const inp = document.getElementById('scriptsSearchInput');
-    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
-  }
-  // Инициализируем sticky-nav для этапов
+  // Инициализируем sticky-nav для этапов (подсветка текущего этапа)
   initStageNav();
 }
 
-function handleScriptSearch(val) {
-  window._scriptSearchQuery = val;
-  renderScripts();
+// ── Поиск по скриптам ──
+// Нормализация только для сравнения: сам текст в поле не трогаем.
+function normSearch(str) {
+  return String(str || '').toLowerCase().replace(/ё/g, 'е');
 }
+function scriptSearchTerms(q) {
+  return normSearch(q).split(/\s+/).filter(Boolean);
+}
+function matchesTerms(text, terms) {
+  const t = normSearch(text);
+  return terms.every(w => t.includes(w));
+}
+const SCRIPT_ROLE_LABELS = { retail: '🛍 У кассы', bar: '☕ У столиков', common: '🧩 Общее' };
+
+function renderScriptSearchResults(terms) {
+  const groups = [];
+  let total = 0;
+  ['retail', 'bar', 'common'].forEach(role => {
+    const items = SCRIPTS_DATA.filter(x => x.role === role);
+    const scripts = items.filter(x => x.type === 'script' &&
+      matchesTerms([x.title, x.situation, x.script, x.why, x.avoid].join(' '), terms));
+    const rules = items.filter(x => x.type === 'rule' &&
+      matchesTerms([x.title, x.category, x.why, x.violation].join(' '), terms));
+    const checks = [];
+    items.filter(x => x.type === 'checklist').forEach(cl => {
+      (cl.items || []).forEach((it, i) => {
+        if (matchesTerms(it, terms) || matchesTerms(cl.title + ' ' + it, terms)) checks.push({ cl, it, i });
+      });
+    });
+    const n = scripts.length + rules.length + checks.length;
+    if (!n) return;
+    total += n;
+    groups.push(`
+      <div class="tools-section" style="padding-top:4px">
+        <div class="tools-section-title">${escHtml(SCRIPT_ROLE_LABELS[role] || role)} · ${n}</div>
+        ${scripts.length ? `<div class="scripts-grid">${scripts.map(x => scriptCardHTML(x)).join('')}</div>` : ''}
+        ${rules.length ? `<div class="rules-grid">${rules.map(x => ruleCardHTML(x)).join('')}</div>` : ''}
+        ${checks.length ? `<div class="checklist-box">
+            <div class="checklist-title">Из чек-листа смены</div>
+            ${checks.map(c => checklistItemHTML(c.cl, c.it, c.i)).join('')}
+          </div>` : ''}
+      </div>`);
+  });
+  if (!total) {
+    return `<div class="scripts-block"><div class="scripts-block-title">🔍 Ничего не найдено</div>
+      <div class="scripts-block-subtitle">Попробуй другое слово — например, «цена», «подарок», «кофе».</div>
+      <button type="button" class="btn" onclick="setScriptSearch('', true)">Сбросить поиск</button></div>`;
+  }
+  return `<div class="scripts-block"><div class="scripts-block-title">🔍 Результаты поиска</div>
+    <div class="scripts-block-subtitle">Найдено: ${total} — по всем участкам. <button type="button" class="link-btn" onclick="setScriptSearch('', true)">Сбросить поиск</button></div></div>
+    ${groups.join('')}`;
+}
+
+let _scriptSearchTimer = null;
+function handleScriptSearch(val) {
+  clearTimeout(_scriptSearchTimer);
+  _scriptSearchTimer = setTimeout(() => {
+    window._scriptSearchQuery = val;
+    renderScripts();
+  }, 150);
+}
+// Программная установка запроса (быстрые кнопки, сброс, смена участка)
+function setScriptSearch(val, focus = false) {
+  clearTimeout(_scriptSearchTimer);
+  window._scriptSearchQuery = val;
+  const inp = document.getElementById('scriptsSearchInput');
+  if (inp && inp.value !== val) inp.value = val;
+  renderScripts();
+  if (focus && inp) inp.focus();
+}
+function quickScriptSearch(q) {
+  setScriptSearch(q);
+  document.getElementById('scriptsContent')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+}
+
 
 // ── ОЗНАКОМЛЕНИЕ СО СКРИПТАМИ ───────────────────────────────────────
 // Сотрудник отмечает «я ознакомился» по каждому разделу скриптов.
@@ -20799,13 +20886,32 @@ function renderScriptAckBlock(role) {
 function openScriptsSection(role) {
   currentScriptRole = role;
   currentTreePath = [];
-  window._scriptSearchQuery = '';
   navigateTo('scripts');
-  renderScripts();
+  setScriptSearch('');
 }
 
+// Подсветка этапа, который сейчас на экране, в sticky-полосе этапов
+let _stageObserver = null;
 function initStageNav() {
-  // sticky-nav инициализируется при рендере renderScriptsByStage — ничего дополнительного
+  if (_stageObserver) { _stageObserver.disconnect(); _stageObserver = null; }
+  const nav = document.getElementById('scriptsStageNav');
+  const blocks = document.querySelectorAll('#scriptsContent .scripts-stage-block');
+  if (!nav || !blocks.length || !('IntersectionObserver' in window)) return;
+  const setActive = key => {
+    nav.querySelectorAll('.scripts-stage-nav-btn').forEach(b => {
+      const on = b.dataset.stage === key;
+      b.classList.toggle('active', on);
+      if (on) {
+        b.setAttribute('aria-current', 'true');
+        if (nav.scrollWidth > nav.clientWidth) nav.scrollLeft = b.offsetLeft - (nav.clientWidth - b.offsetWidth) / 2;
+      } else b.removeAttribute('aria-current');
+    });
+  };
+  _stageObserver = new IntersectionObserver(entries => {
+    const vis = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+    if (vis.length) setActive(vis[0].target.dataset.stage);
+  }, { rootMargin: '-70px 0px -55% 0px' });
+  blocks.forEach(b => _stageObserver.observe(b));
 }
 
 function renderTreeBlock(tree, role) {
@@ -20967,7 +21073,7 @@ function renderScriptsByStage(scripts, role) {
 
   // Sticky якорная навигация по этапам
   const navItems = orderedStages.map((st, i) =>
-    `<button class="scripts-stage-nav-btn" onclick="scrollToStage('stage-${escAttr(st.key)}')">${String(i+1).padStart(2,'0')} ${escHtml(st.label)}</button>`
+    `<button class="scripts-stage-nav-btn" data-stage="${escAttr(st.key)}" onclick="scrollToStage('stage-${escAttr(st.key)}')">${String(i+1).padStart(2,'0')} ${escHtml(st.label)}</button>`
   ).join('');
   const stageNav = `<div class="scripts-stage-nav" id="scriptsStageNav">${navItems}</div>`;
 
@@ -21015,7 +21121,7 @@ function scriptCardHTML(s) {
       <div class="script-section-label" style="margin-top:14px;margin-bottom:8px">Что сказать</div>
       <div class="script-text-quote">${escHtml(s.script || '').replace(/\n/g,'<br>')}</div>
     </div>
-    ${hasDetails ? `<button class="script-accordion-toggle" onclick="toggleScriptAccordion('${escAttr(s.id)}')">
+    ${hasDetails ? `<button type="button" class="script-accordion-toggle" aria-expanded="false" onclick="toggleScriptAccordion('${escAttr(s.id)}', this)">
       <span>Подробнее</span>
       <span class="script-accordion-arrow">▼</span>
     </button>
@@ -21023,9 +21129,12 @@ function scriptCardHTML(s) {
   </div>`;
 }
 
-function toggleScriptAccordion(id) {
-  const card = document.getElementById('scd-' + id);
-  if (card) card.classList.toggle('accordion-open');
+function toggleScriptAccordion(id, btn) {
+  // id может повторяться (карточка в результатах поиска) — берём ту, где нажали
+  const card = btn ? btn.closest('.script-card') : document.getElementById('scd-' + id);
+  if (!card) return;
+  const open = card.classList.toggle('accordion-open');
+  card.querySelector('.script-accordion-toggle')?.setAttribute('aria-expanded', String(open));
 }
 
 // flipScript оставляем как заглушку (вдруг где-то вызывается из редактора)
@@ -21062,12 +21171,32 @@ function ruleCardHTML(r) {
   </div>`;
 }
 
+// Отметки чек-листа живут в памяти на время открытой вкладки: переживают перерисовку
+// (поиск, подгрузку из БД), но не сохраняются между сменами — так задумано.
+const CHECKLIST_STATE = new Set();
+function checklistItemHTML(cl, item, i) {
+  const key = `${cl.id}:${i}`;
+  const on = CHECKLIST_STATE.has(key);
+  return `<label class="checklist-item${on ? ' checked' : ''}" data-key="${escAttr(key)}">
+    <input type="checkbox" class="sr-only" ${on ? 'checked' : ''} onchange="toggleChecklistItem(this)">
+    <span class="checklist-check" aria-hidden="true">✓</span><span class="checklist-text">${escHtml(item)}</span></label>`;
+}
+function toggleChecklistItem(input) {
+  const key = input.closest('.checklist-item').dataset.key;
+  if (input.checked) CHECKLIST_STATE.add(key); else CHECKLIST_STATE.delete(key);
+  document.querySelectorAll('.checklist-item').forEach(el => {
+    if (el.dataset.key !== key) return;
+    el.querySelector('input').checked = input.checked;
+    el.classList.toggle('checked', input.checked);
+  });
+}
+
 function renderChecklistsBlock(checklists) {
   const inner = checklists.map(cl => `
     <div class="checklist-box">
       ${canEditContent() ? `<button class="rule-edit-btn admin-only" onclick="openChecklistModal('${escAttr(cl.id)}')" aria-label="Редактировать">✎</button>` : ''}
       <div class="checklist-title">${escHtml(cl.title || 'Чек-лист')}</div>
-      ${(cl.items||[]).map(item => `<div class="checklist-item" onclick="this.classList.toggle('checked')"><div class="checklist-check">✓</div><div class="checklist-text">${escHtml(item)}</div></div>`).join('')}
+      ${(cl.items||[]).map((item, i) => checklistItemHTML(cl, item, i)).join('')}
     </div>
   `).join('');
   return `<div class="scripts-block">
@@ -22116,8 +22245,7 @@ async function init() {
       btn.classList.add('active');
       currentScriptRole = btn.dataset.role;
       currentTreePath = [];
-      window._scriptSearchQuery = '';
-      renderScripts();
+      setScriptSearch('');
     });
   });
 
