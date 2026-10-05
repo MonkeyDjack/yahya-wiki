@@ -643,6 +643,9 @@ button.scripts-principles-header{width:100%;border:0;background:none;font:inheri
 .card-archived{display:inline-block;margin:0 6px 10px 0;padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(var(--rgb-danger),.18);color:var(--text-heading);border:1px dashed var(--danger-border);}
 .card-location{font-size:12px;color:var(--text-accent-soft);margin-bottom:8px;}
 @media(max-width:768px){.products-search-wrap{padding:10px 14px 0;}}
+.form-hint{font-size:12px;color:var(--text-dim);line-height:1.5;margin-top:6px;}
+.form-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-body);cursor:pointer;line-height:1.4;}
+.form-check input{width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:var(--accent);}
 /* Стоп-фразы — приоритетный визуальный блок */
 .stopphrases-banner{margin-bottom:12px;padding:12px 16px;background:rgba(var(--rgb-danger),.10);border:1px solid var(--danger-border);border-radius:10px;font-size:11px;color:var(--danger-text);letter-spacing:.5px;line-height:1.5;}
 /* Сетка карточек */
@@ -20310,8 +20313,9 @@ function renderCatManagerModal(type, loc = null) {
         const enc = encodeURIComponent(cat);
         const displayLabel = labels[cat] || cat;
         return `<div class="cat-mgr-row" data-cat-enc="${enc}">
-          <input class="cat-rename-input" value="${escAttr(displayLabel)}" placeholder="Название">
+          <input class="cat-rename-input" value="${escAttr(displayLabel)}" placeholder="Название" aria-label="Название категории">
           <span class="cat-mgr-count">${count}</span>
+          ${type === 'card' && count === 0 ? '<span class="form-hint" style="margin:0">пустая — видна только тебе</span>' : ''}
           <button class="btn" onclick="handleCatRename('${type}','${enc}',this${locArg})">Переименовать</button>
           ${isAdmin ? `<button class="btn danger" onclick="handleCatDelete('${type}','${enc}',this${locArg})">Удалить</button>` : ''}
         </div>`;
@@ -20326,6 +20330,7 @@ function renderCatManagerModal(type, loc = null) {
     ${locTabsHTML}
     <div><div class="fsec">Добавить категорию</div>
       ${addRow}
+      ${type === 'card' ? '<div class="form-hint">Пустая категория сохраняется только на этом устройстве. У всех она появится, когда в ней будет первая карточка — категорию можно выбрать или создать прямо в форме карточки («＋ Новая категория…»).</div>' : ''}
     </div>
     <div><div class="fsec">Существующие (${categories.length})</div>
       ${rowsHTML}
@@ -20349,7 +20354,7 @@ function handleCatAdd(type, loc = null) {
     saveNav();
     renderCards();
     renderCatManagerModal(type, loc);
-    showToast(`Категория «${name}» добавлена`);
+    showToast(`«${name}» пока видна только тебе — появится у всех, когда добавишь в неё первую карточку`, 'info', 6000);
     return;
   }
 
@@ -21865,12 +21870,16 @@ function buildForm(c) {
     </div>
     <div class="fgrid" style="margin-top:12px">
       <div class="ff"><label>Локация <span style="font-weight:normal;opacity:.6;font-size:10px">(вкладка сайта)</span></label><select id="f-location" onchange="updateCatSelect(this.value)" ${lockToBar?'disabled':''}>${locs.map(l=>`<option ${currentLoc==l?'selected':''}>${l}</option>`).join('')}</select></div>
-      <div class="ff"><label>Категория меню <span style="font-weight:normal;opacity:.6;font-size:10px">(фильтр в навигации)</span></label><select id="f-category">${cats.map(c=>`<option ${currentCatVal==c?'selected':''}>${escHtml(c)}</option>`).join('')}</select></div>
+      <div class="ff"><label for="f-category">Категория меню <span style="font-weight:normal;opacity:.6;font-size:10px">(фильтр в навигации)</span></label><select id="f-category" onchange="toggleNewCatInput(this)">${catOptionsHTML(cats, currentCatVal)}</select>
+        <input id="f-category-new" placeholder="Название новой категории" style="display:none;margin-top:6px" aria-label="Название новой категории">
+        <div class="form-hint" id="f-category-hint" style="display:none">Категория появится у всех вместе с этой карточкой.</div></div>
     </div>
     <div class="fgrid" style="margin-top:12px">
       <div class="ff"><label>Бейдж (цена / вес)</label><input id="f-badge" value="${ve('badge')}"></div>
       <div class="ff"><label>Подкатегория <span style="font-weight:normal;opacity:.6;font-size:10px">(опционально)</span></label><input id="f-sub" value="${ve('subcategory')}" placeholder="Напр. Корпусные"></div>
     </div>
+    <label class="form-check" style="margin-top:12px"><input type="checkbox" id="f-archived" ${c?.archived ? 'checked' : ''}>
+      В архиве — скрыть от продавцов (сезонное, снято с продажи)</label>
   </div>
   <div><div class="fsec">Описание</div>
     <div class="ff"><label>Вкус / описание (для карточки)</label><textarea id="f-desc">${escHtml(v('description'))}</textarea></div>
@@ -21909,12 +21918,24 @@ function buildForm(c) {
   </div>`;
 }
 
+function catOptionsHTML(cats, selected) {
+  return cats.map(c => `<option ${selected === c ? 'selected' : ''}>${escHtml(c)}</option>`).join('') +
+    `<option value="__new__">＋ Новая категория…</option>`;
+}
+function toggleNewCatInput(sel) {
+  const isNew = sel.value === '__new__';
+  const inp = document.getElementById('f-category-new');
+  const hint = document.getElementById('f-category-hint');
+  if (inp) { inp.style.display = isNew ? '' : 'none'; if (isNew) inp.focus(); }
+  if (hint) hint.style.display = isNew ? '' : 'none';
+}
 function updateCatSelect(loc) {
-  // при смене локации показываем полный список категорий для неё — DEFAULT_NAV + NAV + данные
+  // при смене локации показываем полный список категорий для неё — данные + локальные черновики
   const sel = document.getElementById('f-category');
   const prev = sel?.value;
   const cats = getCardCategoriesSorted(loc);
-  sel.innerHTML = cats.map(c=>`<option ${prev===c?'selected':''}>${escHtml(c)}</option>`).join('');
+  sel.innerHTML = catOptionsHTML(cats, prev);
+  toggleNewCatInput(sel);
 }
 
 // ── Загрузка фото для карточки: сжатие + Supabase Storage ──
@@ -22041,24 +22062,35 @@ async function saveCard() {
   }
   const id   = editingId || name.toLowerCase().replace(/[^а-яёa-z0-9\s-]/gi,'').replace(/\s+/g,'-').slice(0,60);
 
+  let category = document.getElementById('f-category').value;
+  if (category === '__new__') {
+    category = (document.getElementById('f-category-new')?.value || '').trim();
+    if (!category) { showToast('Введи название новой категории'); return; }
+  }
+  // Поля, которых нет в форме (archived от контент-правок, seasonal, акцент), не теряем
+  const prevCard = editingId ? (CARDS.find(c => c.id === editingId) || {}) : {};
+
   const card = {
+    ...prevCard,
     id, name,
     badge:       document.getElementById('f-badge').value.trim()||name,
     location:    loc,
-    category:    document.getElementById('f-category').value,
+    category,
     subcategory: document.getElementById('f-sub').value.trim(),
-    seasonal:    false,
+    seasonal:    prevCard.seasonal || false,
     type:        document.getElementById('f-type').value.trim(),
-    accentFrom:  '#3D2010', accentTo: '#8B4513',
+    accentFrom:  prevCard.accentFrom || '#3D2010', accentTo: prevCard.accentTo || '#8B4513',
     chocolate:   document.getElementById('f-choc').value.trim(),
     tasteTags:   tags,
     description: document.getElementById('f-desc').value.trim(),
     occasions, phrases,
     pairingIcon: document.getElementById('f-pi').value.trim()||'☕',
     pairingText: document.getElementById('f-pt').value.trim(),
-    faq: faqs, audience: '',
+    faq: faqs, audience: prevCard.audience || '',
     image: document.getElementById('f-img').value.trim(),
+    archived: !!document.getElementById('f-archived')?.checked,
   };
+  if (!card.archived) delete card.archived;
 
   const ok = await dbUpsert('cards', id, card);
   if (!ok) return;
