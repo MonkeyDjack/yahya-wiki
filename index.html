@@ -32,18 +32,20 @@
      иначе сливается. Шкала подкручена для видимости. */
   --color-cream-100: #F8EDD5;   /* ярчайший — заголовки */
   --color-cream-200: #F0DFC0;   /* основной текст */
-  --color-cream-300: #D9C49E;   /* приглушённый */
-  --color-cream-400: #C3A87E;   /* вторичный (meta) — читаем и на фоне, и на карточке */
+  --color-cream-300: #E4D2B0;   /* приглушённый (≥6:1 на фоне страницы) */
+  --color-cream-400: #D9C49E;   /* вторичный (meta): 4.7:1 на странице, 5.8:1 на карточке */
 
   /* Золото — акцент (фирменное YAHYA) */
-  --color-gold-300: #D8BD8E;   /* светло-золотое (hover/highlight) */
+  --color-gold-300: #E0C99B;   /* светло-золотое (hover/highlight) */
   --color-gold-500: #C59E5F;   /* основное золото — фирменное yahya-gold */
   --color-gold-700: #A9824A;   /* глубокое золото (pressed) */
 
   /* Семантика */
   --color-danger:   #C96A55;   /* предупреждение, нарушение */
-  --color-danger-soft:#D39989; /* светло-предупреждающее (текст) */
+  --color-danger-soft:#F3C2B5; /* светло-предупреждающее (текст) */
   --color-success:  #7EA870;
+  --color-success-text:#B4D3A8; /* зелёный ТЕКСТ (≥4.5:1 на фоне страницы и на карточке) */
+  --color-danger-text:#F3C2B5;  /* красный ТЕКСТ (≥4.5:1 на фоне страницы) */
   --color-warning:  #E3A853;
 
   /* RGB-тройки для rgba() с прозрачностью.
@@ -69,7 +71,7 @@
      На светлом основном фоне #845D3E карточки делаем ТЕМНЕЕ фона,
      чтобы создать контраст «окно в глубину» — это классический
      приём для светлых тем. */
-  --bg-page:          var(--color-choco-700);              /* body — светлый базовый */
+  --bg-page:          var(--color-choco-750);              /* body — #6A4A2F (согласовано 2026-10: контраст текста ≥4.5:1) */
   --bg-card:          var(--color-choco-850);              /* тёмная карточка на светлом фоне */
   --bg-card-alt:      var(--color-choco-800);              /* flip-оборот — чуть светлее card */
   --bg-deep:          var(--color-choco-900);              /* модалки, глубокий контраст */
@@ -85,7 +87,7 @@
   --text-body:        var(--color-cream-200);              /* основной текст */
   --text-dim:         var(--color-cream-300);              /* приглушённый */
   --text-muted:       var(--color-cream-400);              /* meta, подписи */
-  --text-on-accent:   var(--color-choco-800);              /* тёмный текст на золотой кнопке */
+  --text-on-accent:   var(--color-choco-900);              /* тёмный текст на золотой кнопке (6.4:1) */
   --text-accent:      var(--color-gold-500);
   --text-accent-soft: var(--color-gold-300);
 
@@ -112,20 +114,37 @@
   --danger-border:    rgba(var(--rgb-danger), .4);
 
   /* — Alert (яркий красный — для кнопок «удалить», критических ошибок) — */
-  --rgb-alert:        255, 100, 100;
-  --rgb-alert-soft:   255, 130, 130;
-  --alert-text:       rgb(255, 130, 130);
+  --rgb-alert:        214, 118, 98;
+  --rgb-alert-soft:   243, 194, 181;
+  --alert-text:       rgb(243, 194, 181);
 
   /* — Бейджи типов инструментов (изолированные акценты) — */
-  --rgb-tag-upsell:   196, 100, 255;   /* фиолетовый */
-  --rgb-tag-upsell-t: 220, 150, 255;   /* тот же, светлее */
-  --rgb-tag-cross:    100, 196, 255;   /* голубой */
-  --rgb-tag-cross-t:  150, 210, 255;
-  --rgb-tag-bundle:   100, 255, 150;   /* зелёный */
-  --rgb-tag-bundle-t: 150, 255, 180;
-  --rgb-tag-live:     120, 255, 160;
+  --rgb-tag-upsell:   197, 158, 95;     /* золото */
+  --rgb-tag-upsell-t: 224, 201, 155;   /* золото светлее */
+  --rgb-tag-cross:    217, 196, 158;   /* кремовый */
+  --rgb-tag-cross-t:  240, 223, 192;
+  --rgb-tag-bundle:   126, 168, 112;   /* фисташковый (success) */
+  --rgb-tag-bundle-t: 180, 211, 168;
+  --rgb-tag-live:     180, 211, 168;
 
   /* — Прочее — */
+  /* — Фото-подложка (единая для всех товаров) — */
+  --bg-photo:         var(--color-cream-100);
+  --bg-photo-edge:    #EADBBC;
+  /* — Статусные цвета (производные от палитры) — */
+  --delta-up:         var(--color-success-text);
+  --delta-down:       var(--color-danger-text);
+  /* — Радиусы (шкала 8 / 12 / 16 / pill) — */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  /* — Шкала кеглей — */
+  --fs-xs: 11px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 20px; --fs-xl: 28px; --fs-2xl: 36px;
+  /* — Движение (фирстайл: 140–360 мс) — */
+  --dur-fast: 140ms; --dur-base: 220ms; --dur-slow: 360ms;
+  --ease-standard: cubic-bezier(.4,0,.2,1);
+  --content-max: 1440px;
   --radius: 16px;
   --font-sans: 'Montserrat', 'Segoe UI', sans-serif;
 }
@@ -888,8 +907,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 .br-table tr:last-child td{border-bottom:none;}
 .br-table .br-hint{margin:0;white-space:normal;}
 .br-delta{font-size:11px;margin-left:6px;}
-.br-delta.up{color:#4caf50;}
-.br-delta.down{color:#e57373;}
+.br-delta.up{color:var(--delta-up);}
+.br-delta.down{color:var(--delta-down);}
 
 /* Ознакомление со скриптами: строки статуса в профиле */
 .prof-ack-list{display:flex;flex-direction:column;gap:8px;}
@@ -918,6 +937,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   .prof-stats-grid{grid-template-columns:repeat(2,1fr);}
 }
 </style>
+<link rel="stylesheet" href="assets/design.css">
+<script src="assets/design.js" defer></script>
 </head>
 <body>
 
@@ -17197,23 +17218,26 @@ function renderCards() {
 function cardHTML(c) {
   // Все поля карточки — пользовательский ввод (в т.ч. от bar_editor):
   // экранируем как в остальных модулях (toolCardHTML, scriptCardHTML и т.д.).
-  const accent = `background:linear-gradient(90deg,${escAttr(c.accentFrom)},${escAttr(c.accentTo)})`;
+  // Цвет акцентной полосы — токен по разделу (accentFrom/accentTo из данных больше не выводятся inline)
+  const accentCls = 'card-accent card-accent--' + (['магазин','кухня','бар'].includes(c.location) ? c.location : 'shop');
   const img = c.image
-    ? `<div class="card-img-area"><img src="${escAttr(c.image)}" alt="${escAttr(c.name)}" loading="lazy"><div class="card-accent" style="${accent}"></div></div>`
-    : `<div class="card-img-area"><div class="card-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="card-accent" style="${accent}"></div></div>`;
+    ? `<div class="card-img-area"><img src="${escAttr(c.image)}" alt="${escAttr(c.name)}" loading="lazy" decoding="async"><div class="${accentCls}"></div></div>`
+    : `<div class="card-img-area is-empty" aria-hidden="true"><span class="card-img-mono">YAHYA</span><div class="${accentCls}"></div></div>`;
+  const badgeText = c.badge || c.type || '';
+  const badgeCls = /\d\s*(сом|com)/i.test(badgeText) ? 'card-badge is-price' : 'card-badge';
 
   const tags = (c.tasteTags||[]).map(t=>`<span class="taste-tag">${escHtml(t)}</span>`).join('');
   const occasions = (c.occasions||[]).map(o=>`<span class="occasion-tag">${escHtml(o.emoji)} ${escHtml(o.text)}</span>`).join('');
   const phrases = (c.phrases||[]).map(p=>`<li>${escHtml(p)}</li>`).join('');
   const faqs = (c.faq||[]).map(f=>`<div class="faq-item"><div class="faq-q">${escHtml(f.q)}</div><div class="faq-a">${escHtml(f.a)}</div></div>`).join('');
 
-  return `<div class="card-wrap" id="cw-${c.id}" onclick="flipCard('${c.id}',event)">
+  return `<div class="card-wrap" id="cw-${c.id}" role="button" tabindex="0" aria-label="${escAttr(c.name)}: скрипты для продавца" onclick="flipCard('${c.id}',event)">
   ${canEditCard(c) ? `<button class="card-edit-btn" onclick="openModal('${c.id}');event.stopPropagation()">✎</button>` : ''}
   <div class="card-inner">
     <div class="card-front">
       ${img}
       <div class="card-body">
-        <div class="card-badge">${escHtml(c.badge||c.type)}</div>
+        <div class="${badgeCls}">${escHtml(badgeText)}</div>
         <div class="card-name">${escHtml(c.name)}</div>
         <div class="card-type">${escHtml(c.type)}</div>
         ${c.chocolate ? `<div class="card-chocolate">${escHtml(c.chocolate)}</div>` : ''}
@@ -17247,6 +17271,8 @@ function cardHTML(c) {
 
 function flipCard(id, e) {
   if (e.target.closest('.card-edit-btn')) return;
+  // ≤768px: оборот карточки — шторка снизу (assets/design.js), 3D-переворот остаётся на десктопе
+  if (window.openCardSheet && window.matchMedia('(max-width:768px)').matches) { window.openCardSheet(id); return; }
   const w = document.getElementById('cw-'+id);
   if (w) w.classList.toggle('flipped');
 }

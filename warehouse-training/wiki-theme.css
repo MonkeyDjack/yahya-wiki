@@ -1,0 +1,40 @@
+/* «Склад ХОЗ» — приведение оформления к токенам вики (аудит 2026-10).
+   Только оформление: переопределяет переменные и пару правил, JS/JSX не затрагивает.
+   Значения = токены :root основного index.html (choco-750/850, cream, gold). */
+:root {
+  --app-bg: #402B1A;        /* = --bg-card вики */
+  --choc-900: #2E1E11;      /* = --color-choco-900 */
+  --choc-800: #402B1A;
+  --choc-700: #5A3E27;      /* = --color-choco-800 (карточки на панели) */
+  --choc-600: #6A4A2F;
+  --choc-500: #845D3E;
+  --line: rgba(197, 158, 95, 0.18);          /* = --border-subtle */
+  --line-strong: rgba(197, 158, 95, 0.32);   /* = --border-default */
+  --cream: #F8EDD5;         /* = --color-cream-100 */
+  --cream-dim: #F0DFC0;     /* = --color-cream-200 */
+  --cream-mute: #D9C49E;    /* = --color-cream-400 (4.7:1+) */
+  --gold: #C59E5F;
+  --gold-deep: #A9824A;
+  --bar: #E0C99B;           /* бейдж «Бар»: золото светлее */
+  --bar-bg: rgba(197, 158, 95, 0.18);
+  --mag: #B4D3A8;           /* бейдж «Магазин»: фисташковый текст */
+  --mag-bg: rgba(126, 168, 112, 0.18);
+  --oba: #F0DFC0;
+  --ok: #B4D3A8;
+  --warn: #E0C99B;
+  --add: #F3C2B5;
+  --shadow-wiki: 0 12px 36px rgba(30, 19, 10, 0.5);
+}
+body { background: var(--choc-600) !important; }               /* фон страницы вики (--color-choco-750) */
+#app { box-shadow: var(--shadow-wiki); }
+@media (min-width: 480px) { #app { border-radius: 16px; } }  /* шкала радиусов вики */
+@media (min-width: 900px) { #app { border-radius: 16px; } }
+.card { border-radius: 16px; }
+.h-screen { font-weight: 600; letter-spacing: .08em; }      /* голос бренда без 800-веса */
+.eyebrow { font-weight: 600; letter-spacing: .14em; }
+.badge.bar { color: var(--choc-900); background: var(--bar); }
+.badge.mag { color: var(--choc-900); background: var(--mag); }
+.badge.oba { color: var(--choc-900); background: var(--oba); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
