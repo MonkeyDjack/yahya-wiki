@@ -17088,24 +17088,148 @@ async function dbUpsertMany(table, rows) {
 // ════════════════════════════════════════════════
 // PAGE ROUTING
 // ════════════════════════════════════════════════
+// Адрес страницы = состояние: #раздел, а внутри обучения — #techniques/topic/1.3,
+// #techniques/quiz/module1, #techniques/dashboard, #techniques/user/<id>.
+// Переходы кладутся в историю (pushState), поэтому системная «Назад» на телефоне
+// возвращает на предыдущий экран, а не уводит с сайта.
+const PAGES = ['products','scripts','techniques','glossary','regulations','warehouse','profile'];
+let _routeApplying = false;
+
+function showPage(p) {
+  if (p === 'tools') p = 'products';           // старая вкладка «Инструменты» удалена
+  if (!PAGES.includes(p)) p = 'products';
+  document.querySelectorAll('.page-tab').forEach(t => {
+    const on = t.dataset.page === p;
+    t.classList.toggle('active', on);
+    if (on) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('.page').forEach(pg => pg.classList.toggle('active', pg.id === 'page-' + p));
+  currentPage = p;
+  if (p === 'warehouse') sizeWarehouseFrame();
+  if (p === 'profile') renderProfile();
+  const tab = document.querySelector(`.page-tab[data-page="${p}"]`);
+  const nav = tab && tab.parentElement;
+  if (nav && nav.scrollWidth > nav.clientWidth) {
+    nav.scrollLeft = tab.offsetLeft - (nav.clientWidth - tab.offsetWidth) / 2;
+  }
+}
+
+function techRouteHash() {
+  switch (currentTechView) {
+    case 'topic':       return currentTopicId ? '#techniques/topic/' + encodeURIComponent(currentTopicId) : '#techniques';
+    case 'quiz':
+    case 'quiz-result': return currentQuizId ? '#techniques/quiz/' + encodeURIComponent(currentQuizId) : '#techniques';
+    case 'dashboard':   return '#techniques/dashboard';
+    case 'user-detail': return currentDetailUserId ? '#techniques/user/' + encodeURIComponent(currentDetailUserId) : '#techniques/dashboard';
+    default:            return '#techniques';
+  }
+}
+function currentRouteHash() { return currentPage === 'techniques' ? techRouteHash() : '#' + currentPage; }
+
+// Записать текущее состояние в адресную строку. prev — откуда пришли (для кнопок «← Назад»).
+function pushRoute(replace = false) {
+  if (_routeApplying) return;
+  const h = currentRouteHash();
+  if (location.hash === h) return;
+  const prev = location.hash || '#products';
+  try { history[replace ? 'replaceState' : 'pushState']({ route: h, prev }, '', h); }
+  catch (e) { location.hash = h; }
+}
+
+function isQuizInProgress() {
+  return currentTechView === 'quiz' && Object.keys(currentQuizAnswers || {}).length > 0;
+}
+
+function applyRoute(rawHash) {
+  const hash = (rawHash || '').replace(/^#/, '');
+  if (hash.includes('=')) return;              // токены восстановления пароля Supabase — не маршрут
+  if ('#' + hash === currentRouteHash() && hash) return;
+  const seg = hash.split('/');
+  const page = seg[0] || 'products';
+  const kind = seg[1] || '';
+  const arg = seg[2] ? decodeURIComponent(seg.slice(2).join('/')) : '';
+
+  // Уход из начатого теста (кнопкой «Назад» или правкой адреса) — только с подтверждением
+  if (page === 'techniques' && isQuizInProgress() && !(kind === 'quiz' && arg === currentQuizId)) {
+    if (!confirm('Прервать тест? Ответы будут потеряны.')) {
+      const back = techRouteHash();
+      try { history.pushState({ route: back, prev: '#techniques' }, '', back); } catch (e) {}
+      return;
+    }
+    currentQuizAnswers = {};
+    currentQuizSet = null;
+  }
+
+  _routeApplying = true;
+  try {
+    showPage(page);
+    if (currentPage === 'techniques') {
+      if (kind === 'topic' && arg && TECHNIQUES_DATA.some(t => t.id === arg)) {
+        if (currentTechView !== 'topic' || currentTopicId !== arg) topicOpenedAt = Date.now();
+        currentTechView = 'topic';
+        currentTopicId = arg;
+        rememberLearningPlace(arg);
+      } else if (kind === 'quiz' && arg && (currentTechView === 'quiz' || currentTechView === 'quiz-result') && currentQuizId === arg) {
+        // остаёмся в том же тесте / результате
+      } else if (kind === 'dashboard' && isAdmin) {
+        currentTechView = 'dashboard';
+        currentDetailUserId = null;
+        if (!ALL_PROFILES.length) { openDashboard(); return; }
+      } else if (kind === 'user' && arg && isAdmin && ALL_PROFILES.some(p => p.id === arg)) {
+        currentTechView = 'user-detail';
+        currentDetailUserId = arg;
+      } else if (kind === 'user' && isAdmin) {
+        currentTechView = 'dashboard';
+        if (!ALL_PROFILES.length) { openDashboard(); return; }
+      } else {
+        currentTechView = 'modules';
+        currentTopicId = null;
+        currentQuizId = null;
+        currentDetailUserId = null;
+      }
+      renderTechniques();
+      window.scrollTo({ top: 0 });
+    }
+  } finally {
+    _routeApplying = false;
+  }
+  // Адрес, который не удалось применить как есть (например, тест по ссылке), — поправляем
+  if (location.hash && location.hash !== currentRouteHash()) pushRoute(true);
+}
+
+window.addEventListener('popstate', () => applyRoute(location.hash));
+window.addEventListener('hashchange', () => applyRoute(location.hash));
+window.addEventListener('beforeunload', e => {
+  if (isQuizInProgress()) { e.preventDefault(); e.returnValue = ''; }
+});
+
 document.querySelectorAll('.page-tab').forEach(btn => {
   btn.addEventListener('click', () => {
-    const p = btn.dataset.page;
-    document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
-    document.getElementById('page-' + p).classList.add('active');
-    currentPage = p;
-    location.hash = p;
-    if (p === 'warehouse') sizeWarehouseFrame();
-    if (p === 'profile') renderProfile();
-    if (p === 'scripts' && window._scriptSearchQuery) { window._scriptSearchQuery = ''; renderScripts(); }
+    showPage(btn.dataset.page);
+    pushRoute();
   });
 });
 
 function navigateTo(page) {
-  const tab = document.querySelector(`.page-tab[data-page="${page}"]`);
-  if (tab) tab.click();
+  showPage(page);
+  pushRoute();
+}
+
+// Кнопки «← К модулям» / «← К дашборду»: если пришли оттуда — шаг назад по истории
+// (чтобы не плодить записи), иначе — обычный переход.
+function techBack(target = 'modules') {
+  const want = target === 'dashboard' ? '#techniques/dashboard' : '#techniques';
+  if (history.state && history.state.prev === want) { history.back(); return; }
+  if (target === 'dashboard') openDashboard(); else backToModules();
+}
+
+// Последнее открытое место в обучении — для кнопки «Продолжить» в «Моём старте»
+const LEARNING_LS_KEY = 'yahya_last_learning_v1';
+function rememberLearningPlace(topicId) {
+  try { localStorage.setItem(LEARNING_LS_KEY, JSON.stringify({ topic: topicId, at: Date.now() })); } catch (e) {}
+}
+function lastLearningPlace() {
+  try { return JSON.parse(localStorage.getItem(LEARNING_LS_KEY) || 'null'); } catch (e) { return null; }
 }
 
 // Встроенное приложение «Склад ХОЗ»: ленивая загрузка src + подгон высоты iframe
@@ -17621,7 +17745,9 @@ function openTopic(id) {
   currentTopicId = id;
   currentTechView = 'topic';
   topicOpenedAt = Date.now();
+  rememberLearningPlace(id);
   renderTechniques();
+  pushRoute();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -17631,12 +17757,13 @@ function backToModules() {
   currentQuizId = null;
   currentDetailUserId = null;
   renderTechniques();
+  pushRoute();
 }
 
 function renderTopicView(root) {
   const t = TECHNIQUES_DATA.find(x => x.id === currentTopicId);
   if (!t) {
-    root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="backToModules()">← К модулям</button><p>Тема не найдена.</p></div>`;
+    root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="techBack()">← К модулям</button><p>Тема не найдена.</p></div>`;
     return;
   }
   const d = t.data;
@@ -17702,7 +17829,7 @@ function renderTopicView(root) {
   const nextId = getNextTopicId(t.id);
   const navBar = `
     <div class="tech-topic-nav">
-      <button class="btn nav-back" onclick="backToModules()">← К модулям</button>
+      <button class="btn nav-back" onclick="techBack()">← К модулям</button>
       ${nextId
         ? `<button class="tech-mark-done-btn nav-next" onclick="openTopic('${nextId}')">Следующая →</button>`
         : `<div style="font-size:13px;color:var(--text-dim);text-align:right;align-self:center">Последняя тема модуля</div>`}
@@ -17711,7 +17838,7 @@ function renderTopicView(root) {
 
   root.innerHTML = `
     <div class="tech-topic-view">
-      <button class="tech-back-btn" onclick="backToModules()">← К модулям</button>
+      <button class="tech-back-btn" onclick="techBack()">← К модулям</button>
       ${canEditContent() ? `<button class="btn admin-only" style="margin-left:10px" onclick="openTechniqueEditor('${t.id}')">✎ Редактировать</button>` : ''}
       ${body}
       ${markBar}
@@ -17798,13 +17925,14 @@ function startQuiz(num) {
   currentQuizAnswers = {};
   currentQuizSet = buildQuizSet(quiz);
   renderTechniques();
+  pushRoute();
   window.scrollTo({top:0});
 }
 
 function renderQuizView(root) {
   const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
   if (!quiz) {
-    root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="backToModules()">← К модулям</button><p>Тест не найден.</p></div>`;
+    root.innerHTML = `<div class="tech-topic-view"><button class="tech-back-btn" onclick="techBack()">← К модулям</button><p>Тест не найден.</p></div>`;
     return;
   }
   const d = quiz.data;
@@ -17883,7 +18011,7 @@ function cancelQuiz() {
   if (answered > 0 && !confirm('Прервать тест? Ответы будут потеряны.')) return;
   currentQuizAnswers = {};
   currentQuizSet = null;
-  backToModules();
+  techBack();
 }
 
 async function submitQuiz() {
@@ -17982,7 +18110,7 @@ function renderQuizResultView(root) {
 
   root.innerHTML = `
     <div class="tech-topic-view tech-quiz-result">
-      <button class="tech-back-btn" onclick="backToModules()">← К модулям</button>
+      <button class="tech-back-btn" onclick="techBack()">← К модулям</button>
       <div class="tech-result-card ${att.passed ? 'passed' : 'failed'}">
         <div class="tech-result-icon">${att.passed ? '🎉' : '🤔'}</div>
         <h1>${att.passed ? 'Сдано!' : 'Не сдано'}</h1>
@@ -19005,11 +19133,13 @@ const JOB_TITLES = ['Продавец-консультант','ПК универ
 async function openDashboard() {
   if (!isAdmin) { showToast('Только для админа'); return; }
   currentTechView = 'dashboard';
+  currentDetailUserId = null;
+  pushRoute();
   // Рендер сразу с loading-состоянием
   const root = document.getElementById('techniquesRoot');
   if (root) {
     root.innerHTML = `<div class="tech-modules"><div class="tech-userbar">
-      <button class="btn" onclick="backToModules()">← Назад</button>
+      <button class="btn" onclick="techBack()">← Назад</button>
       <div style="font-size:18px;font-weight:600;color:var(--text-heading);margin-left:8px">👥 Загрузка дашборда…</div>
     </div></div>`;
   }
@@ -19239,7 +19369,7 @@ function renderDashboardView(root) {
   root.innerHTML = `
     <div class="tech-modules">
       <div class="tech-userbar">
-        <button class="btn" onclick="backToModules()">← К модулям</button>
+        <button class="btn" onclick="techBack()">← К модулям</button>
         <div style="font-size:18px;font-weight:600;color:var(--text-heading);margin-left:14px">👥 Дашборд сотрудников</div>
         <div class="tech-userbar-spacer"></div>
         <button class="btn" onclick="openDashboard()" title="Обновить">↻ Обновить</button>
@@ -19346,6 +19476,7 @@ function openUserDetail(userId) {
   currentTechView = 'user-detail';
   userFeedLimit = 30;
   renderTechniques();
+  pushRoute();
   window.scrollTo({top:0});
 }
 
@@ -19394,7 +19525,7 @@ function renderUserDetailView(root) {
 
   root.innerHTML = `
     <div class="tech-topic-view">
-      <button class="tech-back-btn" onclick="openDashboard()">← К дашборду</button>
+      <button class="tech-back-btn" onclick="techBack('dashboard')">← К дашборду</button>
       <h1>${roleIcon(p.role)}${escHtml(p.full_name || '— без имени —')}</h1>
       <div class="tagline-big">${escHtml([p.job_title, p.branch].filter(Boolean).join(' · ') || 'филиал не указан')} · ${roleLabel(p.role)}</div>
       ${(() => {
@@ -21925,8 +22056,8 @@ async function init() {
   if (typeof renderTechniques === 'function') renderTechniques();
   if (typeof renderProfile === 'function') renderProfile();
 
-  const hash = location.hash.replace('#','');
-  if (['products','tools','techniques','glossary','scripts','regulations','warehouse','profile'].includes(hash)) navigateTo(hash);
+  const initialHash = location.hash;
+  applyRoute(initialHash);
 
   // restore session + load profile (isAdmin определяется через profile.role)
   try {
@@ -21937,6 +22068,8 @@ async function init() {
       renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
       if (typeof renderTechniques === 'function') renderTechniques();
       if (typeof renderProfile === 'function') renderProfile();
+      // Подмаршруты обучения (тема, дашборд) требуют профиля — применяем повторно после входа
+      if (initialHash.startsWith('#techniques/')) applyRoute(initialHash);
       sb.auth.refreshSession().catch(e => console.warn('refresh on init failed', e));
     }
   } catch(e) { console.warn('session check failed', e); }
