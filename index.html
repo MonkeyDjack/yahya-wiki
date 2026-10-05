@@ -665,6 +665,9 @@ fieldset.tech-quiz-question{min-width:0;}
 .my-start-ico{width:18px;flex-shrink:0;text-align:center;color:var(--accent);}
 .my-start-step.done .my-start-ico{color:var(--color-success);}
 .my-start-note{font-size:12px;color:var(--text-dim);font-weight:400;flex-basis:100%;padding-left:28px;}
+.offline-banner{position:relative;z-index:10;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:10px 16px;background:rgba(var(--rgb-danger),.22);border-bottom:1px solid var(--danger-border);color:var(--text-heading);font-size:13px;text-align:center;}
+.offline-banner[hidden]{display:none;}
+#headerLoginBtn[hidden],#headerUserBtn[hidden]{display:none;}
 /* Стоп-фразы — приоритетный визуальный блок */
 .stopphrases-banner{margin-bottom:12px;padding:12px 16px;background:rgba(var(--rgb-danger),.10);border:1px solid var(--danger-border);border-radius:10px;font-size:11px;color:var(--danger-text);letter-spacing:.5px;line-height:1.5;}
 /* Сетка карточек */
@@ -973,6 +976,8 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
   </div>
   <div class="header-right">
     <span class="api-badge" id="apiBadge">Live</span>
+    <button class="btn primary" id="headerLoginBtn" onclick="openPwdModal()">Войти</button>
+    <button class="btn" id="headerUserBtn" onclick="navigateTo('profile')" hidden></button>
     <div class="admin-badge"><div class="admin-dot"></div>Редактор</div>
     <button class="btn admin-only" onclick="exportData()">↓ Экспорт</button>
     <label class="btn admin-only" style="cursor:pointer">↑ Импорт<input type="file" accept=".json" onchange="importData(event)" style="display:none"></label>
@@ -1004,6 +1009,11 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
     <span class="tab-icon">👤</span> Профиль
   </button>
 </nav>
+
+<div class="offline-banner" id="offlineBanner" role="status" hidden>
+  <span id="offlineBannerText">Нет связи — показана сохранённая копия</span>
+  <button type="button" class="btn" onclick="retrySync()">Повторить</button>
+</div>
 
 <!-- ══════════════ PRODUCTS PAGE ══════════════ -->
 <div id="page-products" class="page active">
@@ -1172,15 +1182,17 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
 <!-- LOGIN MODAL -->
 <div class="pwd-overlay" id="pwdOverlay" onclick="if(event.target===this)closePwdModal()">
   <div class="pwd-modal">
-    <h2>YAHYA</h2>
-    <p>Вход для редакторов</p>
-    <input class="pwd-input" type="email" id="pwdEmail" placeholder="email" autocomplete="username"
+    <h2 id="pwdTitle">Вход</h2>
+    <p>Логин и пароль от твоего аккаунта YAHYA</p>
+    <label for="pwdEmail" class="sr-only">Логин (email)</label>
+    <input class="pwd-input" type="email" id="pwdEmail" placeholder="логин (email)" autocomplete="username"
       style="letter-spacing:1px;font-size:14px;text-align:left;padding:12px 14px"
       onkeydown="if(event.key==='Enter')document.getElementById('pwdInput').focus();if(event.key==='Escape')closePwdModal()">
+    <label for="pwdInput" class="sr-only">Пароль</label>
     <input class="pwd-input" type="password" id="pwdInput" placeholder="пароль" autocomplete="current-password"
       style="letter-spacing:3px;font-size:15px;text-align:left;padding:12px 14px;margin-top:8px"
       onkeydown="if(event.key==='Enter')checkPwd();if(event.key==='Escape')closePwdModal()">
-    <div class="pwd-error" id="pwdError" style="margin-top:10px"></div>
+    <div class="pwd-error" id="pwdError" style="margin-top:10px" role="alert"></div>
     <button class="btn-pwd-enter" onclick="checkPwd()">Войти</button>
     <button class="btn-pwd-cancel" onclick="closePwdModal()">Отмена</button>
   </div>
@@ -16722,6 +16734,29 @@ function fabAction() {
 // ════════════════════════════════════════════════
 // SUPABASE DATA LOADING
 // ════════════════════════════════════════════════
+const LAST_SYNC_LS_KEY = 'yahya_last_sync_v1';
+function setOfflineBanner(on, err) {
+  const el = document.getElementById('offlineBanner');
+  if (!el) return;
+  el.hidden = !on;
+  if (!on) return;
+  let when = '';
+  try { when = localStorage.getItem(LAST_SYNC_LS_KEY) || ''; } catch (e) {}
+  const copy = when
+    ? `сохранённая копия от ${new Date(when).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}`
+    : 'встроенная копия (может быть устаревшей)';
+  document.getElementById('offlineBannerText').textContent = isNetworkError(err)
+    ? `Нет связи — показана ${copy}`
+    : `База сейчас недоступна — показана ${copy}`;
+}
+function retrySync() {
+  showToast('Пробую подключиться…');
+  loadFromSupabase();
+}
+window.addEventListener('online', () => {
+  if (!document.getElementById('offlineBanner')?.hidden) loadFromSupabase();
+});
+
 async function loadFromSupabase() {
   const bar = document.getElementById('loadingBar');
   try {
@@ -16810,9 +16845,11 @@ async function loadFromSupabase() {
     renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
     if (typeof renderTechniques === 'function') renderTechniques();
     document.getElementById('apiBadge').classList.add('visible');
+    try { localStorage.setItem(LAST_SYNC_LS_KEY, new Date().toISOString()); } catch (e) {}
+    setOfflineBanner(false);
   } catch(e) {
     console.error('Supabase load failed', e);
-    showToast('Нет связи с базой — показаны сохранённые данные');
+    setOfflineBanner(true, e);
   } finally {
     bar.classList.remove('active');
   }
@@ -17115,22 +17152,88 @@ function isAuthExpiredError(err) {
   const code = err.code || '';
   return code === 'PGRST301' || msg.includes('jwt expired') || msg.includes('jwt is expired') || msg.includes('invalid jwt');
 }
+// Сеть пропала / запрос не дошёл — это не «сессия недействительна»
+function isNetworkError(e) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true;
+  if (!e) return false;
+  const m = String(e.message || e || '').toLowerCase();
+  return e.name === 'AuthRetryableFetchError' || e.status === 0 ||
+    m.includes('failed to fetch') || m.includes('networkerror') || m.includes('load failed') ||
+    m.includes('network request failed') || m.includes('fetch failed');
+}
+// Русский текст ошибки для людей. Исходное сообщение — в консоль (и в скобках админу).
+function humanError(e) {
+  if (!e) return 'неизвестная ошибка';
+  const raw = String(e.message || e.error_description || e || '');
+  const code = String(e.code || '');
+  const m = raw.toLowerCase();
+  console.warn('error:', e);
+  let text;
+  if (isNetworkError(e)) text = 'нет связи с интернетом — проверь сеть и повтори';
+  else if (isAuthExpiredError(e) || m.includes('refresh token') || m.includes('session')) text = 'сессия истекла — войди заново';
+  else if (m.includes('invalid login credentials')) text = 'неверный логин или пароль';
+  else if (code === '42501' || m.includes('row-level security') || m.includes('permission denied')) text = 'нет прав на это действие';
+  else if (code === '23505' || m.includes('duplicate key')) text = 'такая запись уже есть';
+  else if (m.includes('already registered') || m.includes('already been registered')) text = 'такой логин уже занят';
+  else if (m.includes('password') && (m.includes('at least') || m.includes('short'))) text = 'пароль слишком короткий (нужно от 6 символов)';
+  else if (code === 'PGRST205' || code === 'PGRST202' || code === '42P01' || m.includes('does not exist') || m.includes('schema cache')) text = 'в базе не хватает таблицы или функции — скажи администратору';
+  else if (m.includes('timeout') || m.includes('timed out')) text = 'база не ответила вовремя — попробуй ещё раз';
+  else text = 'не удалось выполнить действие, попробуй ещё раз';
+  return (isAdmin && raw && !isNetworkError(e)) ? `${text} (${raw})` : text;
+}
+
 async function handleAuthExpired() {
+  let refreshErr = null;
   try {
     const { data, error } = await sb.auth.refreshSession();
     if (!error && data?.session) return true;
-  } catch(e) { /* ignore */ }
-  // refresh failed → выходим и показываем модалку логина
+    refreshErr = error;
+  } catch(e) { refreshErr = e; }
+  // Нет сети — токен мог быть и живым: не выходим, просто просим повторить
+  if (isNetworkError(refreshErr)) {
+    showToast('Нет связи — изменения не сохранены. Повтори, когда появится интернет', 'error');
+    return false;
+  }
+  // Токен действительно недействителен → выходим
+  const wasEditor = isAdmin || isBarEditor || isContentEditor;
   isAdmin = false;
   isBarEditor = false;
   isContentEditor = false;
+  USER_PROFILE = null;
   document.body.classList.remove('is-admin');
   document.body.classList.remove('is-bar-editor');
   document.body.classList.remove('is-content-editor');
   try { await sb.auth.signOut(); } catch(e) {}
-  showToast('Сессия истекла — войдите заново');
-  openPwdModal();
+  rerenderAll();
+  if (wasEditor) {
+    showToast('Сессия истекла — войди заново', 'error');
+    openPwdModal();
+  } else {
+    // Продавцу не показываем «Вход для редакторов» — вход в профиле
+    showToast('Сессия истекла — войди заново в «Профиле»', 'error');
+  }
   return false;
+}
+
+// Перерисовать всё, что зависит от входа/роли
+function rerenderAll() {
+  renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
+  if (typeof renderTechniques === 'function') renderTechniques();
+  if (typeof renderProfile === 'function') renderProfile();
+  updateHeaderAuth();
+}
+function updateHeaderAuth() {
+  const login = document.getElementById('headerLoginBtn');
+  const user = document.getElementById('headerUserBtn');
+  if (!login || !user) return;
+  const logged = !!USER_PROFILE;
+  login.hidden = logged;
+  user.hidden = !logged;
+  if (logged) {
+    const name = shortName(USER_PROFILE.full_name || '') || 'Профиль';
+    user.textContent = '👤 ' + name;
+    user.setAttribute('aria-label', 'Мой профиль: ' + (USER_PROFILE.full_name || ''));
+  }
 }
 async function dbWrite(op, errLabel) {
   let { error } = await op();
@@ -17139,7 +17242,7 @@ async function dbWrite(op, errLabel) {
       ({ error } = await op());
     }
   }
-  if (error) { showToast(errLabel + ': ' + error.message); return false; }
+  if (error) { showToast(errLabel + ': ' + humanError(error), 'error'); return false; }
   return true;
 }
 async function dbUpsert(table, id, data) {
@@ -17778,7 +17881,7 @@ function renderTechniques() {
         </div>
         <div class="err" id="techLoginErr"></div>
         <button class="btn-save" onclick="techDoLogin()" style="width:100%">Войти</button>
-        <p style="margin-top:18px;font-size:12px">Нет логина? Попроси у владельца — аккаунты создаются вручную.</p>
+        <p style="margin-top:18px;font-size:12px">Нет логина? Попроси у руководителя филиала.</p>
       </div>
     `;
     return;
@@ -17936,17 +18039,16 @@ async function techDoLogin() {
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
     if (error) {
-      err.textContent = 'Неверный логин или пароль';
+      err.textContent = isNetworkError(error) ? 'Нет связи с интернетом — проверь сеть' : 'Неверный логин или пароль';
       return;
     }
     await loadProfileAndProgress();
+    await reloadQuizzesFromDb();
     logActivity('login');
-    renderTechniques();
-    renderProfile();
-    renderCards(); renderGlossary(); renderScripts(); renderRegulations();
+    rerenderAll();
     showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
   } catch(e) {
-    err.textContent = 'Ошибка: ' + (e.message||e);
+    err.textContent = 'Ошибка: ' + humanError(e);
   }
 }
 
@@ -18966,7 +19068,7 @@ async function downloadBadge() {
     }, 'image/png');
   } catch(e) {
     console.error('badge render failed', e);
-    showToast('Ошибка генерации QR: ' + (e.message || e));
+    showToast('Ошибка генерации QR: ' + humanError(e));
   }
 }
 
@@ -19405,16 +19507,14 @@ async function profileDoLogin() {
   err.textContent = 'Проверка…';
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-    if (error) { err.textContent = 'Неверный логин или пароль'; return; }
+    if (error) { err.textContent = isNetworkError(error) ? 'Нет связи с интернетом — проверь сеть' : 'Неверный логин или пароль'; return; }
     await loadProfileAndProgress();
     await reloadQuizzesFromDb();
     logActivity('login');
-    renderProfile();
-    renderTechniques();
-    renderCards(); renderGlossary(); renderScripts(); renderRegulations();
+    rerenderAll();
     showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
   } catch(e) {
-    err.textContent = 'Ошибка входа: ' + (e.message || e);
+    err.textContent = 'Ошибка входа: ' + humanError(e);
   }
 }
 
@@ -19471,7 +19571,7 @@ async function openDashboard() {
     renderTechniques();
   } catch(e) {
     console.error('dashboard load failed', e);
-    showToast('Ошибка загрузки дашборда: ' + (e.message||e));
+    showToast('Ошибка загрузки дашборда: ' + humanError(e));
   }
 }
 
@@ -19990,7 +20090,7 @@ async function saveProfile() {
     if (eErr) {
       showToast(rpcMigrationError(eErr)
         ? 'Профиль сохранён, но логин не изменён — запусти admin_users_migration.sql'
-        : 'Профиль сохранён, но логин не изменён: ' + eErr.message);
+        : 'Профиль сохранён, но логин не изменён: ' + humanError(eErr));
     } else if (ALL_AUTH_USERS[id]) {
       ALL_AUTH_USERS[id].email = newEmail;
     }
@@ -20022,7 +20122,7 @@ async function resetUserProgress(userId) {
     sb.from('quiz_attempts').delete().eq('user_id', userId)
   ]);
   if (r1.error || r2.error) {
-    showToast('Ошибка сброса: ' + (r1.error?.message || r2.error?.message || ''));
+    showToast('Ошибка сброса: ' + humanError(r1.error || r2.error));
     return;
   }
   ALL_PROGRESS = ALL_PROGRESS.filter(p => p.user_id !== userId);
@@ -20118,7 +20218,7 @@ async function saveAdminPassword() {
   if (error) {
     showToast(rpcMigrationError(error)
       ? 'Функция не найдена — запусти admin_users_migration.sql в Supabase SQL Editor'
-      : 'Ошибка: ' + error.message);
+      : 'Ошибка: ' + humanError(error));
     return;
   }
   const login = ALL_AUTH_USERS[userId]?.email || '';
@@ -20162,7 +20262,7 @@ async function adminDeleteUser(userId) {
   if (error) {
     showToast(rpcMigrationError(error)
       ? 'Функция не найдена — запусти admin_users_migration.sql в Supabase SQL Editor'
-      : 'Ошибка: ' + error.message);
+      : 'Ошибка: ' + humanError(error));
     return;
   }
   ALL_PROFILES   = ALL_PROFILES.filter(x => x.id !== userId);
@@ -20179,7 +20279,7 @@ async function adminResetScriptAck(userId, section) {
   if (!confirm('Снять отметку об ознакомлении со скриптами?')) return;
   const { error } = await sb.from('script_ack').delete()
     .eq('user_id', userId).eq('section', section);
-  if (error) { showToast('Ошибка: ' + error.message); return; }
+  if (error) { showToast('Ошибка: ' + humanError(error)); return; }
   ALL_SCRIPT_ACK = ALL_SCRIPT_ACK.filter(a => !(a.user_id === userId && a.section === section));
   if (USER_PROFILE && USER_PROFILE.id === userId) {
     USER_SCRIPT_ACK = USER_SCRIPT_ACK.filter(a => a.section !== section);
@@ -20299,7 +20399,7 @@ async function saveNewUser() {
     if (msg.includes('registered') || msg.includes('already')) {
       showToast('Такой логин уже занят');
     } else {
-      showToast('Ошибка: ' + (e.message || e));
+      showToast('Ошибка: ' + humanError(e));
     }
     return;
   }
@@ -20325,7 +20425,7 @@ async function saveNewUser() {
   const { error: pErr } = await sb.from('profiles').update(updates).eq('id', newUserId);
   if (pErr) {
     console.warn('Profile update failed:', pErr);
-    showToast(`Аккаунт создан, но профиль не обновился: ${pErr.message}`);
+    showToast(`Аккаунт создан, но профиль не обновился: ${humanError(pErr)}`);
   }
 
   closeModal();
@@ -20369,7 +20469,7 @@ async function saveOwnPassword() {
     closeModal();
     showToast('Пароль обновлён ✓');
   } catch(e) {
-    showToast('Ошибка: ' + (e.message || e));
+    showToast('Ошибка: ' + humanError(e));
   }
 }
 
@@ -20574,7 +20674,7 @@ async function dbFetchByCategory(table, catField, catValue, locValue) {
   let q = sb.from(table).select('id,data').eq('data->>' + catField, catValue);
   if (table === 'cards' && locValue) q = q.eq('data->>location', locValue);
   const { data, error } = await q;
-  if (error) { showToast('Не удалось перечитать категорию: ' + error.message); return null; }
+  if (error) { showToast('Не удалось перечитать категорию: ' + humanError(error)); return null; }
   return data || [];
 }
 
@@ -21104,7 +21204,7 @@ async function toggleScriptAck(section) {
   if (existing) {
     const { error } = await sb.from('script_ack').delete()
       .eq('user_id', USER_PROFILE.id).eq('section', section);
-    if (error) { showToast('Ошибка: ' + error.message); return; }
+    if (error) { showToast('Ошибка: ' + humanError(error)); return; }
     USER_SCRIPT_ACK = USER_SCRIPT_ACK.filter(a => a.section !== section);
     showToast('Отметка снята');
   } else {
@@ -21116,7 +21216,7 @@ async function toggleScriptAck(section) {
         scriptAckTableOk = false;
         showToast(isAdmin ? 'Запусти script_ack_migration.sql в Supabase SQL Editor' : 'Раздел ещё не настроен — скажи руководителю');
       } else {
-        showToast('Ошибка: ' + error.message);
+        showToast('Ошибка: ' + humanError(error));
       }
       return;
     }
@@ -22303,7 +22403,8 @@ async function deleteCard() {
 // ADMIN AUTH (Supabase)
 // ════════════════════════════════════════════════
 function openPwdModal() {
-  if (isAdmin || isBarEditor || isContentEditor) return;
+  // Уже вошёл — не показываем окно входа, ведём в профиль
+  if (USER_PROFILE || isAdmin || isBarEditor || isContentEditor) { navigateTo('profile'); return; }
   document.getElementById('pwdOverlay').classList.add('active');
   document.getElementById('pwdInput').value = '';
   document.getElementById('pwdError').textContent = '';
@@ -22320,7 +22421,7 @@ async function checkPwd() {
   try {
     const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) {
-      errEl.textContent = 'Неверный email или пароль';
+      errEl.textContent = isNetworkError(error) ? 'Нет связи с интернетом — проверь сеть' : 'Неверный логин или пароль';
       document.getElementById('pwdInput').value = '';
       return;
     }
@@ -22329,8 +22430,7 @@ async function checkPwd() {
     await reloadQuizzesFromDb();
     logActivity('login');
     closePwdModal();
-    renderCards(); renderGlossary(); renderTools(); renderRegulations();
-    if (typeof renderTechniques === 'function') renderTechniques();
+    rerenderAll();
     if (USER_PROFILE && USER_PROFILE.role === 'admin') {
       showToast('Режим редактора активирован');
     } else if (USER_PROFILE && USER_PROFILE.role === 'bar_editor') {
@@ -22356,7 +22456,7 @@ async function checkPwd() {
       await seedQuizzesOnly();
     }
   } catch(e) {
-    errEl.textContent = 'Ошибка: ' + (e.message||e);
+    errEl.textContent = 'Ошибка: ' + humanError(e);
   }
 }
 
@@ -22373,9 +22473,8 @@ async function exitAdmin() {
   document.body.classList.remove('is-admin');
   document.body.classList.remove('is-bar-editor');
   document.body.classList.remove('is-content-editor');
-  renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
-  if (typeof renderTechniques === 'function') renderTechniques();
-  if (typeof renderProfile === 'function') renderProfile();
+  currentTechView = 'modules';
+  rerenderAll();
   showToast('Вышли');
 }
 
@@ -22538,13 +22637,12 @@ async function init() {
         document.body.classList.remove('is-admin');
         document.body.classList.remove('is-bar-editor');
         document.body.classList.remove('is-content-editor');
-        renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
-        if (typeof renderTechniques === 'function') renderTechniques();
-        if (typeof renderProfile === 'function') renderProfile();
+        rerenderAll();
       }
     }
   });
 
+  updateHeaderAuth();
   // инициализация блока принципов (сворачивание из localStorage)
   initPrinciples();
 
