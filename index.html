@@ -637,6 +637,12 @@ body.is-admin .script-edit-btn, body.is-content-editor .script-edit-btn{display:
 .scripts-quick-btn:hover{border-color:var(--accent);color:var(--text-accent-soft);}
 .link-btn{background:none;border:none;padding:0;color:var(--text-accent-soft);font:inherit;text-decoration:underline;cursor:pointer;}
 button.scripts-principles-header{width:100%;border:0;background:none;font:inherit;color:inherit;text-align:left;}
+.products-search-wrap{padding:12px 40px 0;}
+.products-search{width:100%;max-width:480px;}
+.search-summary{grid-column:1/-1;font-size:14px;color:var(--text-heading);padding:4px 2px;}
+.card-archived{display:inline-block;margin:0 6px 10px 0;padding:3px 10px;border-radius:20px;font-size:11px;background:rgba(var(--rgb-danger),.18);color:var(--text-heading);border:1px dashed var(--danger-border);}
+.card-location{font-size:12px;color:var(--text-accent-soft);margin-bottom:8px;}
+@media(max-width:768px){.products-search-wrap{padding:10px 14px 0;}}
 /* Стоп-фразы — приоритетный визуальный блок */
 .stopphrases-banner{margin-bottom:12px;padding:12px 16px;background:rgba(var(--rgb-danger),.10);border:1px solid var(--danger-border);border-radius:10px;font-size:11px;color:var(--danger-text);letter-spacing:.5px;line-height:1.5;}
 /* Сетка карточек */
@@ -984,6 +990,13 @@ body.is-admin .rule-edit-btn, body.is-content-editor .rule-edit-btn{display:flex
       <button class="section-tab" data-section="бар">Бар <span class="section-count" id="cnt-бар">0</span></button>
       <div class="nav-spacer"></div>
       <button class="btn" style="margin-right:8px" onclick="window.print()">⎙ Печать</button>
+    </div>
+    <!-- Поиск по всем карточкам (все локации). Поле статичное — не перерисовывается. -->
+    <div class="products-search-wrap" role="search">
+      <label for="productSearch" class="sr-only">Поиск по продуктам</label>
+      <input class="glossary-search products-search" type="search" id="productSearch"
+        placeholder="Поиск: название, вкус, ингредиент…" autocomplete="off" enterkeyhint="search"
+        oninput="handleProductSearch(this.value)">
     </div>
     <div class="nav-categories" id="navCategories"></div>
   </div>
@@ -17301,7 +17314,7 @@ function saveCards() { localStorage.setItem('yahya_cards_v4', JSON.stringify(CAR
 // extra — явная категория редактируемой карточки, чтобы её option всегда была в селекте.
 function getCardCategories(loc, extra = null) {
   const s = new Set();
-  CARDS.filter(c => c.location === loc && c.category).forEach(c => s.add(c.category));
+  visibleCards().filter(c => c.location === loc && c.category).forEach(c => s.add(c.category));
   if (canEditContent() || isBarEditor) (NAV[loc]?.categories || []).forEach(c => s.add(c));
   if (extra) s.add(extra);
   return s;
@@ -17310,27 +17323,72 @@ function getCardCategoriesSorted(loc, extra = null) {
   return [...getCardCategories(loc, extra)].sort((a,b)=>a.localeCompare(b,'ru'));
 }
 
+// Архивные карточки (data.archived = true, например сезонные) продавцам не показываем;
+// админ и редакторы видят их с пометкой «Архив».
+function canSeeArchived() { return canEditContent() || isBarEditor; }
+function visibleCards() {
+  return canSeeArchived() ? CARDS : CARDS.filter(c => !c.archived);
+}
+
+// Перевёрнутые карточки — переживают перерисовку (подгрузка из БД, фильтры)
+const FLIPPED_CARDS = new Set();
+let cardsLoading = false;      // true — каталог ещё грузится (нет кэша, ждём базу)
+
+let productSearchQuery = '';
+let _productSearchTimer = null;
+function handleProductSearch(val) {
+  clearTimeout(_productSearchTimer);
+  _productSearchTimer = setTimeout(() => { productSearchQuery = val; renderCards(); }, 150);
+}
+function resetProductSearch() {
+  productSearchQuery = '';
+  const inp = document.getElementById('productSearch');
+  if (inp) { inp.value = ''; inp.focus(); }
+  renderCards();
+}
+function cardSearchText(c) {
+  return [c.name, c.type, c.category, c.subcategory, c.badge, c.chocolate, c.description,
+    ...(c.tasteTags || []),
+    ...(c.faq || []).map(f => (f.q || '') + ' ' + (f.a || ''))].join(' ');
+}
+const LOCATION_LABELS = { 'магазин': 'Магазин', 'кухня': 'Кухня', 'бар': 'Бар' };
+
 function renderCards() {
+  const all = visibleCards();
   const counts = {};
   ['магазин','кухня','бар'].forEach(loc => {
-    counts[loc] = CARDS.filter(c => c.location === loc).length;
+    counts[loc] = all.filter(c => c.location === loc).length;
     const el = document.getElementById('cnt-'+loc);
     if (el) el.textContent = counts[loc] || 0;
   });
 
-  const sect = currentSection === 'all' ? null : currentSection;
-  const filtered = sect ? CARDS.filter(c => c.location === sect) : CARDS;
-  const cats = sect ? getCardCategories(sect) : new Set(filtered.map(c => c.category).filter(Boolean));
+  const grid = document.getElementById('grid');
   const navCat = document.getElementById('navCategories');
+  const terms = scriptSearchTerms(productSearchQuery);
+
+  // Режим поиска: по всем локациям, без фильтра категорий
+  if (terms.length) {
+    navCat.classList.add('hidden');
+    const found = all.filter(c => matchesTerms(cardSearchText(c), terms));
+    const head = `<div class="search-summary" role="status">${found.length
+      ? `Найдено: ${found.length} — по всем разделам (Магазин, Кухня, Бар). <button type="button" class="link-btn" onclick="resetProductSearch()">Сбросить</button>`
+      : `Ничего не найдено по запросу «${escHtml(productSearchQuery.trim())}». <button type="button" class="link-btn" onclick="resetProductSearch()">Сбросить поиск</button>`}</div>`;
+    grid.innerHTML = head + found.map((c, i) => cardHTML(c, i, true)).join('');
+    return;
+  }
+
+  const sect = currentSection === 'all' ? null : currentSection;
+  const filtered = sect ? all.filter(c => c.location === sect) : all;
+  const cats = sect ? getCardCategories(sect) : new Set(filtered.map(c => c.category).filter(Boolean));
   // Управление категориями — админу и редактору. Старший барист не трогает структуру.
   const catMgrBtn = canEditContent() && sect ? `<button class="btn admin-only" style="margin-left:auto" onclick="openCatManager('card','${sect}')">⚙ Категории</button>` : '';
   if (cats.size > 0 || canEditContent()) {
     navCat.classList.remove('hidden');
-    navCat.innerHTML = '<button class="cat-tab'+(currentCat==='Все'?' active':'')+'" onclick="setCat(\'Все\',this)">Все</button>' +
+    navCat.innerHTML = '<button class="cat-tab'+(currentCat==='Все'?' active':'')+'" aria-pressed="'+(currentCat==='Все')+'" onclick="setCat(\'Все\',this)">Все</button>' +
       [...cats].sort().map(c => {
         // Категория — пользовательский текст: экранируем и для JS-строки в onclick, и для HTML
         const cjs = String(c).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        return `<button class="cat-tab${currentCat===c?' active':''}" onclick="setCat('${escAttr(cjs)}',this)">${escHtml(c)}</button>`;
+        return `<button class="cat-tab${currentCat===c?' active':''}" aria-pressed="${currentCat===c}" onclick="setCat('${escAttr(cjs)}',this)">${escHtml(c)}</button>`;
       }).join('') + catMgrBtn;
   } else {
     navCat.classList.add('hidden');
@@ -17338,19 +17396,20 @@ function renderCards() {
 
   // «+ Добавить карточку»: админу и редактору — везде; бар-редактору — только в секции «бар».
   const canAdd = canEditContent() || (isBarEditor && sect === 'бар');
-  const grid = document.getElementById('grid');
   const show = filtered.filter(c => currentCat === 'Все' || c.category === currentCat);
-  grid.innerHTML = show.length === 0 ? '<div class="empty-state">Нет карточек в этом разделе</div>' :
-    show.map(c => cardHTML(c)).join('') +
-    (canAdd ? `<div class="card-add add-tile" onclick="openModal(null)"><div class="plus">+</div><p>Добавить карточку</p></div>` : '');
+  grid.innerHTML = show.length === 0
+    ? `<div class="empty-state">${cardsLoading ? 'Загружаю каталог…' : 'Нет карточек в этом разделе'}</div>` +
+      (canAdd ? `<div class="card-add add-tile" onclick="openModal(null)"><div class="plus">+</div><p>Добавить карточку</p></div>` : '')
+    : show.map((c, i) => cardHTML(c, i)).join('') +
+      (canAdd ? `<div class="card-add add-tile" onclick="openModal(null)"><div class="plus">+</div><p>Добавить карточку</p></div>` : '');
 }
 
-function cardHTML(c) {
+function cardHTML(c, idx = 99, showLocation = false) {
   // Все поля карточки — пользовательский ввод (в т.ч. от bar_editor):
   // экранируем как в остальных модулях (toolCardHTML, scriptCardHTML и т.д.).
   const accent = `background:linear-gradient(90deg,${escAttr(c.accentFrom)},${escAttr(c.accentTo)})`;
   const img = c.image
-    ? `<div class="card-img-area"><img src="${escAttr(c.image)}" alt="${escAttr(c.name)}" loading="lazy"><div class="card-accent" style="${accent}"></div></div>`
+    ? `<div class="card-img-area"><img src="${escAttr(c.image)}" alt="${escAttr(c.name)}" width="600" height="400" decoding="async" ${idx < 2 ? 'fetchpriority="high"' : 'loading="lazy"'}><div class="card-accent" style="${accent}"></div></div>`
     : `<div class="card-img-area"><div class="card-img-placeholder"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div class="card-accent" style="${accent}"></div></div>`;
 
   const tags = (c.tasteTags||[]).map(t=>`<span class="taste-tag">${escHtml(t)}</span>`).join('');
@@ -17358,12 +17417,17 @@ function cardHTML(c) {
   const phrases = (c.phrases||[]).map(p=>`<li>${escHtml(p)}</li>`).join('');
   const faqs = (c.faq||[]).map(f=>`<div class="faq-item"><div class="faq-q">${escHtml(f.q)}</div><div class="faq-a">${escHtml(f.a)}</div></div>`).join('');
 
-  return `<div class="card-wrap" id="cw-${c.id}" onclick="flipCard('${c.id}',event)">
-  ${canEditCard(c) ? `<button class="card-edit-btn" onclick="openModal('${c.id}');event.stopPropagation()">✎</button>` : ''}
+  const flipped = FLIPPED_CARDS.has(c.id);
+  return `<div class="card-wrap${flipped ? ' flipped' : ''}" id="cw-${escAttr(c.id)}" data-id="${escAttr(c.id)}" role="button" tabindex="0"
+    aria-expanded="${flipped}" aria-label="${escAttr(c.name)}: ${flipped ? 'скрыть подсказки продавцу' : 'показать подсказки продавцу'}"
+    onclick="flipCard(this.dataset.id,event)" onkeydown="cardKeydown(event)">
+  ${canEditCard(c) ? `<button class="card-edit-btn" onclick="openModal(this.closest('.card-wrap').dataset.id);event.stopPropagation()" aria-label="Редактировать карточку">✎</button>` : ''}
   <div class="card-inner">
-    <div class="card-front">
+    <div class="card-front"${flipped ? ' aria-hidden="true" inert' : ''}>
       ${img}
       <div class="card-body">
+        ${c.archived ? `<div class="card-archived">Архив — продавцы не видят</div>` : ''}
+        ${showLocation ? `<div class="card-location">${escHtml(LOCATION_LABELS[c.location] || c.location || '')}${c.category ? ' · ' + escHtml(c.category) : ''}</div>` : ''}
         <div class="card-badge">${escHtml(c.badge||c.type)}</div>
         <div class="card-name">${escHtml(c.name)}</div>
         <div class="card-type">${escHtml(c.type)}</div>
@@ -17377,7 +17441,7 @@ function cardHTML(c) {
         <div class="flip-icon">↻</div>
       </div>
     </div>
-    <div class="card-back">
+    <div class="card-back"${flipped ? '' : ' aria-hidden="true" inert'}>
       <div class="back-header">
         <div class="back-name">${escHtml(c.name)}</div>
         <div class="back-label">Для продавца</div>
@@ -17397,9 +17461,31 @@ function cardHTML(c) {
 }
 
 function flipCard(id, e) {
-  if (e.target.closest('.card-edit-btn')) return;
-  const w = document.getElementById('cw-'+id);
-  if (w) w.classList.toggle('flipped');
+  if (e && e.target.closest('.card-edit-btn')) return;
+  const w = [...document.querySelectorAll('.card-wrap')].find(x => x.dataset.id === id);
+  if (!w) return;
+  const on = w.classList.toggle('flipped');
+  if (on) FLIPPED_CARDS.add(id); else FLIPPED_CARDS.delete(id);
+  w.setAttribute('aria-expanded', String(on));
+  const name = w.querySelector('.card-name')?.textContent || '';
+  w.setAttribute('aria-label', `${name}: ${on ? 'скрыть подсказки продавцу' : 'показать подсказки продавцу'}`);
+  const front = w.querySelector('.card-front'), back = w.querySelector('.card-back');
+  [[front, on], [back, !on]].forEach(([el, hide]) => {
+    if (!el) return;
+    if (hide) { el.setAttribute('aria-hidden', 'true'); el.setAttribute('inert', ''); }
+    else { el.removeAttribute('aria-hidden'); el.removeAttribute('inert'); }
+  });
+  // Карточка выше экрана: после переворота начало оборота оказывалось выше видимой
+  // области — подтягиваем карточку к верху экрана
+  const r = w.getBoundingClientRect();
+  if (r.top < 0) {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    w.scrollIntoView({ block: 'start', behavior: reduce ? 'auto' : 'smooth' });
+  }
+}
+function cardKeydown(e) {
+  if (e.target !== e.currentTarget) return;           // Enter на кнопке ✎ — не переворачиваем
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flipCard(e.currentTarget.dataset.id, e); }
 }
 
 document.querySelectorAll('.section-tab').forEach(btn => {
@@ -17408,6 +17494,7 @@ document.querySelectorAll('.section-tab').forEach(btn => {
     btn.classList.add('active');
     currentSection = btn.dataset.section;
     currentCat = 'Все';
+    if (productSearchQuery) { productSearchQuery = ''; const i = document.getElementById('productSearch'); if (i) i.value = ''; }
     renderCards();
   });
 });
@@ -21829,7 +21916,7 @@ function updateCatSelect(loc) {
 }
 
 // ── Загрузка фото для карточки: сжатие + Supabase Storage ──
-function compressImageBlob(file, maxDim = 1200, quality = 0.85) {
+function compressImageBlob(file, maxDim = 800, quality = 0.82) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
