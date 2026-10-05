@@ -54,7 +54,9 @@ tr,td{font-variant-numeric:tabular-nums;}
 /* ── 3. ШАПКА И НАВИГАЦИЯ ──────────────────────────────────────────── */
 header{padding:24px 40px 18px;}
 .logo-area p{font-size:11px;letter-spacing:.2em;color:var(--text-on-page-muted);}
-body:not(.is-admin):not(.is-content-editor) .header-right{display:none;}   /* LIVE и пр. — только для редакторов */
+/* LIVE — только для редакторов; «Войти»/имя пользователя видны всем */
+body:not(.is-admin):not(.is-content-editor) .header-right .admin-badge{display:none;}
+@media(max-width:768px){.header-right{width:auto!important;margin-left:auto;}header{display:flex;align-items:center;flex-wrap:nowrap;gap:12px;}}
 body:not(.is-admin):not(.is-content-editor) .api-badge{display:none!important;}
 .api-badge{color:var(--color-success-text);border-color:rgba(var(--rgb-success),.5);}
 .page-nav{background:rgba(var(--rgb-choco-900),.6);}
