@@ -646,6 +646,25 @@ button.scripts-principles-header{width:100%;border:0;background:none;font:inheri
 .form-hint{font-size:12px;color:var(--text-dim);line-height:1.5;margin-top:6px;}
 .form-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--text-body);cursor:pointer;line-height:1.4;}
 .form-check input{width:18px;height:18px;flex-shrink:0;margin-top:1px;accent-color:var(--accent);}
+.tech-mark-hint{font-size:12px;color:var(--text-dim);margin-top:4px;line-height:1.45;font-weight:400;}
+.tech-quiz-cta{margin-top:10px;font-size:13px;font-weight:600;color:var(--text-accent-soft);}
+fieldset.tech-quiz-question{min-width:0;}
+.tech-quiz-question.unanswered{border-color:var(--danger);box-shadow:0 0 0 2px rgba(var(--rgb-danger),.35);}
+.tech-reread{display:inline-block;margin-top:8px;text-align:left;}
+.tech-reread-list{display:flex;flex-wrap:wrap;gap:8px;}
+.tech-reread-list .btn{white-space:normal;text-align:left;text-transform:none;letter-spacing:.3px;}
+.my-start{margin-bottom:24px;padding:16px 18px;background:var(--bg-card);border:1px solid var(--border-strong);border-radius:12px;}
+.my-start-done{font-size:14px;color:var(--text-body);border-color:rgba(var(--rgb-success),.4);}
+.my-start-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.my-start-head h2{font-size:18px;color:var(--text-heading);font-weight:600;}
+.my-start-count{font-size:12px;color:var(--text-dim);font-weight:400;margin-left:6px;}
+.my-start-steps{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.my-start-step{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--text-body);padding:4px 0;}
+.my-start-step.done{color:var(--text-dim);}
+.my-start-step.current{font-weight:600;color:var(--text-heading);}
+.my-start-ico{width:18px;flex-shrink:0;text-align:center;color:var(--accent);}
+.my-start-step.done .my-start-ico{color:var(--color-success);}
+.my-start-note{font-size:12px;color:var(--text-dim);font-weight:400;flex-basis:100%;padding-left:28px;}
 /* Стоп-фразы — приоритетный визуальный блок */
 .stopphrases-banner{margin-bottom:12px;padding:12px 16px;background:rgba(var(--rgb-danger),.10);border:1px solid var(--danger-border);border-radius:10px;font-size:11px;color:var(--danger-text);letter-spacing:.5px;line-height:1.5;}
 /* Сетка карточек */
@@ -16542,6 +16561,8 @@ let QUIZZES_DATA    = [];   // тесты (по 1 на модуль)
 let USER_PROFILE    = null; // {id, full_name, branch, role}
 let USER_PROGRESS   = [];   // [{user_id, technique_id, completed_at}]
 let LATEST_ATTEMPTS = {};   // {quiz_id: {score,total,passed,attempted_at}} — последняя попытка на тест
+let BEST_PASSED = {};       // {quiz_id: лучшая УСПЕШНАЯ попытка} — «сдано» = была хотя бы одна успешная
+                            // (решение владельца: пересдача после зачёта — тренировка, зачёт не отзывается)
 
 let currentPage    = 'products';
 let currentSection = 'магазин';
@@ -16886,6 +16907,7 @@ async function loadProfileAndProgress() {
       USER_PROFILE = null;
       USER_PROGRESS = [];
       LATEST_ATTEMPTS = {};
+      BEST_PASSED = {};
       USER_SCRIPT_ACK = [];
       return;
     }
@@ -16904,8 +16926,13 @@ async function loadProfileAndProgress() {
     USER_SCRIPT_ACK = ackRes.error ? [] : (ackRes.data || []);
     // Последняя попытка по каждому тесту
     LATEST_ATTEMPTS = {};
+    BEST_PASSED = {};
     (attRes.data || []).forEach(a => {
       if (!LATEST_ATTEMPTS[a.quiz_id]) LATEST_ATTEMPTS[a.quiz_id] = a;
+      if (a.passed) {
+        const b = BEST_PASSED[a.quiz_id];
+        if (!b || a.score / a.total > b.score / b.total) BEST_PASSED[a.quiz_id] = a;
+      }
     });
     await loadMySales();
     // isAdmin / isBarEditor / isContentEditor определяются ролью в profile.
@@ -17268,6 +17295,88 @@ function techBack(target = 'modules') {
   if (target === 'dashboard') openDashboard(); else backToModules();
 }
 
+// «Мой старт» — маршрут новичка: шаги со статусами и кнопка «Продолжить»
+const INTRO_SEEN_LS_KEY = 'yahya_intro_seen_v1';
+function introSeenList() {
+  try { return JSON.parse(localStorage.getItem(INTRO_SEEN_LS_KEY) || '[]'); } catch (e) { return []; }
+}
+function markIntroSeen(id) {
+  const l = introSeenList();
+  if (!l.includes(id)) { l.push(id); try { localStorage.setItem(INTRO_SEEN_LS_KEY, JSON.stringify(l)); } catch (e) {} }
+}
+function nextUndoneTopic(num) {
+  const { topics } = getModuleData(num);
+  const last = lastLearningPlace();
+  const lastT = last && topics.find(t => t.id === last.topic && !isTechniqueDone(t.id));
+  return lastT || topics.find(t => !isTechniqueDone(t.id)) || null;
+}
+function myStartSteps() {
+  if (!USER_PROFILE) return [];
+  const m1 = getModuleData(1), m2 = getModuleData(2);
+  const d1 = m1.topics.filter(t => isTechniqueDone(t.id)).length;
+  const d2 = m2.topics.filter(t => isTechniqueDone(t.id)).length;
+  const acks = SCRIPT_ACK_SECTIONS.filter(x => myScriptAck(x.key)).length;
+  const firstUnacked = SCRIPT_ACK_SECTIONS.find(x => !myScriptAck(x.key));
+  const steps = [{ key: 'login', title: 'Вход в аккаунт', status: 'done' }];
+  if (m1.intro) steps.push({ key: 'intro', title: 'Введение к обучению',
+    status: (introSeenList().includes(m1.intro.id) || d1 > 0) ? 'done' : 'todo',
+    go: () => openTopic(m1.intro.id) });
+  steps.push({ key: 'm1', title: `Модуль 1 — темы ${d1} из ${m1.topics.length}`,
+    status: m1.topics.length && d1 === m1.topics.length ? 'done' : 'todo',
+    go: () => { const t = nextUndoneTopic(1); if (t) openTopic(t.id); } });
+  steps.push({ key: 'q1', title: 'Тест Модуля 1', status: isModulePassed(1) ? 'done' : 'todo',
+    note: !isModulePassed(1) && quizCooldownRemainingMs(1) > 0 ? `следующая попытка через ${Math.ceil(quizCooldownRemainingMs(1) / 60000)} мин` : '',
+    go: () => startQuiz(1) });
+  const qrOpen = isQrUnlocked();
+  steps.push({ key: 'qr', title: 'QR-бейдж продавца',
+    status: qrOpen && myQrId() ? 'done' : (qrOpen ? 'wait' : 'todo'),
+    note: qrOpen && !myQrId() ? 'открыт — ждёт привязки кода из 1С (скажи руководителю)' : '',
+    go: () => navigateTo('profile') });
+  if (scriptAckTableOk) steps.push({ key: 'scripts', title: `Скрипты — ознакомлен ${acks} из ${SCRIPT_ACK_SECTIONS.length}`,
+    status: acks === SCRIPT_ACK_SECTIONS.length ? 'done' : 'todo',
+    go: () => openScriptsSection(firstUnacked ? firstUnacked.key : 'retail') });
+  steps.push({ key: 'm2', title: `Модуль 2 — темы ${d2} из ${m2.topics.length}, тест`,
+    status: isModulePassed(2) ? 'done' : 'todo',
+    go: () => { const t = nextUndoneTopic(2); if (t) openTopic(t.id); else startQuiz(2); } });
+  return steps;
+}
+function myStartGo(key) {
+  const st = myStartSteps().find(x => x.key === key);
+  if (!st || !st.go) return;
+  // Шаги по порядку: тест — после тем, модуль 2 — после теста модуля 1
+  if (key === 'q1' && getModuleData(1).topics.some(t => !isTechniqueDone(t.id)) && !canEditContent()) {
+    showToast('Сначала изучи все темы Модуля 1'); return;
+  }
+  if (key === 'm2' && !isModulePassed(1) && !canEditContent()) { showToast('Модуль 2 откроется после теста Модуля 1'); return; }
+  st.go();
+}
+function myStartHTML() {
+  const steps = myStartSteps();
+  if (!steps.length) return '';
+  const next = steps.find(x => x.status === 'todo');
+  const doneN = steps.filter(x => x.status === 'done').length;
+  if (!next && steps.every(x => x.status === 'done')) {
+    return `<div class="my-start my-start-done"><b>🏁 Мой старт пройден</b> — все шаги выполнены (${doneN}/${steps.length}).</div>`;
+  }
+  const icon = { done: '✓', todo: '○', wait: '⏳' };
+  return `<section class="my-start" aria-labelledby="myStartTitle">
+    <div class="my-start-head">
+      <h2 id="myStartTitle">🧭 Мой старт <span class="my-start-count">${doneN} из ${steps.length}</span></h2>
+      ${next ? `<button type="button" class="tech-mark-done-btn" onclick="myStartGo('${next.key}')">Продолжить: ${escHtml(next.title.split(' — ')[0])} →</button>` : ''}
+    </div>
+    <ol class="my-start-steps">
+      ${steps.map(st => `<li class="my-start-step ${st.status}${next && st.key === next.key ? ' current' : ''}">
+        <span class="my-start-ico" aria-hidden="true">${icon[st.status]}</span>
+        ${st.go && st.status !== 'done'
+          ? `<button type="button" class="link-btn" onclick="myStartGo('${st.key}')">${escHtml(st.title)}</button>`
+          : `<span>${escHtml(st.title)}</span>`}
+        <span class="sr-only">${st.status === 'done' ? '— выполнено' : st.status === 'wait' ? '— ожидает' : '— не выполнено'}</span>
+        ${st.note ? `<span class="my-start-note">${escHtml(st.note)}</span>` : ''}
+      </li>`).join('')}
+    </ol>
+  </section>`;
+}
+
 // Последнее открытое место в обучении — для кнопки «Продолжить» в «Моём старте»
 const LEARNING_LS_KEY = 'yahya_last_learning_v1';
 function rememberLearningPlace(topicId) {
@@ -17626,8 +17735,11 @@ function moduleProgressPct(num) {
 }
 
 function isModulePassed(num) {
-  const att = LATEST_ATTEMPTS['module' + num];
-  return !!(att && att.passed);
+  return !!BEST_PASSED['module' + num];
+}
+// Что показывать как статус теста: лучшая успешная попытка, иначе последняя
+function moduleStatusAttempt(num) {
+  return BEST_PASSED['module' + num] || LATEST_ATTEMPTS['module' + num] || null;
 }
 
 function getQuiz(num) {
@@ -17639,6 +17751,7 @@ function quizCooldownRemainingMs(num) {
   const cdMin = q?.data?.cooldown_minutes || 30;
   const att = LATEST_ATTEMPTS['module' + num];
   if (!att || att.passed) return 0;
+  if (isModulePassed(num)) return 0;   // зачёт уже есть — тренировочные пересдачи без паузы
   const since = Date.now() - new Date(att.attempted_at).getTime();
   const total = cdMin * 60 * 1000;
   return Math.max(0, total - since);
@@ -17715,7 +17828,7 @@ function renderTechniques() {
     const pct = moduleProgressPct(num);
     const passed = isModulePassed(num);
     const introTile = m.intro ? `
-      <div class="tech-topic-tile intro" onclick="openTopic('${m.intro.id}')">
+      <div class="tech-topic-tile intro" role="button" tabindex="0" onclick="openTopic('${m.intro.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
         <div class="num">Введение</div>
         <div class="title">${escHtml(m.intro.data.title)}</div>
         <div class="tagline">Прочитай перед началом</div>
@@ -17723,8 +17836,8 @@ function renderTechniques() {
     const topicsHTML = m.topics.map(t => {
       const done = isTechniqueDone(t.id);
       return `
-      <div class="tech-topic-tile ${done ? 'done' : ''}" onclick="openTopic('${t.id}')">
-        ${done ? '<div class="check">✓</div>' : ''}
+      <div class="tech-topic-tile ${done ? 'done' : ''}" role="button" tabindex="0" onclick="openTopic('${t.id}')" onkeydown="if(event.target===this&&(event.key==='Enter'||event.key===' ')){event.preventDefault();this.click()}">
+        ${done ? '<div class="check" aria-label="изучено">✓</div>' : ''}
         ${canEditContent() ? `<button class="edit-btn admin-only" onclick="event.stopPropagation();openTechniqueEditor('${t.id}')" title="Редактировать">✎</button>` : ''}
         <div class="num">${escHtml(t.id)}</div>
         <div class="title">${escHtml(t.data.title || '')}</div>
@@ -17737,33 +17850,40 @@ function renderTechniques() {
     const att = LATEST_ATTEMPTS['module' + num];
     const cdMs = quizCooldownRemainingMs(num);
     const quizDisabled = !allDone && !canEditContent();
+    const best = BEST_PASSED['module' + num];
     const quizCaption = quizDisabled
-      ? `Доступна когда все ${m.topics.length} тем изучены`
-      : (att && att.passed)
-        ? `Сдан: ${att.score}/${att.total}`
+      ? `Доступна, когда изучены все ${m.topics.length} тем (сейчас ${m.topics.filter(t => isTechniqueDone(t.id)).length})`
+      : best
+        ? `Сдан ✓ — лучший результат ${best.score}/${best.total}. Можно пересдать для тренировки: зачёт не пропадёт.`
         : (cdMs > 0)
           ? `Следующая попытка через ${Math.ceil(cdMs/60000)} мин`
           : (att ? `Прошлая попытка: ${att.score}/${att.total}. Можно пересдать.` : 'Готовы пройти?');
 
-    const badgeHTML = att
-      ? `<div class="badge ${att.passed ? 'passed' : 'failed'}">${att.passed ? '✓ Сдано' : `✗ ${att.score}/${att.total}`}</div>`
-      : '';
+    const badgeHTML = best
+      ? `<div class="badge passed">✓ Сдано</div>${att && !att.passed ? ` <div class="badge failed">последняя тренировка ${att.score}/${att.total}</div>` : ''}`
+      : att ? `<div class="badge failed">✗ ${att.score}/${att.total}</div>` : '';
+    const quizAction = (!quizDisabled && cdMs === 0)
+      ? `<div class="tech-quiz-cta">${best ? 'Пересдать для тренировки →' : (att ? 'Пересдать →' : 'Начать тест →')}</div>` : '';
 
     const quizClick = (!quizDisabled && cdMs === 0)
       ? `startQuiz(${num})`
-      : `showToast('Тест пока недоступен')`;
+      : (quizDisabled
+          ? `showToast('Сначала изучи все темы модуля — отметь каждую кнопкой «Я изучил»')`
+          : `showToast('Следующая попытка через ${Math.ceil(cdMs/60000)} мин — перечитай темы, где ошибся')`);
     const adminEditBtn = canEditContent()
       ? `<button class="edit-btn admin-only" style="position:absolute;top:10px;right:10px"
                   onclick="event.stopPropagation();openQuizEditor('module${num}')" title="Редактировать тест">✎</button>`
       : '';
     const quizTile = `
       <div class="tech-quiz-tile ${quizDisabled || cdMs > 0 ? 'disabled' : ''}"
-           style="position:relative"
-           onclick="${quizClick}">
+           style="position:relative" role="button" tabindex="0"
+           aria-disabled="${quizDisabled || cdMs > 0}"
+           onclick="${quizClick}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
         ${adminEditBtn}
         <h4>📝 Аттестация Модуля ${num}</h4>
         <p>${escHtml(quizCaption)}</p>
         ${badgeHTML}
+        ${quizAction}
       </div>
     `;
 
@@ -17797,6 +17917,7 @@ function renderTechniques() {
   root.innerHTML = `
     <div class="tech-modules">
       ${userBar}
+      ${myStartHTML()}
       ${renderModule(1, m1, false)}
       ${renderModule(2, m2, m2Locked)}
       ${canEditContent() ? `<div style="margin-top:24px;padding:14px 18px;background:var(--bg-card);border:1px dashed var(--accent);border-radius:10px;font-size:13px;color:var(--text-dim)">
@@ -17855,12 +17976,15 @@ function startTopicTimer(id) {
     } else {
       btn.disabled = false;
       btn.textContent = 'Я изучил';
+      const hint = document.getElementById('markDoneHint');
+      if (hint) hint.textContent = 'Отметь тему — после всех тем модуля откроется тест.';
       clearInterval(topicTimerHandle); topicTimerHandle = null;
     }
   }, 1000);
 }
 
 function openTopic(id) {
+  if (/\.0$/.test(id)) markIntroSeen(id);
   currentTopicId = id;
   currentTechView = 'topic';
   topicOpenedAt = Date.now();
@@ -17935,12 +18059,18 @@ function renderTopicView(root) {
   }
 
   const waitLeft = isIntro ? 0 : topicWaitLeftSec(done);
+  const canUnmark = done && canEditContent();
   const markBar = !isIntro ? `
     <div class="tech-mark-done-bar ${done ? 'done' : ''}">
-      <div class="lbl">${done ? '✓ Тема изучена' : 'Готов идти дальше?'}</div>
+      <div class="lbl">${done ? '✓ Тема изучена' : 'Готов идти дальше?'}
+        ${!done ? `<div class="tech-mark-hint" id="markDoneHint">${waitLeft > 0
+          ? `Кнопка откроется через ${TOPIC_READ_SECONDS} сек после открытия темы — сначала прочитай её. Отметки нужны для допуска к тесту.`
+          : 'Отметь тему — после всех тем модуля откроется тест.'}</div>` : ''}
+      </div>
       <button class="tech-mark-done-btn ${done ? 'done' : ''}" id="markDoneBtn"
-        ${waitLeft > 0 ? 'disabled' : ''} onclick="markTechniqueDone('${t.id}')">
-        ${done ? '✓ Изучено' : (waitLeft > 0 ? `⏳ ${waitLeft} сек` : 'Я изучил')}
+        ${(waitLeft > 0 || (done && !canUnmark)) ? 'disabled' : ''} onclick="markTechniqueDone('${t.id}')"
+        ${canUnmark ? 'title="Снять отметку (только админ/редактор)"' : ''}>
+        ${done ? (canUnmark ? '✓ Изучено · снять' : '✓ Изучено') : (waitLeft > 0 ? `⏳ ${waitLeft} сек` : 'Я изучил')}
       </button>
     </div>
   ` : '';
@@ -17982,7 +18112,9 @@ function getNextTopicId(currentId) {
 async function markTechniqueDone(id) {
   if (!USER_PROFILE) { showToast('Войди сначала'); return; }
   if (isTechniqueDone(id)) {
-    // toggle off — admin или личный сброс
+    // Снять отметку может только админ/редактор (раньше повторный тап молча стирал прогресс продавца)
+    if (!canEditContent()) { showToast('Тема уже отмечена как изученная ✓'); return; }
+    if (!confirm('Снять отметку «изучено» с этой темы?')) return;
     const ok = await dbWrite(
       () => sb.from('user_progress').delete().eq('user_id', USER_PROFILE.id).eq('technique_id', id),
       'Ошибка'
@@ -18073,16 +18205,14 @@ function renderQuizView(root) {
       `;
     }).join('');
     return `
-      <div class="tech-quiz-question">
+      <fieldset class="tech-quiz-question" id="qz-${di}" data-qi="${item.qi}">
+        <legend class="sr-only">Вопрос ${di + 1}</legend>
         <div class="tech-quiz-q-num">Вопрос ${di + 1} из ${currentQuizSet.length}</div>
         <div class="tech-quiz-q-text">${escHtml(q.q)}</div>
         <div class="tech-quiz-options">${optionsHTML}</div>
-      </div>
+      </fieldset>
     `;
   }).join('');
-
-  const answered = Object.keys(currentQuizAnswers).length;
-  const allAnswered = answered === currentQuizSet.length;
 
   root.innerHTML = `
     <div class="tech-topic-view tech-quiz-view">
@@ -18093,10 +18223,8 @@ function renderQuizView(root) {
       </div>
       ${questionsHTML}
       <div class="tech-quiz-submit-bar">
-        <div class="lbl" id="quizAnsweredCount">Ответов: ${answered} из ${currentQuizSet.length}</div>
-        <button class="tech-mark-done-btn" id="quizSubmitBtn"
-          ${allAnswered ? '' : 'disabled style="opacity:.4;cursor:not-allowed"'}
-          onclick="submitQuiz()">Сдать тест</button>
+        <div class="lbl" id="quizAnsweredCount" aria-live="polite">${quizProgressHTML()}</div>
+        <button class="tech-mark-done-btn" id="quizSubmitBtn" onclick="submitQuiz()">Сдать тест</button>
       </div>
     </div>
   `;
@@ -18109,20 +18237,29 @@ function selectQuizAnswer(qi, oi) {
     const isSelected = parseInt(lbl.dataset.o, 10) === oi;
     lbl.classList.toggle('selected', isSelected);
   });
-  const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
-  if (!quiz) return;
-  const total = currentQuizSet ? currentQuizSet.length : (quiz.data.questions || []).length;
-  const answered = Object.keys(currentQuizAnswers).length;
+  document.querySelector(`.tech-quiz-question[data-qi="${qi}"]`)?.classList.remove('unanswered');
   const cnt = document.getElementById('quizAnsweredCount');
-  if (cnt) cnt.textContent = `Ответов: ${answered} из ${total}`;
-  if (answered === total) {
-    const btn = document.getElementById('quizSubmitBtn');
-    if (btn) {
-      btn.disabled = false;
-      btn.style.opacity = '1';
-      btn.style.cursor = 'pointer';
-    }
-  }
+  if (cnt) cnt.innerHTML = quizProgressHTML();
+}
+
+// Номера (по порядку на экране) вопросов без ответа
+function unansweredQuizNums() {
+  return (currentQuizSet || []).map((item, di) => currentQuizAnswers[item.qi] == null ? di + 1 : null).filter(Boolean);
+}
+function quizProgressHTML() {
+  const total = (currentQuizSet || []).length;
+  const miss = unansweredQuizNums();
+  const answered = total - miss.length;
+  if (!miss.length) return `Ответов: ${answered} из ${total} — всё отвечено ✓`;
+  const links = miss.slice(0, 8).map(n => `<button type="button" class="link-btn" onclick="scrollToQuizQuestion(${n - 1})">№${n}</button>`).join(', ');
+  return `Ответов: ${answered} из ${total}. Без ответа: ${links}${miss.length > 8 ? ` и ещё ${miss.length - 8}` : ''}`;
+}
+function scrollToQuizQuestion(di) {
+  const el = document.getElementById('qz-' + di);
+  if (!el) return;
+  el.classList.add('unanswered');
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  el.querySelector('input')?.focus({ preventScroll: true });
 }
 
 function cancelQuiz() {
@@ -18136,6 +18273,15 @@ function cancelQuiz() {
 async function submitQuiz() {
   const quiz = QUIZZES_DATA.find(q => q.id === currentQuizId);
   if (!quiz || !USER_PROFILE) return;
+  const miss = unansweredQuizNums();
+  if (miss.length) {
+    (currentQuizSet || []).forEach((item, di) => {
+      if (currentQuizAnswers[item.qi] == null) document.getElementById('qz-' + di)?.classList.add('unanswered');
+    });
+    showToast(`Ответь на все вопросы: без ответа ${miss.length === 1 ? 'вопрос' : 'вопросы'} №${miss.join(', №')}`, 'error');
+    scrollToQuizQuestion(miss[0] - 1);
+    return;
+  }
   const questions = quiz.data.questions || [];
   // Считаем только по вопросам этой попытки (случайная выборка из банка)
   const asked = currentQuizSet || questions.map((_, qi) => ({qi}));
@@ -18166,10 +18312,16 @@ async function submitQuiz() {
     answers: currentQuizAnswers,
     attempted_at: new Date().toISOString()
   };
+  if (passed) {
+    const b = BEST_PASSED[currentQuizId];
+    if (!b || score / total > b.score / b.total) BEST_PASSED[currentQuizId] = LATEST_ATTEMPTS[currentQuizId];
+  }
+  currentQuizAnswers = {};
   currentQuizSet = null;
 
   currentTechView = 'quiz-result';
   renderTechniques();
+  pushRoute(true);
   renderProfile();   // сдача Модуля 1 открывает QR-бейдж — страница профиля должна это подхватить
   window.scrollTo({top:0});
 }
@@ -18199,7 +18351,8 @@ function renderQuizResultView(root) {
       qi,
       q: q.q,
       your: userOpt ? userOpt.text : '— не отвечено —',
-      right: correctOpt ? correctOpt.text : '—'
+      right: correctOpt ? correctOpt.text : '—',
+      topic: guessTopicForQuestion(moduleNum, q.q + ' ' + (correctOpt ? correctOpt.text : ''))
     };
   }).filter(Boolean);
 
@@ -18216,6 +18369,7 @@ function renderQuizResultView(root) {
           <div class="q">${escHtml(w.q)}</div>
           <div class="your"><b>Твой ответ:</b> ${escHtml(w.your)}</div>
           <div class="right"><b>Правильно:</b> ${escHtml(w.right)}</div>
+          ${w.topic ? `<button type="button" class="link-btn tech-reread" onclick="openTopic('${escAttr(w.topic.id)}')">📖 Перечитай тему ${escHtml(w.topic.id)} «${escHtml(w.topic.data.title || '')}»</button>` : ''}
         </div>
       `).join('')}
     </div>
@@ -18245,8 +18399,30 @@ function renderQuizResultView(root) {
           <button class="btn" style="margin-left:auto" onclick="navigateTo('profile')">Открыть профиль →</button>
         </div>` : ''}
       ${wrongHTML}
+      ${wrongs.length ? `<div class="tech-section"><h3>Темы модуля</h3><div class="tech-reread-list">${getModuleData(moduleNum).topics.map(t =>
+        `<button type="button" class="btn" onclick="openTopic('${escAttr(t.id)}')">${escHtml(t.id)} ${escHtml(t.data.title || '')}</button>`).join('')}</div></div>` : ''}
     </div>
   `;
+}
+
+// У вопросов теста нет привязки к теме — подбираем тему по общим словам
+// (вопрос + верный ответ против заголовка/описания темы). Без уверенного
+// совпадения ссылку не показываем — ниже есть список всех тем модуля.
+function guessTopicForQuestion(moduleNum, text) {
+  const syn = t => normSearch(t).replace(/апсейл\S*/g, ' up selling ').replace(/кросс[- ]?сейл\S*|кроссейл\S*/g, ' cross selling ');
+  const words = t => new Set(syn(t).replace(/[^a-zа-я0-9\s]/g, ' ').split(/\s+/)
+    .filter(w => w.length >= 5 || (/^[a-z]+$/.test(w) && w.length >= 2)).map(w => w.slice(0, 6)));
+  const qw = words(text);
+  let best = null, bestScore = 0;
+  getModuleData(moduleNum).topics.forEach(t => {
+    const d = t.data || {};
+    const tw = words([d.title, d.tagline, d.what, (d.when || []).join(' '), d.template].join(' '));
+    const titleW = words([d.title, d.tagline].join(' '));
+    let score = 0;
+    qw.forEach(w => { if (tw.has(w)) score += titleW.has(w) ? 5 : 1; });
+    if (score > bestScore) { bestScore = score; best = t; }
+  });
+  return bestScore >= 3 ? best : null;
 }
 
 // ── Admin: редактор темы ──
@@ -18822,7 +18998,7 @@ function renderProfile() {
 
   const p = USER_PROFILE;
   const m1 = moduleProgressPct(1), m2 = moduleProgressPct(2);
-  const a1 = LATEST_ATTEMPTS['module1'], a2 = LATEST_ATTEMPTS['module2'];
+  const a1 = moduleStatusAttempt(1), a2 = moduleStatusAttempt(2);
   const attBadge = a => a
     ? `<span class="dash-badge ${a.passed ? 'passed' : 'failed'}">${a.passed ? '✓' : '✗'} ${a.score}/${a.total}</span>`
     : `<span class="dash-badge muted">не сдавал</span>`;
@@ -19308,6 +19484,12 @@ function userModuleProgressPct(userId, num) {
   return Math.round(100 * done / topics.length);
 }
 
+// Статус сотрудника по тесту: лучшая успешная попытка, иначе последняя
+function statusAttemptFor(quizId, userId) {
+  const passed = ALL_ATTEMPTS.filter(a => a.quiz_id === quizId && a.user_id === userId && a.passed);
+  if (passed.length) return passed.reduce((b, a) => (a.score / a.total > b.score / b.total ? a : b));
+  return latestAttemptFor(quizId, userId);
+}
 function latestAttemptFor(quizId, userId) {
   const atts = ALL_ATTEMPTS.filter(a => a.quiz_id === quizId && a.user_id === userId);
   if (!atts.length) return null;
@@ -19471,8 +19653,8 @@ function renderDashboardView(root) {
   // которого повысили, пропадал из счётчиков — выглядело как «исчез с сайта».
   const sellers = ALL_PROFILES.filter(p => p.role !== 'admin');
   const totalSellers = sellers.length;
-  const passedM1 = sellers.filter(p => latestAttemptFor('module1', p.id)?.passed).length;
-  const passedM2 = sellers.filter(p => latestAttemptFor('module2', p.id)?.passed).length;
+  const passedM1 = sellers.filter(p => statusAttemptFor('module1', p.id)?.passed).length;
+  const passedM2 = sellers.filter(p => statusAttemptFor('module2', p.id)?.passed).length;
 
   const roleOrder = r => r === 'admin' ? 0 : r === 'branch_admin' ? 1 : r === 'bar_editor' ? 2 : 3;
   const sortedProfiles = [...ALL_PROFILES].sort((a,b) => {
@@ -19540,8 +19722,8 @@ function renderDashboardView(root) {
 function renderUserRow(p) {
   const m1pct = userModuleProgressPct(p.id, 1);
   const m2pct = userModuleProgressPct(p.id, 2);
-  const m1att = latestAttemptFor('module1', p.id);
-  const m2att = latestAttemptFor('module2', p.id);
+  const m1att = statusAttemptFor('module1', p.id);
+  const m2att = statusAttemptFor('module2', p.id);
   const lastActive = userLastActive(p.id);
 
   const m1Badge = m1att
@@ -19663,7 +19845,7 @@ function renderUserDetailView(root) {
       <div class="tech-section">
         <h3>QR-код продавца</h3>
         ${(() => {
-          const passed = !!latestAttemptFor('module1', p.id)?.passed;
+          const passed = !!statusAttemptFor('module1', p.id)?.passed;
           if (!p.qr_id) return `<p style="color:var(--text-dim);font-size:13px">GUID из 1С не привязан — сотрудник не сможет получить бейдж. Внеси код через «✎ Изменить профиль».</p>`;
           return `<p style="font-size:13px;color:var(--text-body)">
             <span class="dash-badge ${passed ? 'passed' : 'muted'}">${passed ? '✓ бейдж доступен' : '🔒 ждёт аттестации М1'}</span>
@@ -19848,6 +20030,7 @@ async function resetUserProgress(userId) {
   if (USER_PROFILE && USER_PROFILE.id === userId) {
     USER_PROGRESS = [];
     LATEST_ATTEMPTS = {};
+    BEST_PASSED = {};
   }
   showToast('Прогресс сброшен');
   renderTechniques();
@@ -22185,6 +22368,7 @@ async function exitAdmin() {
   USER_PROFILE = null;
   USER_PROGRESS = [];
   LATEST_ATTEMPTS = {};
+  BEST_PASSED = {};
   USER_SCRIPT_ACK = [];
   document.body.classList.remove('is-admin');
   document.body.classList.remove('is-bar-editor');
@@ -22349,6 +22533,7 @@ async function init() {
         USER_PROFILE = null;
         USER_PROGRESS = [];
         LATEST_ATTEMPTS = {};
+        BEST_PASSED = {};
         USER_SCRIPT_ACK = [];
         document.body.classList.remove('is-admin');
         document.body.classList.remove('is-bar-editor');
