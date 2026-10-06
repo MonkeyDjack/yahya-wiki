@@ -6107,6 +6107,8 @@ async function submitQuiz() {
     scrollToQuizQuestion(miss[0] - 1);
     return;
   }
+  // Подсказка «ответь на все вопросы» больше не актуальна — убираем, чтобы не висела над результатом
+  clearTimeout(toastTimer); document.getElementById('toast')?.classList.remove('show');
   const questions = quiz.data.questions || [];
   // Считаем только по вопросам этой попытки (случайная выборка из банка)
   const asked = currentQuizSet || questions.map((_, qi) => ({qi}));
@@ -6202,7 +6204,7 @@ function renderQuizResultView(root) {
 
   const nextStep = att.passed
     ? (moduleNum === 1
-        ? 'Модуль 2 разблокирован — там 15 продвинутых техник.'
+        ? `Модуль 2 разблокирован — там ${getModuleData(2).topics.length} продвинутых техник.`
         : 'Ты прошёл оба модуля. Можешь перепройти любой материал в любое время.')
     : `Не страшно. Перечитай темы Модуля ${moduleNum}, через 30 минут попробуй ещё раз.`;
 
