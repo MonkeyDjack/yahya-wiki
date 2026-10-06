@@ -56,7 +56,7 @@ header{padding:24px 40px 18px;}
 .logo-area p{font-size:11px;letter-spacing:.2em;color:var(--text-on-page-muted);}
 /* LIVE — только для редакторов; «Войти»/имя пользователя видны всем */
 body:not(.is-admin):not(.is-content-editor) .header-right .admin-badge{display:none;}
-@media(max-width:768px){.header-right{width:auto!important;margin-left:auto;}header{display:flex;align-items:center;flex-wrap:nowrap;gap:12px;}}
+@media(max-width:768px){header{display:flex;align-items:center;flex-wrap:nowrap;gap:12px;}.logo-area{min-width:0;flex:1 1 auto;}.header-right{width:auto!important;margin-left:auto;min-width:0;flex:0 1 auto;}#headerUserBtn{display:inline-block;max-width:36vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;padding-left:12px;padding-right:12px;letter-spacing:.06em;}}
 body:not(.is-admin):not(.is-content-editor) .api-badge{display:none!important;}
 .api-badge{color:var(--color-success-text);border-color:rgba(var(--rgb-success),.5);}
 .page-nav{background:rgba(var(--rgb-choco-900),.6);}
