@@ -3601,6 +3601,7 @@ const SCRIPT_STAGES = {
     {key:'objection',  label:'Универсальные возражения'},
     {key:'returns',    label:'Возвраты и обмен'},
     {key:'errors',     label:'Типичные ошибки'},
+    {key:'english',    label:'Иностранный гость (English)'},
     {key:'stopphrases',label:'Фразы-стопы'}
   ]
 };
@@ -5751,6 +5752,7 @@ function renderTechniques() {
       ${myStartHTML()}
       ${renderModule(1, m1, false)}
       ${renderModule(2, m2, m2Locked)}
+      ${renderServiceQuizBlock()}
       ${canEditContent() ? `<div style="margin-top:24px;padding:14px 18px;background:var(--bg-card);border:1px dashed var(--accent);border-radius:10px;font-size:13px;color:var(--text-dim)">
         ${isAdmin ? 'Режим админа: правка тем/тестов + удаление + дашборд + создание юзеров.' : 'Режим редактора: можешь править темы и тесты. Удаление и управление юзерами — только у админа.'}
       </div>` : ''}
@@ -5822,6 +5824,56 @@ function openTopic(id) {
   renderTechniques();
   pushRoute();
   window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Тест по правилам обслуживания (Скрипты → У столиков → Правила). Отдельно от модулей:
+// ничего не блокирует и ничем не блокируется, тем для «изучено» нет — правила читают на странице скриптов.
+const SERVICE_QUIZ_NUM = 3;
+function openServiceRules() {
+  openScriptsSection('bar');
+  setTimeout(() => document.getElementById('rulesBlock')?.scrollIntoView({behavior:'smooth', block:'start'}), 120);
+}
+function renderServiceQuizBlock() {
+  const num = SERVICE_QUIZ_NUM;
+  const quiz = getQuiz(num);
+  if (!quiz) return '';
+  const nRules = SCRIPTS_DATA.filter(s => s.type === 'rule').length;
+  const att = LATEST_ATTEMPTS['module' + num];
+  const best = BEST_PASSED['module' + num];
+  const cdMs = quizCooldownRemainingMs(num);
+  const caption = best
+    ? `Сдан ✓ — лучший результат ${best.score}/${best.total}. Можно пересдать для тренировки: зачёт не пропадёт.`
+    : cdMs > 0 ? `Следующая попытка через ${Math.ceil(cdMs/60000)} мин`
+    : att ? `Прошлая попытка: ${att.score}/${att.total}. Можно пересдать.` : 'Прочитай правила и проверь себя.';
+  const badgeHTML = best
+    ? `<div class="badge passed">✓ Сдано</div>${att && !att.passed ? ` <div class="badge failed">последняя тренировка ${att.score}/${att.total}</div>` : ''}`
+    : att ? `<div class="badge failed">✗ ${att.score}/${att.total}</div>` : '';
+  const click = cdMs === 0 ? `startQuiz(${num})` : `showToast('Следующая попытка через ${Math.ceil(cdMs/60000)} мин — перечитай правила')`;
+  return `
+    <div class="tech-module">
+      <div class="tech-module-header">
+        <h3>🍽 Правила сервиса</h3>
+        <div class="tech-module-progress">${best ? 'сдан ✓' : ''}</div>
+      </div>
+      <div class="tech-module-tagline">${nRules} правил обслуживания гостей в зале: подача, посуда, общение, внешний вид, момент ухода, местные традиции.</div>
+      <div class="tech-topics">
+        <div class="tech-topic-tile intro" role="button" tabindex="0" onclick="openServiceRules()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+          <div class="num">Правила</div>
+          <div class="title">Правила обслуживания</div>
+          <div class="tagline">Прочитай перед тестом — Скрипты → У столиков</div>
+        </div>
+      </div>
+      <div style="margin-top:18px">
+        <div class="tech-quiz-tile ${cdMs > 0 ? 'disabled' : ''}" style="position:relative" role="button" tabindex="0"
+             aria-disabled="${cdMs > 0}" onclick="${click}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">
+          ${canEditContent() ? `<button class="edit-btn admin-only" style="position:absolute;top:10px;right:10px" onclick="event.stopPropagation();openQuizEditor('module${num}')" title="Редактировать тест">✎</button>` : ''}
+          <h4>📝 Тест: правила сервиса</h4>
+          <p>${escHtml(caption)}</p>
+          ${badgeHTML}
+          ${cdMs === 0 ? `<div class="tech-quiz-cta">${best ? 'Пересдать для тренировки →' : (att ? 'Пересдать →' : 'Начать тест →')}</div>` : ''}
+        </div>
+      </div>
+    </div>`;
 }
 
 function backToModules() {
@@ -6207,7 +6259,10 @@ function renderQuizResultView(root) {
     </div>
   `;
 
-  const nextStep = att.passed
+  const isService = moduleNum === SERVICE_QUIZ_NUM;
+  const nextStep = isService
+    ? (att.passed ? 'Правила сервиса сданы. Главное теперь — делать так каждую смену.' : 'Не страшно. Перечитай правила обслуживания, через 30 минут попробуй ещё раз.')
+    : att.passed
     ? (moduleNum === 1
         ? `Модуль 2 разблокирован — там ${getModuleData(2).topics.length} продвинутых техник.`
         : 'Ты прошёл оба модуля. Можешь перепройти любой материал в любое время.')
@@ -6231,7 +6286,8 @@ function renderQuizResultView(root) {
           <button class="btn" style="margin-left:auto" onclick="navigateTo('profile')">Открыть профиль →</button>
         </div>` : ''}
       ${wrongHTML}
-      ${wrongs.length ? `<div class="tech-section"><h3>Темы модуля</h3><div class="tech-reread-list">${getModuleData(moduleNum).topics.map(t =>
+      ${(wrongs.length && isService) ? `<div class="tech-section"><button type="button" class="btn" onclick="openServiceRules()">📏 Перечитать правила обслуживания</button></div>` : ''}
+      ${(wrongs.length && !isService) ? `<div class="tech-section"><h3>Темы модуля</h3><div class="tech-reread-list">${getModuleData(moduleNum).topics.map(t =>
         `<button type="button" class="btn" onclick="openTopic('${escAttr(t.id)}')">${escHtml(topicNum(t))} ${escHtml(t.data.title || '')}</button>`).join('')}</div></div>` : ''}
     </div>
   `;
@@ -7375,7 +7431,7 @@ function buildActivityEvents(userId = null) {
   });
   ALL_ATTEMPTS.forEach(a => {
     if (userId && a.user_id !== userId) return;
-    const mod = a.quiz_id === 'module1' ? 'Модуль 1' : a.quiz_id === 'module2' ? 'Модуль 2' : a.quiz_id;
+    const mod = a.quiz_id === 'module1' ? 'Модуль 1' : a.quiz_id === 'module2' ? 'Модуль 2' : a.quiz_id === 'module3' ? '«Правила сервиса»' : a.quiz_id;
     events.push({when: a.attempted_at, userId: a.user_id, icon: a.passed ? '✅' : '❌',
       text: `тест ${mod}: ${a.score}/${a.total} (${a.passed ? 'сдан' : 'не сдан'})`});
   });
@@ -7485,6 +7541,7 @@ function renderDashboardView(root) {
   const totalSellers = sellers.length;
   const passedM1 = sellers.filter(p => statusAttemptFor('module1', p.id)?.passed).length;
   const passedM2 = sellers.filter(p => statusAttemptFor('module2', p.id)?.passed).length;
+  const passedSvc = sellers.filter(p => statusAttemptFor('module3', p.id)?.passed).length;
 
   const roleOrder = r => r === 'admin' ? 0 : r === 'branch_admin' ? 1 : r === 'bar_editor' ? 2 : 3;
   const sortedProfiles = [...ALL_PROFILES].sort((a,b) => {
@@ -7518,6 +7575,10 @@ function renderDashboardView(root) {
         <div class="dash-stat-card">
           <div class="dash-stat-num">${passedM2}<span class="of">/${totalSellers||1}</span></div>
           <div class="dash-stat-lbl">Сдали Модуль 2</div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-stat-num">${passedSvc}<span class="of">/${totalSellers||1}</span></div>
+          <div class="dash-stat-lbl">Сдали правила сервиса</div>
         </div>
         <div class="dash-stat-card">
           <div class="dash-stat-num">${ALL_ATTEMPTS.length}</div>
@@ -7554,6 +7615,7 @@ function renderUserRow(p) {
   const m2pct = userModuleProgressPct(p.id, 2);
   const m1att = statusAttemptFor('module1', p.id);
   const m2att = statusAttemptFor('module2', p.id);
+  const svcAtt = statusAttemptFor('module3', p.id);
   const lastActive = userLastActive(p.id);
 
   const m1Badge = m1att
@@ -7595,6 +7657,10 @@ function renderUserRow(p) {
           <span class="num">${m2pct}%</span>
           ${m2Badge}
         </div>
+        ${svcAtt ? `<div class="dash-progress-row">
+          <span class="lbl" title="Правила сервиса">Серв.</span>
+          <span class="dash-badge ${svcAtt.passed ? 'passed' : 'failed'}">${svcAtt.passed ? '✓' : '✗'} ${svcAtt.score}/${svcAtt.total}</span>
+        </div>` : ''}
       </div>
       <div class="dash-arrow">→</div>
     </div>
@@ -7642,7 +7708,7 @@ function renderUserDetailView(root) {
         return `
           <div class="dash-attempt ${a.passed ? 'passed' : 'failed'}">
             <div class="dash-attempt-meta">
-              ${a.quiz_id === 'module1' ? '🎓 Модуль 1' : '🚀 Модуль 2'}
+              ${a.quiz_id === 'module1' ? '🎓 Модуль 1' : a.quiz_id === 'module3' ? '🍽 Правила сервиса' : '🚀 Модуль 2'}
               · ${escHtml(formatDateTime(a.attempted_at))}
             </div>
             <div class="dash-attempt-score">
@@ -9287,9 +9353,9 @@ function renderRulesBlock(rules) {
       </div>
     </div>
   `).join('');
-  return `<div class="scripts-block">
+  return `<div class="scripts-block" id="rulesBlock">
     <div class="scripts-block-title">📏 Правила обслуживания</div>
-    <div class="scripts-block-subtitle">Стандарты сервиса, которые формируют впечатление о бренде. В премиум-сегменте эти правила дают ~50% «ощущения» качества.</div>
+    <div class="scripts-block-subtitle">Стандарты сервиса, которые формируют впечатление о бренде. В премиум-сегменте эти правила дают ~50% «ощущения» качества. Проверь себя — тест «Правила сервиса» в разделе «Техники продаж».</div>
   </div>${catsHtml}`;
 }
 
