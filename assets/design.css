@@ -317,3 +317,7 @@ body.sheet-open{overflow:hidden;}
 .tree-rec-label,
 .rule-violation-label{opacity:1;}
 .tree-option-arrow{opacity:.8;}
+
+/* Девиз «гости, а не клиенты» — всегда виден в Скриптах и «Моём старте» */
+.guest-motto{margin-top:12px;padding:10px 14px;border-left:3px solid var(--accent);background:rgba(var(--rgb-gold-500),.08);border-radius:0 8px 8px 0;color:var(--text-heading);font-size:15px;line-height:1.5;max-width:62ch;}
+.my-start .guest-motto{margin:0 0 12px;}
