@@ -4334,10 +4334,12 @@ let isBarEditor    = false;  // 'bar_editor': редактирует тольк�
 let isBranchAdmin  = false;
 
 // Может ли текущий пользователь редактировать карточку?
-// admin — любую; editor — любую (без удаления); bar_editor — только локацию 'бар'.
+// admin — любую; editor и branch_admin — любую (без удаления); bar_editor — только локацию 'бар'.
+// branch_admin новые карточки не создаёт — только правит существующие (решение владельца 19.10.2026).
 function canEditCard(c) {
   if (isAdmin) return true;
   if (isContentEditor) return true;
+  if (isBranchAdmin) return true;
   if (isBarEditor && c && c.location === 'бар') return true;
   return false;
 }
@@ -10210,7 +10212,7 @@ async function saveCard() {
   if (editingId) {
     const orig = CARDS.find(c => c.id === editingId);
     if (orig && !canEditCard(orig)) { showToast('Нет прав редактировать эту карточку'); return; }
-  }
+  } else if (!canEditContent() && !isBarEditor) { showToast('Нет прав на создание'); return; }
   const id   = editingId || name.toLowerCase().replace(/[^а-яёa-z0-9\s-]/gi,'').replace(/\s+/g,'-').slice(0,60);
 
   let category = document.getElementById('f-category').value;
