@@ -387,7 +387,7 @@ body.is-content-editor .gloss-edit-btn,body.is-content-editor .tool-edit-btn{dis
 /* ── ADD TILE ── */
 .add-tile{display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;border:2px dashed rgba(var(--rgb-gold-500),.3);border-radius:var(--radius);padding:40px 20px;cursor:pointer;min-height:180px;transition:all .2s;color:var(--text-muted);text-align:center;}
 body.is-admin .add-tile, body.is-content-editor .add-tile{display:flex;}
-body.is-bar-editor .add-tile{display:flex;}
+body.is-bar-editor .add-tile,body.is-branch-admin .card-add.add-tile{display:flex;}
 .add-tile:hover{border-color:var(--accent);color:var(--accent);background:rgba(var(--rgb-gold-500),.04);}
 .add-tile .plus{font-size:42px;font-weight:300;line-height:1;color:var(--accent);}
 .add-tile p{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0;}
@@ -397,7 +397,7 @@ body.is-bar-editor .add-tile{display:flex;}
 .fab{display:none;position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:var(--accent);border:none;color:var(--text-on-accent);font-size:32px;font-weight:300;line-height:1;cursor:pointer;box-shadow:var(--shadow-lg);transition:all .2s;}
 .fab:hover,.fab:active{background:var(--text-accent-soft);transform:scale(1.05);}
 body.is-admin .fab, body.is-content-editor .fab{display:flex;align-items:center;justify-content:center;}
-body.is-bar-editor .fab{display:flex;align-items:center;justify-content:center;}
+body.is-bar-editor .fab,body.is-branch-admin .fab{display:flex;align-items:center;justify-content:center;}
 
 /* ── MODAL BUTTON ROW ── */
 .modal-footer .footer-right{display:flex;gap:9px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
@@ -4335,7 +4335,7 @@ let isBranchAdmin  = false;
 
 // Может ли текущий пользователь редактировать карточку?
 // admin — любую; editor и branch_admin — любую (без удаления); bar_editor — только локацию 'бар'.
-// branch_admin новые карточки не создаёт — только правит существующие (решение владельца 19.10.2026).
+// branch_admin правит и создаёт карточки, но не удаляет (решение владельца 19.10.2026).
 function canEditCard(c) {
   if (isAdmin) return true;
   if (isContentEditor) return true;
@@ -4343,6 +4343,8 @@ function canEditCard(c) {
   if (isBarEditor && c && c.location === 'бар') return true;
   return false;
 }
+// Может ли пользователь создать новую карточку?
+function canCreateCard() { return canEditContent() || isBarEditor || isBranchAdmin; }
 // Может ли пользователь удалить контент? Редактор — НЕ может ничего удалять.
 function canDeleteCard(c) {
   if (isAdmin) return true;
@@ -4439,6 +4441,11 @@ function fabAction() {
       currentCat = 'Все';
       renderCards();
     }
+    return openModal(null);
+  }
+  // Админ филиала создаёт только карточки продуктов.
+  if (isBranchAdmin && !canEditContent()) {
+    if (currentPage !== 'products') navigateTo('products');
     return openModal(null);
   }
   if (currentPage === 'techniques') return openTechniqueEditor(null);
@@ -5335,7 +5342,7 @@ function renderCards() {
   }
 
   // «+ Добавить карточку»: админу и редактору — везде; бар-редактору — только в секции «бар».
-  const canAdd = canEditContent() || (isBarEditor && sect === 'бар');
+  const canAdd = canEditContent() || isBranchAdmin || (isBarEditor && sect === 'бар');
   const show = filtered.filter(c => currentCat === 'Все' || c.category === currentCat);
   grid.innerHTML = show.length === 0
     ? `<div class="empty-state">${cardsLoading ? 'Загружаю каталог…' : 'Нет карточек в этом разделе'}</div>` +
@@ -8673,7 +8680,7 @@ function escAttr(s){return escHtml(s);}
 function openModal(id) {
   const c = id ? CARDS.find(x => x.id === id) : null;
   if (id && !canEditCard(c)) { showToast('Нет прав редактировать эту карточку'); return; }
-  if (!id && !canEditContent() && !isBarEditor) { showToast('Нет прав на создание'); return; }
+  if (!id && !canCreateCard()) { showToast('Нет прав на создание'); return; }
   editingType = 'card';
   editingId = id;
   document.getElementById('modalTitle').textContent = c ? 'Редактировать карточку' : 'Новая карточка';
@@ -10212,7 +10219,7 @@ async function saveCard() {
   if (editingId) {
     const orig = CARDS.find(c => c.id === editingId);
     if (orig && !canEditCard(orig)) { showToast('Нет прав редактировать эту карточку'); return; }
-  } else if (!canEditContent() && !isBarEditor) { showToast('Нет прав на создание'); return; }
+  } else if (!canCreateCard()) { showToast('Нет прав на создание'); return; }
   const id   = editingId || name.toLowerCase().replace(/[^а-яёa-z0-9\s-]/gi,'').replace(/\s+/g,'-').slice(0,60);
 
   let category = document.getElementById('f-category').value;
