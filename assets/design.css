@@ -174,7 +174,7 @@ body:not(.is-admin):not(.is-content-editor) .api-badge{display:none!important;}
 .card-type{font-size:var(--fs-xs);letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;}
 .card-chocolate{font-size:var(--fs-sm);color:var(--text-accent-soft);}
 .taste-tag{font-size:var(--fs-xs);padding:4px 10px;color:var(--text-body);border-radius:var(--radius-pill);}
-.card-description{font-style:normal;font-size:var(--fs-sm);line-height:1.65;color:var(--text-dim);max-width:62ch;}
+.card-description{font-style:normal;font-size:var(--fs-sm);line-height:1.65;color:var(--text-dim);max-width:62ch;white-space:pre-line;}
 .occasion-tag{font-size:var(--fs-xs);color:var(--text-dim);background:var(--bg-tint-soft);display:inline-flex;align-items:center;}
 .card-footer{padding:10px 20px;margin-top:auto;}
 .card-footer-hint{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;} /* подсказка заменена иконкой */
