@@ -437,6 +437,17 @@ body.is-bar-editor .fab,body.is-branch-admin .fab{display:flex;align-items:cente
 .reg-doc-footer{margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-subtle);font-size:12px;color:var(--text-muted);font-style:italic;}
 .reg-seed-banner{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 18px;background:rgba(var(--rgb-gold-500),.08);border:1px dashed var(--accent);border-radius:12px;margin-bottom:20px;font-size:13px;color:var(--text-dim);}
 
+/* ── VIDEO INSTRUCTIONS (видеоинструкции по кассе, статичные файлы assets/video/) ── */
+.reg-video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;max-width:720px;}
+.reg-video{margin:0;background:rgba(var(--rgb-choco-950),.30);border:1px solid var(--border-subtle);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+.reg-video video{display:block;width:100%;aspect-ratio:9/16;background:#000;object-fit:contain;}
+.reg-video figcaption{padding:12px 14px 14px;font-size:13px;line-height:1.5;color:var(--text-body);}
+.reg-video figcaption b{display:flex;align-items:baseline;gap:8px;font-family:var(--font-sans);font-size:14px;letter-spacing:.6px;color:var(--text-heading);margin-bottom:8px;}
+.reg-video-dur{font-weight:400;font-size:12px;letter-spacing:0;color:var(--text-muted);}
+.reg-video figcaption ol{margin:0;padding-left:20px;}
+.reg-video figcaption li{margin-bottom:5px;}
+.reg-video figcaption li:last-child{margin-bottom:0;}
+
 /* ══════════════ MOBILE-FIRST ══════════════ */
 @media(max-width:768px){
   header{padding:16px 16px 12px;gap:10px;}
@@ -9584,6 +9595,59 @@ function regBodyHTML(body) {
   return html;
 }
 
+// ── Видеоинструкции по кассе. Статичные файлы в assets/video/ (НЕ в базе) —
+// сняты 09.11.2026 на терминале Castom с POS «Ярос», вертикальные 720×1280 H.264.
+// Шаги под видео — конспект того, что говорится в ролике.
+const POS_VIDEOS = [
+  {
+    id: 'pos-video-open',
+    title: 'Открытие смены на кассе',
+    duration: '1:09',
+    src: 'assets/video/pos_open_shift.mp4',
+    poster: 'assets/video/pos_open_shift_poster.jpg',
+    steps: [
+      'Включить монитор, проверить интернет.',
+      'Открыть Fiscal Connection — через пару кликов значок появится справа внизу: ККМ включена.',
+      'Открыть ЯРОС и дождаться полной загрузки. Если программа предложит перезапуск или завершение — переходим в 1С.',
+      'В 1С выбрать своё предприятие (у каждого филиала своё).',
+      'Админ → «Открыть смену»: нажать кнопку и дождаться чека.',
+      'Внести несгораемый остаток мелочью (ручное внесение) — выйдет чек, смена открыта.'
+    ]
+  },
+  {
+    id: 'pos-video-close',
+    title: 'Закрытие смены на кассе',
+    duration: '0:40',
+    src: 'assets/video/pos_close_shift.mp4',
+    poster: 'assets/video/pos_close_shift_poster.jpg',
+    steps: [
+      'Проверить, что все чеки закрыты.',
+      'Админ (пароль 1 2 3) → Yaros ККМ.',
+      'Выемка 5 000 — несгораемый остаток, он остаётся в кассе на утро.',
+      'Красная кнопка «Отчёт с гашением» — программа покажет автоматическую сумму.',
+      'Сделать выемку на эту сумму — это расходы и инкассация.',
+      'Когда все чеки вышли — ещё раз «Отчёт с гашением», выходит Z-отчёт. Смена закрыта, можно выключать компьютер.'
+    ]
+  }
+];
+
+function renderPosVideosBlock() {
+  return `<div class="reg-doc reg-video-doc">
+    <div class="reg-doc-head"><div class="reg-doc-title">🎬 Видеоинструкции: касса</div></div>
+    <div class="reg-doc-subtitle">Открытие и закрытие смены на кассовом терминале. Посмотри перед первой самостоятельной сменой — и возвращайся, если забыл шаг.</div>
+    <div class="reg-video-grid">
+      ${POS_VIDEOS.map(v => `
+      <figure class="reg-video" id="${escAttr(v.id)}">
+        <video controls playsinline preload="none" poster="${escAttr(v.poster)}" src="${escAttr(v.src)}"></video>
+        <figcaption>
+          <b>${escHtml(v.title)}<span class="reg-video-dur">${escHtml(v.duration)}</span></b>
+          <ol>${v.steps.map(st => `<li>${escHtml(st)}</li>`).join('')}</ol>
+        </figcaption>
+      </figure>`).join('')}
+    </div>
+  </div>`;
+}
+
 function renderRegulations() {
   const container = document.getElementById('regulationsContent');
   if (!container) return;
@@ -9596,7 +9660,7 @@ function renderRegulations() {
   if (usingBuiltin) regs = BUILTIN_REGULATIONS;
   regs = [...regs].sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  let html = '';
+  let html = renderPosVideosBlock();
   if (usingBuiltin && canEditContent()) {
     html += `<div class="reg-seed-banner admin-only"><span>Регламенты ещё не сохранены в облачную базу — показана встроенная версия. После сохранения их можно будет редактировать.</span><button class="btn" onclick="seedRegulationsOnly()">💾 Сохранить в базу</button></div>`;
   }
