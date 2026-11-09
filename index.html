@@ -448,6 +448,12 @@ body.is-bar-editor .fab,body.is-branch-admin .fab{display:flex;align-items:cente
 .reg-video figcaption li{margin-bottom:5px;}
 .reg-video figcaption li:last-child{margin-bottom:0;}
 
+/* ── POS (вкладка «Обучение POS»: разделы внутри, см. setPosSection) ── */
+.pos-section{display:none;}
+.pos-section.active{display:block;}
+#posShift{padding:24px 40px 48px;}
+@media(max-width:768px){#posShift{padding:16px 14px 40px;}}
+
 /* ══════════════ MOBILE-FIRST ══════════════ */
 @media(max-width:768px){
   header{padding:16px 16px 12px;gap:10px;}
@@ -1076,8 +1082,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:1
   <button class="page-tab" data-page="regulations">
     <span class="tab-icon" aria-hidden="true">📜</span> Регламенты
   </button>
-  <button class="page-tab" data-page="warehouse">
-    <span class="tab-icon" aria-hidden="true">📦</span> Склад ХОЗ
+  <button class="page-tab" data-page="pos">
+    <span class="tab-icon" aria-hidden="true">🧾</span> Обучение POS
   </button>
   <button class="page-tab" data-page="profile">
     <span class="tab-icon" aria-hidden="true">👤</span> Профиль
@@ -1225,15 +1231,30 @@ input:focus-visible,textarea:focus-visible,select:focus-visible{outline-offset:1
   <div id="regulationsContent"></div>
 </div>
 
-<!-- ══════════════ WAREHOUSE PAGE (Заявки на склад ХОЗ) ══════════════ -->
-<!-- Самостоятельное React-приложение в подпапке warehouse-training/.
-     Встроено через iframe (все пути внутри относительные). src ставится лениво
-     при первом открытии вкладки — чтобы React/Babel/фото не грузились заранее. -->
-<div id="page-warehouse" class="page">
-  <iframe id="warehouseFrame"
-          data-src="./warehouse-training/index.html"
-          title="Заявки на склад ХОЗ"
-          style="width:100%;border:0;display:block;background:var(--bg-page);"></iframe>
+<!-- ══════════════ POS PAGE (Обучение POS: смена на кассе + заявки на склад ХОЗ) ══════════════ -->
+<!-- Только для вошедших: без сессии renderPos() показывает стену входа (как «Техники продаж»).
+     Внутри два раздела (setPosSection): видеоинструкции открытия/закрытия смены (POS_VIDEOS)
+     и самостоятельное React-приложение «Склад ХОЗ» из warehouse-training/ через iframe —
+     src ставится лениво при первом открытии раздела, чтобы React/Babel/фото не грузились заранее. -->
+<div id="page-pos" class="page">
+  <div id="posWall"></div>
+  <div id="posInner" hidden>
+    <div class="page-header">
+      <h2>Обучение POS</h2>
+      <p>Работа в кассовой системе ЯРОС: открытие и закрытие смены, заявки на склад ХОЗ.</p>
+    </div>
+    <div class="scripts-subnav" id="posSubnav" role="group" aria-label="Раздел">
+      <button class="subnav-btn active" data-pos="shift" aria-pressed="true"><span class="tab-icon" aria-hidden="true">🧾</span> Смена на кассе</button>
+      <button class="subnav-btn" data-pos="warehouse" aria-pressed="false"><span class="tab-icon" aria-hidden="true">📦</span> Заявки на склад ХОЗ</button>
+    </div>
+    <div id="posShift" class="pos-section active"></div>
+    <div id="posWarehouse" class="pos-section">
+      <iframe id="warehouseFrame"
+              data-src="./warehouse-training/index.html"
+              title="Заявки на склад ХОЗ"
+              style="width:100%;border:0;display:block;background:var(--bg-page);"></iframe>
+    </div>
+  </div>
 </div>
 
 <!-- ══════════════ PROFILE PAGE (личный кабинет + QR-бейдж) ══════════════ -->
@@ -4960,6 +4981,7 @@ function rerenderAll() {
   renderCards(); renderGlossary(); renderTools(); renderScripts(); renderRegulations();
   if (typeof renderTechniques === 'function') renderTechniques();
   if (typeof renderProfile === 'function') renderProfile();
+  if (typeof renderPos === 'function') renderPos();
   updateHeaderAuth();
 }
 function updateHeaderAuth() {
@@ -5007,11 +5029,12 @@ async function dbUpsertMany(table, rows) {
 // #techniques/quiz/module1, #techniques/dashboard, #techniques/user/<id>.
 // Переходы кладутся в историю (pushState), поэтому системная «Назад» на телефоне
 // возвращает на предыдущий экран, а не уводит с сайта.
-const PAGES = ['products','scripts','techniques','glossary','regulations','warehouse','profile'];
+const PAGES = ['products','scripts','techniques','glossary','regulations','pos','profile'];
 let _routeApplying = false;
 
 function showPage(p) {
   if (p === 'tools') p = 'products';           // старая вкладка «Инструменты» удалена
+  if (p === 'warehouse') { p = 'pos'; currentPosSection = 'warehouse'; }   // «Склад ХОЗ» — теперь раздел «Обучения POS»
   if (!PAGES.includes(p)) p = 'products';
   document.querySelectorAll('.page-tab').forEach(t => {
     const on = t.dataset.page === p;
@@ -5020,7 +5043,7 @@ function showPage(p) {
   });
   document.querySelectorAll('.page').forEach(pg => pg.classList.toggle('active', pg.id === 'page-' + p));
   currentPage = p;
-  if (p === 'warehouse') sizeWarehouseFrame();
+  if (p === 'pos') renderPos();
   if (p === 'profile') renderProfile();
   const tab = document.querySelector(`.page-tab[data-page="${p}"]`);
   const nav = tab && tab.parentElement;
@@ -5039,7 +5062,11 @@ function techRouteHash() {
     default:            return '#techniques';
   }
 }
-function currentRouteHash() { return currentPage === 'techniques' ? techRouteHash() : '#' + currentPage; }
+function currentRouteHash() {
+  if (currentPage === 'techniques') return techRouteHash();
+  if (currentPage === 'pos') return posRouteHash();
+  return '#' + currentPage;
+}
 
 // Записать текущее состояние в адресную строку. prev — откуда пришли (для кнопок «← Назад»).
 function pushRoute(replace = false) {
@@ -5104,6 +5131,10 @@ function applyRoute(rawHash) {
       }
       renderTechniques();
       window.scrollTo({ top: 0 });
+    }
+    if (currentPage === 'pos') {
+      // #pos → смена на кассе, #pos/warehouse → заявки на склад; старый #warehouse уже переведён в showPage
+      setPosSection(kind === 'warehouse' || page === 'warehouse' ? 'warehouse' : 'shift', false);
     }
   } finally {
     _routeApplying = false;
@@ -5230,17 +5261,18 @@ function lastLearningPlace() {
   try { return JSON.parse(localStorage.getItem(LEARNING_LS_KEY) || 'null'); } catch (e) { return null; }
 }
 
-// Встроенное приложение «Склад ХОЗ»: ленивая загрузка src + подгон высоты iframe
-// под доступную область (под шапкой и навигацией). Высота считается от реального
-// положения iframe, поэтому корректна и на мобиле, и при ресайзе/повороте экрана.
+// Встроенное приложение «Склад ХОЗ» (раздел вкладки «Обучение POS»): ленивая загрузка src
+// + высота iframe почти во весь экран. Над рамкой теперь заголовок страницы и подменю,
+// поэтому считаем не от положения рамки, а от высоты окна: пользователь прокручивает
+// страницу до рамки — и приложение занимает весь экран (на телефоне особенно важно,
+// иначе получается короткая рамка с собственной прокруткой внутри).
 function sizeWarehouseFrame() {
   const f = document.getElementById('warehouseFrame');
   if (!f) return;
   if (!f.src && f.dataset.src) f.src = f.dataset.src; // грузим только при первом открытии
-  const top = f.getBoundingClientRect().top;
-  f.style.height = Math.max(420, window.innerHeight - top) + 'px';
+  f.style.height = Math.max(420, window.innerHeight - 24) + 'px';
 }
-window.addEventListener('resize', () => { if (currentPage === 'warehouse') sizeWarehouseFrame(); });
+window.addEventListener('resize', () => { if (currentPage === 'pos' && currentPosSection === 'warehouse' && USER_PROFILE) sizeWarehouseFrame(); });
 
 // ════════════════════════════════════════════════
 // PRODUCT CARDS
@@ -9595,8 +9627,90 @@ function regBodyHTML(body) {
   return html;
 }
 
-// ── Видеоинструкции по кассе. Статичные файлы в assets/video/ (НЕ в базе) —
-// сняты 09.11.2026 на терминале Castom с POS «Ярос», вертикальные 720×1280 H.264.
+// ════════════════════════════════════════════════
+// ОБУЧЕНИЕ POS (вкладка 🧾, только для вошедших)
+// Два раздела: «Смена на кассе» (видео POS_VIDEOS) и «Заявки на склад ХОЗ»
+// (React-приложение warehouse-training/ в iframe). Без сессии — стена входа,
+// как в «Техниках продаж»; защита только во фронте (файлы на GitHub Pages публичны).
+// Адрес: #pos (смена) / #pos/warehouse (склад); старый #warehouse переводится в showPage.
+// ════════════════════════════════════════════════
+let currentPosSection = 'shift';   // 'shift' | 'warehouse'
+
+function posRouteHash() { return currentPosSection === 'warehouse' ? '#pos/warehouse' : '#pos'; }
+
+function setPosSection(sec, push = true) {
+  currentPosSection = sec === 'warehouse' ? 'warehouse' : 'shift';
+  document.querySelectorAll('#posSubnav .subnav-btn').forEach(b => {
+    const on = b.dataset.pos === currentPosSection;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  const showId = currentPosSection === 'warehouse' ? 'posWarehouse' : 'posShift';
+  document.querySelectorAll('#page-pos .pos-section').forEach(el => el.classList.toggle('active', el.id === showId));
+  // iframe грузим и меряем только когда раздел реально виден (иначе высота считается от нуля)
+  if (USER_PROFILE && currentPage === 'pos' && currentPosSection === 'warehouse') sizeWarehouseFrame();
+  if (push) pushRoute();
+}
+
+function renderPos() {
+  const wall = document.getElementById('posWall');
+  const inner = document.getElementById('posInner');
+  if (!wall || !inner) return;
+  if (!USER_PROFILE) {
+    inner.hidden = true;
+    wall.innerHTML = loginWallHTML('pos', '🧾 Обучение POS',
+      'Работа в кассовой системе: открытие и закрытие смены, заявки на склад ХОЗ. Войди в свой аккаунт.');
+    return;
+  }
+  wall.innerHTML = '';
+  inner.hidden = false;
+  const shift = document.getElementById('posShift');
+  if (shift && !shift.innerHTML) shift.innerHTML = renderPosVideosBlock();
+  setPosSection(currentPosSection, false);
+}
+
+// Стена входа для закрытых вкладок. prefix — префикс id полей, чтобы форм на странице
+// могло быть несколько («Техники» и «Профиль» пока со своими формами, это — для новых вкладок).
+function loginWallHTML(prefix, title, text) {
+  return `
+    <div class="tech-loginwall">
+      <h2>${escHtml(title)}</h2>
+      <p>${escHtml(text)}</p>
+      <div class="form-row">
+        <label for="${prefix}LoginEmail">Логин (email)</label>
+        <input type="email" id="${prefix}LoginEmail" placeholder="example@yahya.local" autocomplete="username">
+      </div>
+      <div class="form-row">
+        <label for="${prefix}LoginPwd">Пароль</label>
+        <input type="password" id="${prefix}LoginPwd" autocomplete="current-password" onkeydown="if(event.key==='Enter')wallDoLogin('${prefix}')">
+      </div>
+      <div class="err" id="${prefix}LoginErr" role="alert"></div>
+      <button class="btn-save" onclick="wallDoLogin('${prefix}')" style="width:100%">Войти</button>
+      <p style="margin-top:18px;font-size:12px">Нет логина? Попроси у руководителя филиала.</p>
+    </div>`;
+}
+
+async function wallDoLogin(prefix) {
+  const email = document.getElementById(prefix + 'LoginEmail').value.trim();
+  const pwd   = document.getElementById(prefix + 'LoginPwd').value;
+  const err   = document.getElementById(prefix + 'LoginErr');
+  if (!email || !pwd) { err.textContent = 'Введи логин и пароль'; return; }
+  err.textContent = 'Проверка…';
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
+    if (error) { err.textContent = isNetworkError(error) ? 'Нет связи с интернетом — проверь сеть' : 'Неверный логин или пароль'; return; }
+    await loadProfileAndProgress();
+    await reloadQuizzesFromDb();
+    logActivity('login');
+    rerenderAll();
+    showToast(`Привет, ${USER_PROFILE?.full_name || email}!`);
+  } catch(e) {
+    err.textContent = 'Ошибка входа: ' + humanError(e);
+  }
+}
+
+// ── Видеоинструкции по кассе (раздел «Смена на кассе»). Статичные файлы в assets/video/
+// (НЕ в базе) — сняты 09.11.2026 на терминале Castom с POS «Ярос», вертикальные 720×1280 H.264.
 // Шаги под видео — конспект того, что говорится в ролике.
 const POS_VIDEOS = [
   {
@@ -9633,8 +9747,8 @@ const POS_VIDEOS = [
 
 function renderPosVideosBlock() {
   return `<div class="reg-doc reg-video-doc">
-    <div class="reg-doc-head"><div class="reg-doc-title">🎬 Видеоинструкции: касса</div></div>
-    <div class="reg-doc-subtitle">Открытие и закрытие смены на кассовом терминале. Посмотри перед первой самостоятельной сменой — и возвращайся, если забыл шаг.</div>
+    <div class="reg-doc-head"><div class="reg-doc-title">🧾 Открытие и закрытие смены</div></div>
+    <div class="reg-doc-subtitle">Два коротких ролика с кассового терминала. Посмотри перед первой самостоятельной сменой — и возвращайся, если забыл шаг.</div>
     <div class="reg-video-grid">
       ${POS_VIDEOS.map(v => `
       <figure class="reg-video" id="${escAttr(v.id)}">
@@ -9660,7 +9774,7 @@ function renderRegulations() {
   if (usingBuiltin) regs = BUILTIN_REGULATIONS;
   regs = [...regs].sort((a, b) => (a.order || 0) - (b.order || 0));
 
-  let html = renderPosVideosBlock();
+  let html = '';
   if (usingBuiltin && canEditContent()) {
     html += `<div class="reg-seed-banner admin-only"><span>Регламенты ещё не сохранены в облачную базу — показана встроенная версия. После сохранения их можно будет редактировать.</span><button class="btn" onclick="seedRegulationsOnly()">💾 Сохранить в базу</button></div>`;
   }
@@ -10533,6 +10647,7 @@ async function init() {
   renderRegulations();
   if (typeof renderTechniques === 'function') renderTechniques();
   if (typeof renderProfile === 'function') renderProfile();
+  if (typeof renderPos === 'function') renderPos();
 
   const initialHash = location.hash;
   applyRoute(initialHash);
@@ -10586,6 +10701,11 @@ async function init() {
   updateHeaderAuth();
   // инициализация блока принципов (сворачивание из localStorage)
   initPrinciples();
+
+  // POS subnav (смена на кассе / заявки на склад)
+  document.querySelectorAll('#posSubnav .subnav-btn').forEach(btn => {
+    btn.addEventListener('click', () => setPosSection(btn.dataset.pos));
+  });
 
   // scripts subnav (retail/bar/common)
   document.querySelectorAll('#scriptsSubnav .subnav-btn').forEach(btn => {

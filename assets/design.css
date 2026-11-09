@@ -20,7 +20,7 @@
 /* ── 1. БАЗА / ДОСТУПНОСТЬ / ДВИЖЕНИЕ ───────────────────────────────── */
 body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.5;}
 body::before{display:none;}                      /* fixed-шум + multiply: красиво еле-еле, но дорого на слабых Android */
-.page:not(#page-warehouse){max-width:var(--content-max);margin-left:auto;margin-right:auto;}
+.page{max-width:var(--content-max);margin-left:auto;margin-right:auto;}
 :focus-visible{outline:2px solid var(--accent-hover);outline-offset:2px;}
 .card-wrap:focus-visible{outline-offset:3px;border-radius:var(--radius-lg);}
 .sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
